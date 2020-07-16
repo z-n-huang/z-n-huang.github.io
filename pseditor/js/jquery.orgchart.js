@@ -1230,7 +1230,7 @@
         });
       }
       // construct the content of node
-      var $nodeDiv = $('<div' + (opts.draggable ? ' draggable="true"' : '') + (data[opts.nodeId] ? ' id="' + data[opts.nodeId] + '"' : '') + (data.parentId ? ' data-parent="' + data.parentId + '"' : '') + '>')
+      var $nodeDiv = $('<div' + (opts.draggable ? ' style="z-index:3;" draggable="true"' : '') + (data[opts.nodeId] ? ' id="' + data[opts.nodeId] + '"' : '') + (data.parentId ? ' data-parent="' + data.parentId + '"' : '') + '>')
         .addClass('node ' + (data.className || '') +  (level > opts.visibleLevel ? ' slide-up' : ''));
 	  var optsID = data[opts.nodeId]; // z-n-huang added; need to draw lines
       if (opts.nodeTemplate) {

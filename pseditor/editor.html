@@ -88,15 +88,15 @@
 
   
 <!-- div id = "testoutput" / -->
-<div id="tabs">
-	<ul>
+<div id="tabs" style = "width:98%; border: 0">
+	<ul style = "position: fixed; width:98%; z-index:10;">
 		<li><a href="#tabs-1">Tree</a></li>
 		<li><a href="#tabs-export">Bracketed form</a></li>
 		<li><a href="#tabs-help">Help</a></li>
 		<li><a href="#tabs-license">License, etc.</a></li>
 	</ul>
-	<div id="tabs-1">
-		<div><!-- z-n-huang removed id= "edit-panel"-->
+	<div id="tabs-1" style = "">
+		<div style = "position: fixed; z-index:9; padding-top:80px; top: 0px; background: #fff;"><!-- z-n-huang removed id= "edit-panel"-->
 	    <!-- z-n-huang removed-->
 		<!--span id="chart-state-panel" class="radio-panel">
 		  <input type="radio" name="chart-state" id="rd-view" value="view"><label for="rd-view">View</label>
@@ -150,13 +150,14 @@
 		<br />
 		
 		</div>
-		<div id= "chart-container"></div>
+		
+		<div id= "chart-container" style ="position:absolute; top:100px; z-index:-4"></div>
 	</div>	
-	<div id="tabs-export">
+	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
 		<button type="button" id="btn-export">Generate</button><br />
 		<textarea id = "hierarchy-str" rows="20" cols="50"></textarea>
 	</div>
-	<div id="tabs-help">
+	<div id="tabs-help" style ="position:absolute; top:40px; z-index:-4">
 		<h2>General</h2>
 			<ol>
 			<li>Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
@@ -186,8 +187,8 @@
 			<li>Click "Update" button. The new node will appear on the right edge.
 			</ol>
 	</div>
-	<div id="tabs-license">
-		<h2>Phrase Structure Tree Editor</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present z-n-huang. All substantial changes can be identified by "z-n-huang" or "z-n-huang:" in comments.</p>
+	<div id="tabs-license" style ="position:absolute; top:40px; z-index:-4">
+		<h2>Phrase Structure Tree Editor</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present <a href = "https://github.com/z-n-huang" target = "_blank">z-n-huang</a>. All substantial changes can be identified by "z-n-huang" or "z-n-huang:" in comments.</p>
 	</div>
 </div>
 
