@@ -103,7 +103,27 @@
 		  <input type="radio" name="chart-state" id="rd-edit" value="edit" checked="true"><label for="rd-edit">Edit</label>
 		</span-->
 		<label>Input:</label>
-			<textarea id="brackets-input" name="brackets-input" rows="3" cols="20" style = "vertical-align: top;"></textarea>
+			<textarea id="brackets-input" name="brackets-input" rows="3" cols="20" style = "vertical-align: top;">
+(ROOT
+  (S
+    (SBAR (IN Because)
+      (S
+        (NP (PRP they))
+        (VP (VBP think))))
+    (NP (PRP it))
+    (VP (VBZ is)
+      (ADJP (RB very) (JJ difficult)
+        (PP (IN for)
+          (NP (PRP them))))
+      (S
+        (VP (TO to)
+          (VP (VB teach)
+            (NP (PRP me))
+            (NP (NN character)
+              (CC and)
+              (NNS values))))))
+    (. .)))
+</textarea>
 			<button type="button" id="gen-tree">Display tree</button>
 		<!-- z-n-huang: make "selected node" invisible. -->
 		<label class="selected-node-group" style="display: none">Selected node:</label>
