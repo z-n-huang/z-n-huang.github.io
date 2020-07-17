@@ -93,7 +93,7 @@
 		<li><a href="#tabs-1">Tree</a></li>
 		<li><a href="#tabs-export">Bracketed form</a></li>
 		<li><a href="#tabs-help">Help</a></li>
-		<li><a href="#tabs-license">License, etc.</a></li>
+		<li><a href="#tabs-license">About</a></li>
 	</ul>
 	<div id="tabs-1" style = "">
 		<div style = "position: fixed; z-index:9; padding-top:80px; top: 0px; background: #fff;"><!-- z-n-huang removed id= "edit-panel"-->
@@ -164,6 +164,7 @@
 			<li>Click "Display tree" button to view tree.
 			<li>Make edits to the tree.
 			<li>To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate".
+			<li>**Warning**: there is still much manual intervention needed. Users need to copy and paste trees from a text file to the browser and vice versa. (See wishlist below.)
 			</ol>
 		
 		<h2>How to edit a tree</h2>
@@ -182,13 +183,20 @@
 			</ol>
 			<li>To add a child or sibling to a node:
 			<ol><li>Click on the node. 
-			<li>Type in the label and string in the top box of "New node". Feel free to leave the bottom box blank if it's a non-terminal node.
+			<li>Type in the label and string in the top box of "New node". Feel free to leave the bottom box blank if it's a non-terminal node. Otherwise, type in the word.
 			<li>Select "Add child" or "Add sibling".
 			<li>Click "Update" button. The new node will appear on the right edge.
 			</ol>
+			
+		<h2>Wishlist, in descending order of priority</h2>
+		<ol>
+		<li>How to read trees directly from a database.
+		<li>How to write trees directly to a database -- but solving this problem could lead to overwriting trees by mistake!
+		<li>How to right click on a node and make edits directly on the node.
+		</ol>
 	</div>
 	<div id="tabs-license" style ="position:absolute; top:40px; z-index:-4">
-		<h2>Phrase Structure Tree Editor</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present <a href = "https://github.com/z-n-huang" target = "_blank">z-n-huang</a>. All substantial changes can be identified by "z-n-huang" or "z-n-huang:" in comments.</p>
+		<h2>Phrase Structure Tree Editor (beta version)</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present <a href = "https://github.com/z-n-huang" target = "_blank">z-n-huang</a>. All substantial changes can be identified by "z-n-huang" in comments in the source code.</p>
 	</div>
 </div>
 
