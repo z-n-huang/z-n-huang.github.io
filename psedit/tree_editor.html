@@ -243,7 +243,7 @@
 	  
 	  // z-n-huang added: Converts tree in round brackets/parentheses format into a JS array
 	  d = $('#brackets-input').val(); // get input from "brackets-input"
-	  d = d.replace(/\s/g, "").trim(); // trim extra whitespace
+	  d = d.replace(/\s\s+/g, "\s"); // trim extra whitespace
 	  d = d.replace(/\n$/, "") // remove trailing \n
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],")
 	  d = d.replace(/(\w+\$*)/g, '"$1", ')
