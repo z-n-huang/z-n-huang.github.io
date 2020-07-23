@@ -249,7 +249,7 @@
 	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
 	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
 	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
-	  d = d.substring(0, d.length -1); // changes last "]," to "]"
+	  d = d.trim().substring(0, d.length -1); // changes last "]," to "]"
 	  		
 	  var tree = JSON.parse(d); // z-n-huang added: generate a dictionary
 	  
