@@ -37,7 +37,7 @@
   <input type="checkbox" id="bottom" /> Align at bottom
 </div>
 <h3>SFP correction</h3>
-<p>Paste in a Penn Treebank-style tree in the "Input tree" box, and then click on "Adjust tree". The tree with corrected SFP and filler tags will appear in the "Adjusted tree" box. To display the tree in the webpage, hit "enter" or "space" anywhere in the "Adjusted tree" box. Code for displaying trees from <a href = "https://github.com/int2str/jssyntaxtree">jsSyntaxTree</a>.</p>
+<p>Paste a Penn Treebank-style tree into the "Input tree" box, and then click "Adjust tree". The tree with corrected SFP and filler tags will appear in the "Adjusted tree" box. To display the tree in the webpage, hit "enter" or "space" anywhere in the "Adjusted tree" box. All code for displaying trees from <a href = "https://github.com/int2str/jssyntaxtree">jsSyntaxTree</a>.</p>
 
   <label style = "vertical-align:top">Input tree:</label>
 			<textarea id="brackets-input" name="brackets-input" style = "width:20%; height:15%">(ROOT
@@ -69,7 +69,7 @@
 	var clearly_sfps = ['lah', 'huh', 
              'ar',
              'orh', 'hor', 'horh',
-             'lo', 'lor', 
+             'lo', 'lor',  // might present problems for names
              'meh',
              ];
 	var intjs = ['uhm', 'uh', 'um', 'okay', 'ya', 'yah', 'aiyoh', 'aiyah', 'hm' ];
