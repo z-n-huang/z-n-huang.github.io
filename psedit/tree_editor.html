@@ -242,7 +242,7 @@
 	  var hierarchy = "";
 	  
 	  // z-n-huang added: Converts tree in round brackets/parentheses format into a JS array
-	  d = $('#brackets-input').val();
+	  d = $('#brackets-input').val().trim(); // get input from "brackets-input", trim extra whitespace
 	  d = d.replace(/\n$/, "") // remove trailing \n
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],")
 	  d = d.replace(/(\w+\$*)/g, '"$1", ')
