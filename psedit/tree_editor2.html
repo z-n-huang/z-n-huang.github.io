@@ -487,11 +487,11 @@
 	// For reading a text file
 	var rawtext = "";
 	var trees = [];
-	$.get('chuaYenChingParsed.txt', function(data) {
+	$.get('/chuaYenChingParsed.txt', function(data) {
 		rawtext = data;
-	    trees = rawtext.split("\r\n\r\n");
+		// this assumes two line breaks between trees; two different ways of representing line breaks
+	    trees = rawtext.split("\r\n\r\n").split("\n\n");
 		}, 'text');
-	trees = rawtext.split("\r\n\r\n"); // this assumes two line breaks between trees
 	//console.log(trees);
 	
 	// For spinner
