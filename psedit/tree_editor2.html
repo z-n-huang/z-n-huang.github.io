@@ -107,7 +107,7 @@
 		  <label for="spinner">Index:</label>
 		  <input id="spinner" name="value" style = "width:50px" value = 5>
 		  <button id="getvalue">Get tree</button>
-		<br />
+		&nbsp;&nbsp;
 		<label>Input:</label>
 			<textarea id="brackets-input" name="brackets-input" rows="3" cols="20" style = "vertical-align: top;">
 			(ROOT
@@ -130,7 +130,7 @@
 						  (NNS values))))))
 				(. .)))
 			</textarea>
-			<button type="button" id="gen-tree">Display tree</button>
+			<button type="button" id="gen-tree">Display</button>
 		<!-- z-n-huang: make "selected node" invisible. -->
 		<label class="selected-node-group" style="display: none">Selected node:</label>
 			<input type="text" id="selected-node" class="selected-node-group" size = 6 style="display: none">
@@ -145,9 +145,14 @@
 		<span id="node-type-panel" class="radio-panel">
 		  <!-- z-n-huang removed -->
 		  <!--input type="radio" name="node-type" id="rd-parent" value="parent"><label for="rd-parent">Root</label-->
-		  <input type="radio" name="node-type" id="rd-child" value="children"><label for="rd-child">Add as child</label>
+		  <select id="edit-menu" style="width:140px">
+			<option name = "node-type" value = "children">Add as child</option>
+			<option name = "node-type" value = "siblings">Add as sibling</option>
+			<option name = "node-type" value = "edit-label">Edit label</option>
+		  </select>
+		  <!--input type="radio" name="node-type" id="rd-child" value="children"><label for="rd-child">Add as child</label>
 		  <input type="radio" name="node-type" id="rd-sibling" value="siblings"><label for="rd-sibling">Add as sibling</label>
-		  <input type="radio" name="node-type" id="edit-label" value="edit-label"><label for="edit-label">Edit label</label>
+		  <input type="radio" name="node-type" id="edit-label" value="edit-label"><label for="edit-label">Edit label</label-->
 		</span>
 		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
 		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
@@ -164,10 +169,13 @@
 		<textarea id = "hierarchy-str" rows="20" cols="50"></textarea>
 	</div>
 	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
+	<h2>What this interface does</h2>
+	This interface reads in a text file containing a set of Penn Treebank-style parses. It then displays the parses in tree form. Users can edit the parse with by dragging and dropping nodes in the tree. Edited trees can then be converted into Penn Treebank-style bracketed forms.
 		<h2>General procedure</h2>
 			<ol>
+			<li>Get a tree: Enter the index (the serial number, so to speak) of the tree in the Index box. Click the "Get tree" button.
 			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
-			<li>View tree: Click the "Display tree" button.
+			<li>Display tree: Click the "Display" button.
 			<li>Edit tree: see below.
 			<li>View edited tree: To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate".
 			<ul>
@@ -192,14 +200,13 @@
 			<li>To add a child or sibling to a node:
 			<ol><li>Click on the node. 
 			<li>Type in the label and string in the top box of "New node". Feel free to leave the bottom box blank if it's a non-terminal node. Otherwise, type in the word.
-			<li>Select "Add child" or "Add sibling".
+			<li>Select "Add as child" or "Add as sibling".
 			<li>Click "Update" button. The new node will appear on the right edge.
 			</ol>
 		</ol>
 			
 		<h2>Wishlist, in descending order of priority</h2>
 		<ol>
-		<li>How to read trees directly from a database.
 		<li>How to write trees directly to a database -- but solving this problem could lead to overwriting trees by mistake!
 		<li>How to right click on a node and make edits directly on the node.
 		</ol>
@@ -300,9 +307,8 @@
 	return oc;
 	};
 	
-	//$('#chart-container').html('');
 	oc = gen_oc();
-	
+	// z-n-huang: If you click on the "Display" button, you should update oc
 	$('#gen-tree').on('click', function() { oc = gen_oc() } );
 	
     oc.$chartContainer.on('click', '.node', function() {
@@ -374,7 +380,7 @@
         alert('Please input value for new node');
         return;
       }
-      var nodeType = $('input[name="node-type"]:checked');
+      var nodeType = $('#edit-menu'); //z-n-huang: previously $('input[name="node-type"]:checked'); 
 	  console.log(11, nodeType);
       if (!nodeType.length) {
         alert('Please specify what kind of edit you want');
@@ -511,7 +517,7 @@
 	  $('#brackets-input').val( 
 		trees[spinner.spinner( "value" )]
 		);
-	  //$('#gen-tree').click();
+	  $('#gen-tree').click();
     });
     $( "#setvalue" ).on( "click", function() {
       spinner.spinner( "value", 5 );
@@ -520,6 +526,8 @@
     $( "button" ).button();
   } );
  
+// For select menu
+$( "#selectmenu" ).selectmenu();
 // For tabs
 $( "#tabs" ).tabs();
 
