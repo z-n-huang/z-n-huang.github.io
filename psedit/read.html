@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Read text</title>
+	<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+	<!-- Added by NH, for reading text files and displaying information -->
+	<script type="text/javascript">
+	// For reading a text file
+	var rawtext = "";
+	var trees = [];
+	$.get('chuaYenChingParsed.txt', function(data) {
+		rawtext = data;
+	    trees = rawtext.split("\r\n\r\n");
+		}, 'text');
+	trees = rawtext.split("\r\n\r\n"); // this assumes two line breaks between trees
+	//console.log(trees);
+	// end reading a text file
+  $( function() {
+    var spinner = $( "#spinner" ).spinner();
+ 
+    $( "#disable" ).on( "click", function() {
+      if ( spinner.spinner( "option", "disabled" ) ) {
+        spinner.spinner( "enable" );
+      } else {
+        spinner.spinner( "disable" );
+      }
+    });
+    $( "#destroy" ).on( "click", function() {
+      if ( spinner.spinner( "instance" ) ) {
+        spinner.spinner( "destroy" );
+      } else {
+        spinner.spinner();
+      }
+    });
+    $( "#getvalue" ).on( "click", function() {
+      //alert( trees[spinner.spinner( "value" )] );
+	  $('#brackets-input').val( 
+		trees[spinner.spinner( "value" )]
+		);
+    });
+    $( "#setvalue" ).on( "click", function() {
+      spinner.spinner( "value", 5 );
+    });
+ 
+    $( "button" ).button();
+  } );
+  </script>
+</head>
+<body>
+<textarea id="brackets-input" name="brackets-input" rows="3" cols="20" style = "vertical-align: top;">
+</textarea>
+ 
+<p>
+  <label for="spinner">Select a value:</label>
+  <input id="spinner" name="value" style = "width:50px">
+  <button id="getvalue">Get value</button>
+</p>
+ 
+</html>

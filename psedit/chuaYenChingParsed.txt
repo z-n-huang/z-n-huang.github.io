@@ -1,0 +1,220 @@
+(ROOT
+  (S
+    (NP (PRP I))
+    (VP (VBD was)
+      (VP (VBN born)
+        (PP (IN in)
+          (NP (CD 1958)))))
+    (. .)))
+
+
+(ROOT
+  (S (CC Or)
+    (ADVP (RB actually))
+    (NP (PRP I))
+    (VP (VBP come)
+      (PP (IN from)
+        (NP (DT a)
+          (ADJP (RB very) (JJ average))
+          (NN family))))
+    (. .)))
+
+
+(ROOT
+  (S
+    (NP (PRP I))
+    (VP (VBD was)
+      (ADVP (RB also))
+      (NP (DT a)
+        (ADJP (RB very) (JJ average))
+        (NN student)))
+    (. .)))
+
+
+(ROOT
+  (S
+    (NP (PRP I))
+    (VP (VBP remember)
+      (PP (IN on)
+        (NP
+          (NP (PRP$ my) (JJ first) (NN day))
+          (PP (IN in)
+            (NP (NN school)))))
+      (, ,)
+      (SBAR
+        (WHADVP (WRB when))
+        (S
+          (NP (PRP I))
+          (VP (VBD was)
+            (PP (IN in)
+              (NP (JJ primary) (CD one)))))))
+    (. .)))
+
+
+(ROOT
+  (S
+    (NP (PRP$ My) (NNS parents))
+    (VP (VBD told)
+      (NP (PRP me))
+      (SBAR (IN that)
+        (S
+          (SBAR (IN if)
+            (S
+              (NP (PRP I))
+              (VP (VBP have)
+                (NP (DT a) (NNP C) (NN grade))
+                (PP (IN for)
+                  (NP
+                    (NP (NN math))
+                    (CC and)
+                    (NP (NNP English)))))))
+          (, ,)
+          (NP (PRP it))
+          (VP (VBZ s)
+            (ADJP (JJ ok))))))
+    (. .)))
+
+
+(ROOT
+  (S
+    (NP (PRP They))
+    (VP (MD will)
+      (VP (VB teach)
+        (NP (PRP me))))
+    (. .)))
+
+
+(ROOT
+  (S (CC But)
+    (SBAR (IN if)
+      (S
+        (NP (PRP I))
+        (VP (VBP have)
+          (NP
+            (NP (DT a) (NN grade) (NNP C))
+            (PP (IN for)
+              (NP (NN character)))))))
+    (, ,)
+    (NP (PRP they))
+    (VP (MD will)
+      (VP (VB rap)
+        (NP (PRP me))
+        (PRT (RP up))))
+    (. .)))
+
+
+(ROOT
+  (S
+    (SBAR (IN Because)
+      (S
+        (NP (PRP they))
+        (VP (VBP think))))
+    (NP (PRP it))
+    (VP (VBZ is)
+      (ADJP (RB very) (JJ difficult)
+        (PP (IN for)
+          (NP (PRP them))))
+      (S
+        (VP (TO to)
+          (VP (VB teach)
+            (NP (PRP me))
+            (NP (NN character)
+              (CC and)
+              (NNS values))))))
+    (. .)))
+
+
+(ROOT
+  (S (IN So)
+    (NP (DT that))
+    (VP
+      (ADVP (RB actually))
+      (VBZ remains)
+      (ADVP (RB very) (RB vividly))
+      (NP
+        (NP (NN er))
+        (PP (IN in)
+          (NP (PRP$ my) (NN mind)))))
+    (. .)))
+
+
+(ROOT
+  (S (IN So)
+    (SBAR (IN while)
+      (S
+        (NP (PRP$ my) (NNS parents))
+        (VP (VB don)
+          (NP (NN t))
+          (ADVP (RB really))
+          (VP (VB pressurise)
+            (NP (PRP me))))))
+    (, ,)
+    (NP (PRP they))
+    (VP (VBD did)
+      (PP
+        (NP (NN share))
+        (IN with)
+        (NP (PRP me)))
+      (NP
+        (NP (PRP$ their) (NN desire))
+        (SBAR (IN that)
+          (S
+            (NP (PRP I))
+            (VP (MD will)
+              (VP (VB pursue)
+                (NP (NN medicine))))))))
+    (. .)))
+
+
+(ROOT
+  (S
+    (SBAR (IN Because)
+      (S
+        (S
+          (NP (PRP$ my) (NN uncle))
+          (VP (VBD was)
+            (NP (DT a) (JJ medical) (NN doctor))))
+        (, ,)
+        (CC and)
+        (S
+          (NP (PRP$ my) (NN father))
+          (VP (VBZ thinks)))))
+    (NP (PRP it))
+    (VP (VBD was)
+      (ADJP (JJ good)
+        (S
+          (VP (TO to)
+            (VP (VB have)
+              (NP
+                (NP (DT a) (NN doctor))
+                (PP (IN in)
+                  (NP (DT the) (NN family)))))))))
+    (. .)))
+
+
+(ROOT
+  (S
+    (NP (PRP$ My) (NN father))
+    (VP (VBD was)
+      (NP
+        (NP (DT a) (JJ principal) (JJ technical) (NN officer))
+        (PP (IN with)
+          (NP (DT a) (NN stat) (NN board)))))
+    (. .)))
+
+
+(ROOT
+  (S (CC And)
+    (NP (NN way))
+    (ADVP (RB back))
+    (RB then)
+    (VP
+      (ADVP (RB there))
+      (VB wasn)
+      (NP
+        (NP (JJ t)
+          (ADJP (RB very) (JJ strong))
+          (NN education) (NN career) (NN guidance))
+        (, ,)
+        (ADVP (RB right))))
+    (. .)))

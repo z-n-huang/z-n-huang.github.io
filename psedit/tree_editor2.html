@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Phrase structure tree editor</title>
+  <!-- link rel="icon" href="img/logo.png"-->
+  <!-- Start tabs -->
+  <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+  <!-- end tabs -->
+  <link rel="stylesheet" href="css/jquery.orgchart.css">
+  
+  <style type="text/css">
+    #chart-container { background-color: #fff; /*height: 500px; */ }
+    .orgchart { background: #fff; }
+    .orgchart.edit-state .edge { display: none; }
+    .orgchart .node .title { height: 30px; line-height: 30px; }
+    #edit-panel {
+	  font-family: sans-serif;
+	  font-size: 14px;
+      position: relative;
+      /*left: 10px;*/
+      /*width: calc(100%);*/
+      border-radius: 4px;
+      float: left;
+      margin-top: 10px;
+      padding: 10px;
+      color: #000;
+      /*background-color: #fff;*/
+    }
+    #edit-panel .btn-inputs::before {
+      background-color: #fff;
+      color: #449d44;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 1.5rem;
+    }
+    #edit-panel .btn-inputs { vertical-align: sub; }
+    #edit-panel.edit-parent-node .btn-inputs { display: none; }
+    #edit-panel .btn-inputs:hover::before { font-weight: bolder; }
+    #edit-panel.edit-state>:not(#chart-state-panel) { display: none; }
+    #edit-panel label { font-weight: bold; }
+    #edit-panel.edit-parent-node .selected-node-group { display: none; }
+    #chart-state-panel, #selected-node, #btn-remove-input { margin-right: 20px; }
+    #edit-panel button {
+      color: #333;
+      background-color: #fff;
+      display: inline-block;
+      padding: 6px 12px;
+      margin-bottom: 0;
+      line-height: 1.42857143;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      -ms-touch-action: manipulation;
+      touch-action: manipulation;
+      cursor: pointer;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      background-image: none;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #edit-panel.edit-parent-node button:not(#btn-add-nodes) { display: none; }
+    #edit-panel button:hover,.edit-panel button:focus,.edit-panel button:active {
+      border-color: #eea236;
+      box-shadow:  0 0 10px #eea236;
+    }
+    #new-nodelist {
+      display: inline-block;
+      list-style:none;
+      margin-top: -2px;
+      padding: 0;
+      vertical-align: text-top;
+    }
+    #new-nodelist>* { padding-bottom: 4px; }
+    .radio-panel input[type='radio'] { display: inline-block;height: 24px;width: 20px;vertical-align: top; }
+    #edit-panel.view-state .radio-panel input[type='radio']+label { vertical-align: -webkit-baseline-middle; }
+    #btn-add-nodes { margin-left: 20px; }
+	
+  </style>
+  <!-- for tabs-->
+  
+</head>
+<body>
+
+  
+<!-- div id = "testoutput" / -->
+<div id="tabs" style = "width:98%; border: 0">
+	<ul style = "position: fixed; width:98%; z-index:10;">
+		<li><a href="#tabs-1">Tree</a></li>
+		<li><a href="#tabs-export">Bracketed form</a></li>
+		<li><a href="#tabs-help">Help</a></li>
+		<li><a href="#tabs-license">About</a></li>
+	</ul>
+	<div id="tabs-1" style = "">
+
+		<div style = "position: fixed; z-index:9; padding-top:80px; top: 0px; background: #fff;"><!-- z-n-huang removed id= "edit-panel"-->
+	    <!-- z-n-huang removed-->
+		<!--span id="chart-state-panel" class="radio-panel">
+		  <input type="radio" name="chart-state" id="rd-view" value="view"><label for="rd-view">View</label>
+		  <input type="radio" name="chart-state" id="rd-edit" value="edit" checked="true"><label for="rd-edit">Edit</label>
+		</span-->
+		
+		  <label for="spinner">Index:</label>
+		  <input id="spinner" name="value" style = "width:50px" value = 5>
+		  <button id="getvalue">Get tree</button>
+		<br />
+		<label>Input:</label>
+			<textarea id="brackets-input" name="brackets-input" rows="3" cols="20" style = "vertical-align: top;">
+			(ROOT
+			  (S
+				(SBAR (IN Because)
+				  (S
+					(NP (PRP they))
+					(VP (VBP think))))
+				(NP (PRP it))
+				(VP (VBZ is)
+				  (ADJP (RB very) (JJ difficult)
+					(PP (IN for)
+					  (NP (PRP them))))
+				  (S
+					(VP (TO to)
+					  (VP (VB teach)
+						(NP (PRP me))
+						(NP (NN character)
+						  (CC and)
+						  (NNS values))))))
+				(. .)))
+			</textarea>
+			<button type="button" id="gen-tree">Display tree</button>
+		<!-- z-n-huang: make "selected node" invisible. -->
+		<label class="selected-node-group" style="display: none">Selected node:</label>
+			<input type="text" id="selected-node" class="selected-node-group" size = 6 style="display: none">
+		&nbsp;&nbsp;<label>New node:</label>
+			<ul id="new-nodelist">
+			  <li><input type="text" id = "gen-new-node" class="new-node" size = 6></li>
+			  <li><input type="text" id = "gen-new-node-content" class="new-node-name" size = 6></li>
+			</ul>
+		<!-- z-n-huang removed -->
+		<!--i class="oci oci-plus-circle btn-inputs" id="btn-add-input"></i>
+		<i class="oci oci-minus-circle btn-inputs" id="btn-remove-input"></i-->
+		<span id="node-type-panel" class="radio-panel">
+		  <!-- z-n-huang removed -->
+		  <!--input type="radio" name="node-type" id="rd-parent" value="parent"><label for="rd-parent">Root</label-->
+		  <input type="radio" name="node-type" id="rd-child" value="children"><label for="rd-child">Add as child</label>
+		  <input type="radio" name="node-type" id="rd-sibling" value="siblings"><label for="rd-sibling">Add as sibling</label>
+		  <input type="radio" name="node-type" id="edit-label" value="edit-label"><label for="edit-label">Edit label</label>
+		</span>
+		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
+		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
+		<!-- z-n-huang removed --><!--button type="button" id="btn-reset">Reset</button-->
+		
+		<br />
+		
+		</div>
+		
+		<div id= "chart-container" style ="position:absolute; top:100px; z-index:-4"></div>
+	</div>	
+	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
+		<button type="button" id="btn-export">Generate</button><br />
+		<textarea id = "hierarchy-str" rows="20" cols="50"></textarea>
+	</div>
+	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
+		<h2>General procedure</h2>
+			<ol>
+			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
+			<li>View tree: Click the "Display tree" button.
+			<li>Edit tree: see below.
+			<li>View edited tree: To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate".
+			<ul>
+			<li>**Warning**: there is still much manual intervention needed. Users need to copy and paste trees from a text file to the browser and vice versa. (See wishlist below.)
+			</ul>
+			</ol>
+		
+		<h2>How to edit a tree</h2>
+			<ol>
+			<li>To re-attach a node: click on it and then drag and drop it to the desired parent node.
+			<li>To re-order nodes within a tree: 
+			<ol><li>Click on a node that is not on the right edge.
+			<li>Drag and drop it to its parent, as if re-attaching it. This moves the node to the right edge. 
+			<li>Repeat as necessary.
+			</ol>
+			<li>To change a non-terminal node label: 
+			<ol><li>Click on the node (the node should be highlighted in yellow). 
+			<li>Type in the corrected label in the top box of "New node" (feel free to leave the bottom box blank).
+			<li>Select "Edit label".
+			<li>Click "Update" button.
+			</ol>
+			<li>To add a child or sibling to a node:
+			<ol><li>Click on the node. 
+			<li>Type in the label and string in the top box of "New node". Feel free to leave the bottom box blank if it's a non-terminal node. Otherwise, type in the word.
+			<li>Select "Add child" or "Add sibling".
+			<li>Click "Update" button. The new node will appear on the right edge.
+			</ol>
+		</ol>
+			
+		<h2>Wishlist, in descending order of priority</h2>
+		<ol>
+		<li>How to read trees directly from a database.
+		<li>How to write trees directly to a database -- but solving this problem could lead to overwriting trees by mistake!
+		<li>How to right click on a node and make edits directly on the node.
+		</ol>
+	</div>
+	<div id="tabs-license" style ="position:absolute; top:40px; z-index:-4">
+		<h2>Phrase Structure Tree Editor (beta version)</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present <a href = "https://github.com/z-n-huang" target = "_blank">z-n-huang</a>. All substantial changes can be identified by "z-n-huang" in comments in the source code.</p>
+	</div>
+</div>
+
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/jquery.orgchart.js"></script>
+
+  <script type="text/javascript">
+	
+	function jsonTree() {
+		$('#chart-container').html('');
+		$('#hierarchy-str').html('');
+
+		// z-n-huang added: Converts a tree in the form of a JS array into a JS dictionary
+		function tree2dict(tree) {
+			var n_children = tree.length;
+			var tree_dict = {};
+			var children = [];
+			var i;
+			for (i = 0; i < n_children; i++) {
+				if (i == 0) {
+					tree_dict["name"] = tree[0];
+				}
+				else {
+					var tt = tree[i];
+					if (Array.isArray(tree[i])) {
+						tree_dict["title"] = undefined;
+						var child = tree2dict(tt);
+						children.push(child);
+					} else {
+						tree_dict["title"] = tt;
+					}
+				}
+				if (children.length > 0) {
+					tree_dict["children"] = children;
+				}
+			}
+			return tree_dict;
+		};
+	  var d = "";
+	  var oc = "";
+	  var hierarchy = "";
+	  
+	  // z-n-huang added: Converts tree in round brackets/parentheses format into a JS array
+	  d = $('#brackets-input').val(); // get input from "brackets-input"
+	  d = d.replace(/\s\s+/g, '').replace(/\t/g, ''); // trim extra whitespace
+	  d = d.replace(/\n$/, "") // remove trailing \n
+	  d = d.replace(/\(/g, "[").replace(/\)/g, "],")
+	  d = d.replace(/(\w+\$*)/g, '"$1", ')
+	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
+	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
+	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
+	  d = d.trim().substring(0, d.length -1); // changes last "]," to "]"
+	  if (d.substr(-1) == ",") {
+		 d = d.substring(0, d.length -1);
+		 console.log(d);
+	  }
+
+	  var tree = JSON.parse(d); // z-n-huang added: generate a dictionary
+	  
+	  datascource = tree2dict(tree); // z-n-huang added: transform dictionary to JSON format
+	  return datascource;
+	};
+	
+    var getId = function() {
+      return (new Date().getTime()) * 1000 + Math.floor(Math.random() * 1001);
+    };
+
+	var oc = "";
+	
+	function gen_oc() {
+    var oc = $('#chart-container').orgchart({
+      'data' : jsonTree(), // 'data' : datascource, 
+      'chartClass': 'edit-state',
+      'exportButton': false,
+      'exportFilename': 'SportsChart',
+      'createNode': function($node, data) {
+        $node[0].id = getId();
+		$node.name = data.name;
+        $node.title = data.title;
+		
+		},
+      'nodeContent': 'title',
+      'draggable': true,
+      'dropCriteria': function($draggedNode, $dragZone, $dropZone) {
+        if($draggedNode.find('.content').text().indexOf('manager') > -1 && $dropZone.find('.content').text().indexOf('engineer') > -1) {
+          return false;
+        }
+        return true;
+      }
+      
+    });
+	return oc;
+	};
+	
+	//$('#chart-container').html('');
+	oc = gen_oc();
+	
+	$('#gen-tree').on('click', function() { oc = gen_oc() } );
+	
+    oc.$chartContainer.on('click', '.node', function() {
+      var $this = $(this);
+      $('#selected-node').val($this.find('.title').text()).data('node', $this);
+    });
+
+    oc.$chartContainer.on('click', '.orgchart', function(event) {
+      if (!$(event.target).closest('.node').length) {
+        $('#selected-node').val('');
+      }
+    });
+	
+	
+  
+
+    $('input[name="chart-state"]').on('click', function() {
+      $('.orgchart').toggleClass('edit-state', this.value !== 'view');
+      $('#edit-panel').toggleClass('edit-state', this.value === 'view');
+      if ($(this).val() === 'edit') {
+        $('.orgchart').find('tr').removeClass('hidden')
+          .find('td').removeClass('hidden')
+          .find('.node').removeClass('slide-up slide-down slide-right slide-left');
+      } else {
+        $('#btn-reset').trigger('click');
+      }
+    });
+
+    $('input[name="node-type"]').on('click', function() {
+      var $this = $(this);
+      if ($this.val() === 'parent') {
+        $('#edit-panel').addClass('edit-parent-node');
+        //$('#new-nodelist').children(':gt(0)').remove(); //z-n-huang: do not remove the box for children
+      } else {
+        $('#edit-panel').removeClass('edit-parent-node');
+      }
+    });
+
+    $('#btn-add-input').on('click', function() {
+      $('#new-nodelist').append('<li><input type="text" class="new-node"><input type="text" class="new-node-name"></li><li></li>');
+    });
+
+    $('#btn-remove-input').on('click', function() {
+      var inputs = $('#new-nodelist').children('li');
+      if (inputs.length > 2) { // original = length > 1
+        inputs.last().remove();
+      }
+    });
+
+    $('#btn-add-nodes').on('click', function() {
+      var $chartContainer = $('#chart-container');
+      var nodeVals = [];
+      $('#new-nodelist').find('.new-node').each(function(index, item) {
+        var validVal = item.value.trim();
+        if (validVal.length) {
+          nodeVals.push(validVal);
+        }
+      });
+	  // z-n-huang: Add names
+	  var nodeValsName = [];
+      $('#new-nodelist').find('.new-node-name').each(function(index, item) {
+        var validValName = item.value.trim();
+        if (validValName.length) {
+          nodeValsName.push(validValName);
+        }
+      });
+      var $node = $('#selected-node').data('node');
+      if (!nodeVals.length) {
+        alert('Please input value for new node');
+        return;
+      }
+      var nodeType = $('input[name="node-type"]:checked');
+	  console.log(11, nodeType);
+      if (!nodeType.length) {
+        alert('Please specify what kind of edit you want');
+        return;
+      }
+      if (nodeType.val() !== 'parent' && !$('.orgchart').length) {
+        alert('Please create the root node first when you want to build the tree from scratch'); // z-n-huang: fixed typo
+        return;
+      }
+      if (nodeType.val() !== 'parent' && !$node) {
+        alert('Please select a node');
+        return;
+      }
+      if (nodeType.val() === 'parent') {
+        if (!$chartContainer.children('.orgchart').length) {// if the original chart has been deleted
+          oc = $chartContainer.orgchart({
+            'data' : { 'name': nodeVals[0] }, // z-n-huang: this is where the node info gets added
+            'exportButton': true,
+            'exportFilename': 'SportsChart',
+            'createNode': function($node, data) {
+              $node[0].id = getId();
+            }
+          });
+          oc.$chart.addClass('view-state');
+        } else {
+          oc.addParent($chartContainer.find('.node:first'), { 'name': nodeVals[0], 'title': '', 'id': getId() });
+        }
+      } else if (nodeType.val() === 'edit-label') { // z-n-huang added edit label
+		    oc.editLabel($node, nodeVals.map(function (item) {
+			return item;
+		}));
+	  } else if (nodeType.val() === 'siblings') {
+        if ($node[0].id === oc.$chart.find('.node:first')[0].id) {
+          alert('You are not allowed to directly add sibling nodes to root node');
+          return;
+        }
+        oc.addSiblings($node, nodeVals.map(function (item) {
+            return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+          }));
+      } else {
+        var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+			console.log(nodeValsName);
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+      }
+    });
+
+    $('#btn-delete-nodes').on('click', function() {
+      var $node = $('#selected-node').data('node');
+      if (!$node) {
+        alert('Please select one node in orgchart');
+        return;
+      } else if ($node[0] === $('.orgchart').find('.node:first')[0]) {
+        if (!window.confirm('Are you sure you want to delete the whole chart?')) {
+          return;
+        }
+      }
+      oc.removeNodes($node);
+      $('#selected-node').val('').data('node', null);
+    });
+
+    $('#btn-reset').on('click', function() {
+      $('.orgchart').find('.focused').removeClass('focused');
+      $('#selected-node').val('');
+      $('#new-nodelist').find('input:first').val('').parent().siblings().remove();
+      $('#node-type-panel').find('input').prop('checked', false);
+    });
+
+	// z-n-huang: for generating updated tree
+  	$('#btn-export').on('click', function() {
+      
+		var hierarchy = oc.getHierarchy();
+		
+		$('#hierarchy-str').html('');
+		var string = JSON.stringify(hierarchy, null, 2);
+		string = string.replace(/\{/g, "\(").replace(/\}/g, "\)").replace(/\]\n/g, ""); // replace braces with parentheses
+		string = string.replace(/\"lex\": \"\*\*\*\",\n/g, '').replace(/\"category\": \"/g, '').replace(/\"children\": \[\n/g, '');
+		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
+		string = string.replace(/(\()(\n)(\s*)/g, "$1").replace(/    /g, " "); // no "stray" left parentheses; remove extra spaces
+		string = string.replace(/(\w)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
+		string = string.replace(/([\.\,\?\!\\\/]+)(\n)(\s*)([\.\,\?\!\\\/]+)/g, '$1 $4'); // punctuation
+		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
+		//replace(/(\))(\n)(\s*)/g, "$1$2")
+		$('#hierarchy-str').html(string);
+      //}
+    });
+  
+  </script>
+  
+  
+<!-- Added by NH, for reading text files and displaying information in tabs and spinners -->
+<!--script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script-->
+	<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+
+	<script type="text/javascript">
+	// For reading a text file
+	var rawtext = "";
+	var trees = [];
+	$.get('chuaYenChingParsed.txt', function(data) {
+		rawtext = data;
+	    trees = rawtext.split("\r\n\r\n");
+		}, 'text');
+	trees = rawtext.split("\r\n\r\n"); // this assumes two line breaks between trees
+	//console.log(trees);
+	
+	// For spinner
+  $( function() {
+    var spinner = $( "#spinner" ).spinner();
+ 
+    $( "#disable" ).on( "click", function() {
+      if ( spinner.spinner( "option", "disabled" ) ) {
+        spinner.spinner( "enable" );
+      } else {
+        spinner.spinner( "disable" );
+      }
+    });
+    $( "#destroy" ).on( "click", function() {
+      if ( spinner.spinner( "instance" ) ) {
+        spinner.spinner( "destroy" );
+      } else {
+        spinner.spinner();
+      }
+    });
+    $( "#getvalue" ).on( "click", function() {
+      //alert( trees[spinner.spinner( "value" )] );
+	  $('#brackets-input').val( 
+		trees[spinner.spinner( "value" )]
+		);
+	  //$('#gen-tree').click();
+    });
+    $( "#setvalue" ).on( "click", function() {
+      spinner.spinner( "value", 5 );
+    });
+ 
+    $( "button" ).button();
+  } );
+ 
+// For tabs
+$( "#tabs" ).tabs();
+
+$( function() {
+    var availableTags = [
+      "VP", "NP", "ADVP", "SFP", "CC", "VB", "NN", 
+	  
+    ];
+    $( "#gen-new-node" ).autocomplete({
+      source: availableTags
+    });
+  } );
+</script>
+<!-- end Tabs -->
+  </body>
+
+</html>
