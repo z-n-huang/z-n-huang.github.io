@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Phrase structure tree editor</title>
   <!-- link rel="icon" href="img/logo.png"-->
+  <!-- File reading works only if this page is run from a local server, like static-server -->
   <!-- Start tabs -->
   <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
   <!-- end tabs -->
@@ -493,7 +494,7 @@
 	    //trees = rawtext.split("\r\n\r\n").split("\n\n");
 		trees = rawtext.split("\n\n");
 		}, 'text');
-	//console.log(trees);
+		console.log(trees);
 	
 	// For spinner
   $( function() {
