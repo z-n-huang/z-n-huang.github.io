@@ -263,7 +263,7 @@
 	  d = d.replace(/\n$/, ""); // remove trailing \n
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace brackets
 	  console.log(d)
-	  d = d.replace(/(\w+\$*)/g, '"$1", ');
+	  d = d.replace(/([\w+\'\-\.\,]\$*)/g, '"$1", ');
 	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
 	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
 	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
