@@ -93,6 +93,7 @@
 	<ul style = "position: fixed; width:98%; z-index:10;">
 		<li><a href="#tabs-1">Tree</a></li>
 		<li><a href="#tabs-export">Bracketed form</a></li>
+		<li><a href="#tabs-all-trees">All edited trees</a></li>
 		<li><a href="#tabs-help">Help</a></li>
 		<li><a href="#tabs-license">About</a></li>
 	</ul>
@@ -168,7 +169,10 @@
 	</div>	
 	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
 		<button type="button" id="btn-export">Generate</button><br />
-		<textarea id = "hierarchy-str" rows="20" cols="50"></textarea>
+		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea>
+	</div>
+	<div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
+		<textarea id = "all-strs" rows="20" cols="50" style="font-size: 10pt; font-family:monospace;"></textarea>
 	</div>
 	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
 	<h2>What this interface does</h2>
@@ -179,10 +183,13 @@
 			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
 			<li>Display tree: Click the "Display" button.
 			<li>Edit tree: see below.
-			<li>View edited tree: To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate".
-			<ul>
-			<li>**Warning**: there is still much manual intervention needed. Users need to copy and paste finalised trees to a text file and vice versa. (See wishlist below.)
-			</ul>
+			<li>View edited tree: To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate". 
+			<li>Save a tree: Click the "Log" button. The current version of the tree will be added to the textbox in "All edited trees". Copy and paste from this textbox to a text file. (Much manual intervention needed. See wishlist below.)
+			<b>Be careful:</b>
+				<ul>
+				<li>If you click on the "Log" button for the same tree multiple times, multiple copies of the tree will be added.
+				<li>If you accidentally close the window or hit the Refresh button, <u>all edits will be lost</u>!
+				</ul>		
 			</ol>
 		
 		<h2>How to edit a tree</h2>
@@ -484,7 +491,8 @@
 		$('#hierarchy-str').html(string);
 		var spinnerVal = document.getElementById("spinner").value;// spinner.spinner("value")
 		//console.log(spinnerVal, string);
-		
+		$('#all-strs').append("\n// Tree id: " + spinnerVal.toString() + "\n\n");
+		$('#all-strs').append(string);
 		updatedTrees[spinnerVal] = string;
       //}
     });
