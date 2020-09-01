@@ -157,6 +157,7 @@
 		</span>
 		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
 		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
+		<button type="button" id="btn-export" style = "background-color: #7f8">Log</button>
 		<!-- z-n-huang removed --><!--button type="button" id="btn-reset">Reset</button-->
 		
 		<br />
@@ -180,7 +181,7 @@
 			<li>Edit tree: see below.
 			<li>View edited tree: To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate".
 			<ul>
-			<li>**Warning**: there is still much manual intervention needed. Users need to copy and paste trees from a text file to the browser and vice versa. (See wishlist below.)
+			<li>**Warning**: there is still much manual intervention needed. Users need to copy and paste finalised trees to a text file and vice versa. (See wishlist below.)
 			</ul>
 			</ol>
 		
@@ -221,7 +222,7 @@
   <script type="text/javascript" src="js/jquery.orgchart.js"></script>
 
   <script type="text/javascript">
-	
+	var updatedTrees = {};
 	function jsonTree() {
 		$('#chart-container').html('');
 		$('#hierarchy-str').html('');
@@ -265,7 +266,7 @@
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
 	  d = d.replace(/(\[)(\w+)/g, '$1"$2", '); // For tags
 	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
-	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s+)/g, '$1"$2", $3'); // For S
+	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
 	  d = d.replace(/\s+(\S+?)(\])/g, ' "$1" $2'); // Terminal nodes
 	  console.log(99, d)
 	  //d = d.replace(/(\w+\$*)/g, '"$1", ');
@@ -481,6 +482,10 @@
 		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
 		//replace(/(\))(\n)(\s*)/g, "$1$2")
 		$('#hierarchy-str').html(string);
+		var spinnerVal = document.getElementById("spinner").value;// spinner.spinner("value")
+		//console.log(spinnerVal, string);
+		
+		updatedTrees[spinnerVal] = string;
       //}
     });
   
@@ -503,37 +508,48 @@
 		}, 'text');
 	console.log(trees);
 	
+	// For simplifying the generation of trees
+	// When you click the Bracketed Form ("tabs-export") tab
+	$(document).ready(function() { 
+		$( "#tabs-export" ).click(function(event) { 
+			console.log(88)
+			// Click the "Generate" button as well
+			$("btn-export").click();
+			}
+		) }
+	)
+	
 	// For spinner
-  $( function() {
-    var spinner = $( "#spinner" ).spinner();
- 
-    $( "#disable" ).on( "click", function() {
-      if ( spinner.spinner( "option", "disabled" ) ) {
-        spinner.spinner( "enable" );
-      } else {
-        spinner.spinner( "disable" );
-      }
-    });
-    $( "#destroy" ).on( "click", function() {
-      if ( spinner.spinner( "instance" ) ) {
-        spinner.spinner( "destroy" );
-      } else {
-        spinner.spinner();
-      }
-    });
-    $( "#getvalue" ).on( "click", function() {
-      //alert( trees[spinner.spinner( "value" )] );
-	  $('#brackets-input').val( 
-		trees[spinner.spinner( "value" )]
-		);
-	  $('#gen-tree').click();
-    });
-    $( "#setvalue" ).on( "click", function() {
-      spinner.spinner( "value", 5 );
-    });
- 
-    $( "button" ).button();
-  } );
+	$( function() {
+		var spinner = $( "#spinner" ).spinner();
+	 
+		$( "#disable" ).on( "click", function() {
+		  if ( spinner.spinner( "option", "disabled" ) ) {
+			spinner.spinner( "enable" );
+		  } else {
+			spinner.spinner( "disable" );
+		  }
+		});
+		$( "#destroy" ).on( "click", function() {
+		  if ( spinner.spinner( "instance" ) ) {
+			spinner.spinner( "destroy" );
+		  } else {
+			spinner.spinner();
+		  }
+		});
+		$( "#getvalue" ).on( "click", function() {
+		  //alert( trees[spinner.spinner( "value" )] );
+		  $('#brackets-input').val( 
+			trees[spinner.spinner( "value" )]
+			);
+		  $('#gen-tree').click();
+		});
+		$( "#setvalue" ).on( "click", function() {
+		  spinner.spinner( "value", 5 );
+		});
+	 
+		$( "button" ).button();
+	  } );
  
 // For select menu
 $( "#selectmenu" ).selectmenu();
