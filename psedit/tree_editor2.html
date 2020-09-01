@@ -262,17 +262,22 @@
 	  d = d.replace(/\s\s+/g, '').replace(/\t/g, ''); // trim extra whitespace
 	  d = d.replace(/\n$/, ""); // remove trailing \n
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace brackets
-	  console.log(d)
-	  d = d.replace(/([\w+\'\-\.\,]\$*)/g, '"$1", ');
+	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
+	  d = d.replace(/(\[)(\w+)/g, '$1"$2", '); // For tags
+	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
+	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s+)/g, '$1"$2", $3'); // For S
+	  d = d.replace(/\s+(\S+?)(\])/g, ' "$1" $2'); // Terminal nodes
+	  console.log(99, d)
+	  //d = d.replace(/(\w+\$*)/g, '"$1", ');
 	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
 	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
 	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
 	  d = d.trim().substring(0, d.length -1); // changes last "]," to "]"
 	  if (d.substr(-1) == ",") {
 		 d = d.substring(0, d.length -1);
-		 console.log(d);
+		 console.log(999, d);
 	  }
-
+	  //console.log(98, d)
 	  var tree = JSON.parse(d); // z-n-huang added: generate a dictionary
 	  
 	  datascource = tree2dict(tree); // z-n-huang added: transform dictionary to JSON format

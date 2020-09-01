@@ -253,7 +253,7 @@
 	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
 	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
 	  d = d.trim().substring(0, d.length -1); // changes last "]," to "]"
-	  		
+	  		console.log(99, d)
 	  var tree = JSON.parse(d); // z-n-huang added: generate a dictionary
 	  
 	  var datascource = tree2dict(tree); // z-n-huang added: transform dictionary to JSON format
