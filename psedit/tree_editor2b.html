@@ -478,7 +478,24 @@
 	// z-n-huang: for generating pros and traces
 	$('#btn-pro').on('click', function() {
 		var $chartContainer = $('#chart-container');
+		var $chartContainer = $('#chart-container');
+		var nodeVals = [];
+		$('#new-nodelist').find('.new-node').each(function(index, item) {
+			var validVal = item.value.trim();
+			if (validVal.length) {
+			  nodeVals.push("prox");
+			}
+		});
+		// z-n-huang: Add names
+		var nodeValsName = [];
+		$('#new-nodelist').find('.new-node-name').each(function(index, item) {
+			var validValName = item.value.trim();
+			if (validValName.length) {
+			  nodeValsName.push(validValName);
+			}
+		});
 		var $node = $('#selected-node').data('node');
+		
 		oc = $chartContainer.orgchart({
             'data' : { 'name': 'NP' }, // z-n-huang: this is where the node info gets added
             'exportButton': true,
@@ -490,7 +507,6 @@
         oc.$chart.addClass('view-state');
 		var rel = nodeVals.length > 1 ? '110' : '100';
      	oc.addChildren($node, nodeVals.map(function (item) {
-		console.log(nodeValsName);
 		  return { 'name': item, 'title': '*PRO*', 'relationship': rel, 'id': getId() };
 		}));
 	  
