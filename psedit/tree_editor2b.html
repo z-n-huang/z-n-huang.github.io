@@ -477,6 +477,7 @@
 	
 	// z-n-huang: for generating pros and traces
 	$('#btn-pro').on('click', function() {
+		var $chartContainer = $('#chart-container');
 		var $node = $('#selected-node').data('node');
 		oc = $chartContainer.orgchart({
             'data' : { 'name': 'NP' }, // z-n-huang: this is where the node info gets added
