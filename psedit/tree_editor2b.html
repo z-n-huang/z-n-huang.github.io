@@ -159,8 +159,10 @@
 		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
 		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
 		<button type="button" id="btn-export" style = "background-color: #7f8">Log</button>
-		<button type="button" id="btn-trace" style = "background-color: #7f8">Add trace</button>
-		<button type="button" id="btn-pro" style = "background-color: #7f8">Add pro</button>
+		<button type="button" id="btn-pro"  style = "display: none; ">Add pro</button>
+		<button type="button" id="btn-trace" style = "display: none; ">Add argument trace</button>
+		<button type="button" id="btn-adj-trace" style = "display: none; ">Add adjunct trace</button>
+		
 		<!-- z-n-huang removed --><!--button type="button" id="btn-reset">Reset</button-->
 		
 		<br />
@@ -193,6 +195,27 @@
 				<li>If you accidentally close the window or hit the Refresh button, <u>all edits will be lost</u>!
 				</ul>		
 			</ol>
+	
+		<h2>Keyboard shortcuts</h2>
+		<ol>
+			<li>Log tree: shift-s (*s*ave)
+			<li>Delete: F6
+			<li>Add terminal nodes
+			<ol>
+				<li>Add pro: shift-0 (zero)
+				<li>Add argument trace: shift-g
+				<li>Add adjunct trace: shift-j
+				<li>Add null complementizer: shift-c
+			</ol>
+			<li>Modify nonterminal nodes
+			<ol>
+				<li>Edit (change) label: shift-e OR ` (the key on the left of "1", "unshifted" tilde)
+				<li>Add flag to label: shift-f
+				<li>Add a PRN/Parenthetical nonterminal node: shift-p
+				<li>Add a INTJ/Interjection nonterminal node: shift-i
+				<li>Add a EDITED/restarts nonterminal node: shift-r
+			</ol>
+		</ol>
 		
 		<h2>How to edit a tree</h2>
 			<ol>
@@ -215,6 +238,7 @@
 			<li>Click "Update" button. The new node will appear on the right edge.
 			</ol>
 		</ol>
+	
 			
 		<h2>Wishlist, in descending order of priority</h2>
 		<ol>
@@ -385,7 +409,7 @@
           nodeVals.push(validVal);
         }
       });
-	  // z-n-huang: Add names
+	  // z-n-huang: Add names = leaves
 	  var nodeValsName = [];
       $('#new-nodelist').find('.new-node-name').each(function(index, item) {
         var validValName = item.value.trim();
@@ -443,11 +467,12 @@
         if (!hasChild) {
 		  var rel = nodeVals.length > 1 ? '110' : '100';
           oc.addChildren($node, nodeVals.map(function (item) {
-			console.log(nodeValsName);
+			//console.log(nodeValsName, nodeVals);
               return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
             }));
         } else {
           oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+			//console.log(nodeValsName, nodeVals);
               return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
             }));
         }
@@ -477,40 +502,101 @@
 	
 	// z-n-huang: for generating pros and traces
 	$('#btn-pro').on('click', function() {
-		var $chartContainer = $('#chart-container');
-		var $chartContainer = $('#chart-container');
-		var nodeVals = [];
-		$('#new-nodelist').find('.new-node').each(function(index, item) {
-			var validVal = item.value.trim();
-			if (validVal.length) {
-			  nodeVals.push("prox");
-			}
-		});
-		// z-n-huang: Add names
-		var nodeValsName = [];
-		$('#new-nodelist').find('.new-node-name').each(function(index, item) {
-			var validValName = item.value.trim();
-			if (validValName.length) {
-			  nodeValsName.push(validValName);
-			}
-		});
+		var nodeVals = ["NP"]; // label
+		var nodeValsName = ["*pro*"]; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	
+	// z-n-huang: for generating argument traces
+	$('#btn-trace').on('click', function() {
+		var nodeVals = ["NP"]; // label
+		var nodeValsName = prompt("Index?", 1);; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': "*-"+nodeValsName[0].toString(), 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	// z-n-huang: for generating adjunct traces
+	$('#btn-adj-trace').on('click', function() {
+		var nodeVals = ["ADVP"]; // label
+		var nodeValsName = prompt("Index?", 1);; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': "*-"+nodeValsName[0].toString(), 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	
+	// z-n-huang: for generating nonterminal nodes
+	function nonterm(nontermlabel) {
+		var nodeVals = [nontermlabel]; // label
+		var nodeValsName = []
 		var $node = $('#selected-node').data('node');
 		
-		oc = $chartContainer.orgchart({
-            'data' : { 'name': 'NP' }, // z-n-huang: this is where the node info gets added
-            'exportButton': true,
-            'exportFilename': 'SportsChart',
-            'createNode': function($node, data) {
-              $node[0].id = getId();
-            }
-          });
-        oc.$chart.addClass('view-state');
-		var rel = nodeVals.length > 1 ? '110' : '100';
-     	oc.addChildren($node, nodeVals.map(function (item) {
-		  return { 'name': item, 'title': '*PRO*', 'relationship': rel, 'id': getId() };
-		}));
-	  
-	})
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+	}
+	// z-n-huang: for adding flags to nonterminal nodes
+	function addFlag() {
+		var $node = $('#selected-node').data('node');
+		var flag = prompt("Flag:", '');
+		var currentLabel = $node[0].innerText;
+		oc.editLabel($node, currentLabel + '-'+flag.toString().toUpperCase())
+	}
+	
+	// z-n-huang: for changing a label
+	function changeLabel() {
+		var newLabel = prompt("New label:", '');
+		var nodeVals = [newLabel.toUpperCase()] // label
+		var nodeValsName = []; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, nodeVals, $node[0].id);
+		
+        oc.editLabel($node, nodeVals.map(function (item) {
+			return item;
+		}))
+	}
 	// z-n-huang: for generating updated tree
   	$('#btn-export').on('click', function() {
       
@@ -541,6 +627,7 @@
 <!-- Added by NH, for reading text files and displaying information in tabs and spinners -->
 <!--script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script-->
 	<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+	<script src="jquery-ui-1.12.1/jquery.hotkeys.js"></script>
 
 	<script type="text/javascript">
 	// For reading a text file
@@ -565,6 +652,25 @@
 		) }
 	)
 	
+	// For keyboard shortcuts ("Hot keys")
+	$(document).bind('keydown', 'shift+s', function(event) { $('#btn-export').click() }); // *s*ave
+	$(document).bind('keydown', 'f6', function(event) { $('#btn-delete-nodes').click() }); // delete has 6 letters (intentionally not mnemonic, to reduce risk of unintended deletion)
+	$(document).bind('keydown', 'shift+e', function(event) { changeLabel(); }); // *e*dit label; PRN
+	$(document).bind('keydown', '`', function(event) { changeLabel(); }); // alternative - only one keystroke needed
+	
+	$(document).bind('keydown', 'shift+0', function(event) { $('#btn-pro').click() }); // 0 (phonologically null)
+	$(document).bind('keydown', 'shift+g', function(event) { $('#btn-trace').click() }); // ar*g*ument
+	$(document).bind('keydown', 'shift+j', function(event) { $('#btn-adj-trace').click() }); // ad*j*unct
+	// Null complementizer
+	$(document).bind('keydown', 'shift+c', function(event) { $('#btn-pro').click() }); // *c*omp
+	// SBAR
+	$(document).bind('keydown', 'shift+f', function(event) { addFlag() }); // Add *f*lag
+	// 
+	$(document).bind('keydown', 'shift+p', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
+	$(document).bind('keydown', 'shift+i', function(event) { nonterm('INTJ'); }); // *i*nterjection; INTJ
+	$(document).bind('keydown', 'shift+r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
+	
+
 	// For spinner
 	$( function() {
 		var spinner = $( "#spinner" ).spinner();
