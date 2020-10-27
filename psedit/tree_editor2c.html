@@ -172,13 +172,13 @@
 		<div id= "chart-container" style ="position:absolute; top:100px; z-index:-4"></div>
 	</div>	
 	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
-		<button type="button" id="btn-export">Generate</button><br />
+		<!-- button type="button" id="btn-export">Generate</button><br / -->
 		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea>
 	</div>
 	<div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
-		<button id="create">Create file with all trees</button>
-		<a download="current_all_trees.txt" id="downloadlink" style="display: none">Download</a>
 		<textarea id = "all-strs" rows="20" cols="50" style="font-size: 10pt; font-family:monospace;"></textarea>
+		<button id="btn-export-txt">Export all trees to txt file</button>
+		<a download="current_all_trees.txt" id="downloadlink" style="display: none">Download</a>
 	</div>
 	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
 	<h2>What this interface does</h2>
@@ -189,8 +189,8 @@
 			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
 			<li>Display tree: Click the "Display" button.
 			<li>Edit tree: see below.
-			<li>View edited tree: To view the revised bracketed version of the tree, click on "Bracketed form" tab, and then click "Generate". 
-			<li>Save a tree: Click the "Log" button. The current version of the tree will be added to the textbox in "All edited trees". Copy and paste from this textbox to a text file. (Much manual intervention needed. See wishlist below.)
+			<li>View edited tree: To view the revised bracketed version of the tree, first log the tree ("Log" button or shift-s), then click on "Bracketed form" tab. 
+			<li>Save a tree: Click the "Log" button (shift-s). The current version of the tree will be added to the textbox in "All edited trees". Copy and paste from this textbox to a text file. (Much manual intervention needed. See wishlist below.) Alternatively: on the "All edited trees" tab, click "Export all trees to txt file" (shift-x); click on the link to download.
 			<b>Be careful:</b>
 				<ul>
 				<li>If you click on the "Log" button for the same tree multiple times, multiple copies of the tree will be added.
@@ -200,7 +200,8 @@
 	
 		<h2>Keyboard shortcuts</h2>
 		<ol>
-			<li>Log tree: shift-s (*s*ave)
+			<li>Log tree inside browser: shift-s (*s*ave)
+			<li>Export all trees -- including edited ones -- to text file: shift-x (e*x*port; this is the same as clicking on the button)
 			<li>Delete: F6
 			<li>Add terminal nodes
 			<ol>
@@ -681,6 +682,10 @@
 	
 	// For keyboard shortcuts ("Hot keys")
 	$(document).bind('keydown', 'shift+s', function(event) { $('#btn-export').click() }); // *s*ave
+	$(document).bind('keydown', 'shift+x', function(event) { $('#btn-export').click(); // save...
+															 $('#btn-export-txt').click(); //...then export
+															 $('#downloadlink').click(); //...then click on downloadlink
+															}); // e*x*port
 	$(document).bind('keydown', 'f9', function(event) { $('#btn-delete-nodes').click() }); // (intentionally not mnemonic, to reduce risk of unintended deletion)
 	$(document).bind('keydown', 'shift+e', function(event) { changeLabel(); }); // *e*dit label; PRN
 	$(document).bind('keydown', '`', function(event) { changeLabel(); }); // alternative - only one keystroke needed
@@ -752,7 +757,7 @@
 		  };
 
 
-	var create = document.getElementById('create');
+	var create = document.getElementById('btn-export-txt');
 		// textbox = document.getElementById('textbox'); // NH: no need for a textbox link
 
 	create.addEventListener('click', function () {
