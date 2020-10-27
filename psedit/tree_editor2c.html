@@ -764,6 +764,14 @@
 		var link = document.getElementById('downloadlink');
 		link.href = makeTextFile(updatedTreesArray.join('\n\n'));
 		link.style.display = 'block';
+		
+		 // wait for the link to be added to the document
+		window.requestAnimationFrame(function () {
+		  var event = new MouseEvent('click');
+		  link.dispatchEvent(event);
+		  //document.body.removeChild(link);
+		});
+
 	  }, false);
 
 	$( function() {
