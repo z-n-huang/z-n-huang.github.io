@@ -11,11 +11,11 @@
 (ROOT
   (S (CC Or)
     (ADVP (RB actually))
-    (NP (PRP I))
+    (NP (PRP$ I))
     (VP (VBP come)
       (PP (IN from)
         (NP (DT a)
-          (ADJP (RB very) (JJ average))
+          (ADJP (RB$ very) (JJ average))
           (NN family))))
     (. .)))
 

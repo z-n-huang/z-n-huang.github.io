@@ -207,10 +207,10 @@
 	
 		<h2>Keyboard shortcuts</h2>
 		<ol>
-			<li>Log tree inside browser: shift-s (*s*ave)
+			<li>Log tree inside browser: shift-l (*l*og)
 			<li>Export all trees -- including edited ones -- to text file: shift-x (e*x*port; this is the same as clicking on the button)
 			<li>Save current tree and then view next tree: shift+. (i.e. ">". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
-			<li>Delete: F6
+			<li>Delete: F9
 			<li>Add terminal nodes
 			<ol>
 				<li>Add pro: shift-0 (zero)
@@ -226,6 +226,8 @@
 				<li>Add a new PRN/Parenthetical nonterminal node: shift-p
 				<li>Add a new INTJ/Interjection nonterminal node: shift-u
 				<li>Add a new EDITED/restarts nonterminal node: shift-r
+				<li>Add a new S nonterminal node: shift-s
+				<li>Add a new VP nonterminal node: shift-v
 				
 			</ol>
 		</ol>
@@ -306,7 +308,7 @@
 	  // z-n-huang added: Converts tree in round brackets/parentheses format into a JS array
 	  d = $('#brackets-input').val(); // get input from "brackets-input"
 	  //d = d.replace(/\'/g, "\'")// fix apostrophes
-	  d = d.replace('\$', 'S'); // convert $
+	  d = d.replace(/\$/g, 'S'); // convert $
 	  d = d.replace(/\s\s+/g, '').replace(/\t/g, ''); // trim extra whitespace
 	  d = d.replace(/\n$/, ""); // remove trailing \n
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace brackets
@@ -646,7 +648,7 @@
 		string = string.replace(/(\w)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
 		string = string.replace(/([\.\,\?\!\\\/]+)(\n)(\s*)([\.\,\?\!\\\/]+)/g, '$1 $4'); // punctuation
 		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
-		string = string.replace("\(\)", "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
+		string = string.replace(/\(\)/g, "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
 		string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
 		//replace(/(\))(\n)(\s*)/g, "$1$2")
 		$('#hierarchy-str').html(string);
@@ -713,12 +715,12 @@
 	)
 	
 	// For keyboard shortcuts ("Hot keys")
-	$(document).bind('keydown', 'shift+s', function(event) { $('#btn-export').click() }); // *s*ave
+	$(document).bind('keydown', 'shift+l', function(event) { $('#btn-export').click() }); // *l*og
 	$(document).bind('keydown', 'shift+x', function(event) { $('#btn-export').click(); // save...
 															 $('#btn-export-txt').click(); //...then export
 															 $('#downloadlink').click(); //...then click on downloadlink
 															}); // e*x*port
-	$(document).bind('keydown', 'shift+.', function(event) { $('#btn-export').click(); // save 
+	$(document).bind('keydown', 'shift+z', function(event) { $('#btn-export').click(); // save 
 															 document.getElementById("spinner").value = parseInt(document.getElementById("spinner").value) +1; //increment
 															 $('#getvalue').click(); //...and go to next tree ">"
 															}); 
@@ -726,22 +728,27 @@
 	$(document).bind('keydown', 'shift+e', function(event) { changeLabel(); }); // *e*dit label
 	$(document).bind('keydown', '`', function(event) { changeLabel(); }); // alternative - only one keystroke needed
 	
-	$(document).bind('keydown', 'shift+0', function(event) { $('#btn-pro').click() }); // 0 (phonologically null)
-	$(document).bind('keydown', 'shift+g', function(event) { $('#btn-trace').click() }); // ar*g*ument
-	$(document).bind('keydown', 'shift+j', function(event) { $('#btn-adj-trace').click() }); // ad*j*unct
-	$(document).bind('keydown', 'shift+4', function(event) { $('#btn-comp').click() }); // Null *c*omp
+	$(document).bind('keydown', '0', function(event) { $('#btn-pro').click() }); // 0 (phonologically null)
+	$(document).bind('keydown', '3', function(event) { $('#btn-pro').click() }); // alternative -- (phonologically null)
+	$(document).bind('keydown', 'g', function(event) { $('#btn-trace').click() }); // ar*g*ument
+	$(document).bind('keydown', 'j', function(event) { $('#btn-adj-trace').click() }); // ad*j*unct
+	$(document).bind('keydown', '4', function(event) { $('#btn-comp').click() }); // Null *c*omp
 	
-	$(document).bind('keydown', 'shift+i', function(event) { oc.editLabel($('#selected-node').data('node'), 
+	$(document).bind('keydown', 'i', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['INTJ'].map(function (item) {
 																return item;
 															})); }); // change a current label to INTJ
-	$(document).bind('keydown', 'shift+f', function(event) { addFlag() }); // Add *f*lag
-	// 
-	$(document).bind('keydown', 'shift+p', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
-	$(document).bind('keydown', 'shift+u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
-	$(document).bind('keydown', 'shift+r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
-	$(document).bind('keydown', 'shift+t', function(event) { nonterm('TOPICP'); }); // *t*opicP;
-	$(document).bind('keydown', 'shift+c', function(event) { nonterm('CP'); }); // *C*omplementizerP;
+	$(document).bind('keydown', 'f', function(event) { addFlag() }); // Add *f*lag
+	$(document).bind('keydown', 'n', function(event) { var newLabel = prompt("New label:", '');
+															 nonterm(newLabel.toUpperCase()); }); // Add a new *n*onterminal
+	
+	$(document).bind('keydown', 'q', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
+	$(document).bind('keydown', 's', function(event) { nonterm('S'); }); // Add a S node (useful for parentheticals)
+	$(document).bind('keydown', 'v', function(event) { nonterm('VP'); }); // Add a VP node (useful for null copulas)
+	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
+	$(document).bind('keydown', 'r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
+	$(document).bind('keydown', 't', function(event) { nonterm('TOPICP'); }); // *t*opicP;
+	$(document).bind('keydown', 'c', function(event) { nonterm('CP'); }); // *C*omplementizerP;
 
 	// For spinner
 	$( function() {
