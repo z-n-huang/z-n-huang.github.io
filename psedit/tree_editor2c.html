@@ -305,18 +305,24 @@
 	  var oc = "";
 	  var hierarchy = "";
 	  
+	  console.log(899, d)
 	  // z-n-huang added: Converts tree in round brackets/parentheses format into a JS array
 	  d = $('#brackets-input').val(); // get input from "brackets-input"
 	  //d = d.replace(/\'/g, "\'")// fix apostrophes
-	  d = d.replace(/\$/g, 'S'); // convert $
+	  d = d.replace(/\$/g, '\$'); // convert $
 	  d = d.replace(/\s\s+/g, '').replace(/\t/g, ''); // trim extra whitespace
+	  d = d.replace(/(\s+)(\))/g, '$2'); // trim extra whitespace before close parenthesis
 	  d = d.replace(/\n$/, ""); // remove trailing \n
-	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace brackets
+	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace ( or ) with [ or ]
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
-	  d = d.replace(/(\[)(\w+)/g, '$1"$2", '); // For tags
+	  d = d.replace(/(\[)([\w-\$]+)/g, '$1"$2", '); // For tags
 	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
 	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
-	  d = d.replace(/\s+(\S+?)(\])/g, ' "$1" $2'); // Terminal nodes
+	  d = d.replace(/(\[)(\`\`)(\s+)/g, '$1"LDQT", '); // For quote tags, convert `` to LDQT
+	  d = d.replace(/(\[)(\'\')(\s+)/g, '$1"RDQT", '); // For quote tags, convert '' to RDQT
+	  d = d.replace(/(\[)(\`)(\s+)/g, '$1"LSQT", '); // For quote tags, convert ` to LSQT
+	  d = d.replace(/(\[)(\')(\s+)/g, '$1"RSQT", '); // For quote tags, convert ' to RSQT
+	  d = d.replace(/\s+(\S+?)(\s*)(\])/g, ' "$1" $3'); // Terminal nodes
 	  console.log(99, d)
 	  //d = d.replace(/(\w+\$*)/g, '"$1", ');
 	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
@@ -645,11 +651,15 @@
 		string = string.replace(/\"lex\": \"\*\*\*\",\n/g, '').replace(/\"category\": \"/g, '').replace(/\"children\": \[\n/g, '');
 		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
 		string = string.replace(/(\()(\n)(\s*)/g, "$1").replace(/    /g, " "); // no "stray" left parentheses; remove extra spaces
-		string = string.replace(/(\w)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
-		string = string.replace(/([\.\,\?\!\\\/]+)(\n)(\s*)([\.\,\?\!\\\/]+)/g, '$1 $4'); // punctuation
+		string = string.replace(/(\w\$*)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
+		string = string.replace(/([\.\,\?\!\\\/\`\']+)(\n)(\s*)([\.\,\?\!\\\/\`\"]+)/g, '$1 $4'); // punctuation
 		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
 		string = string.replace(/\(\)/g, "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
-		string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
+		//string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
+		string = string.replace("LDQT", "``"); // Replace quotes
+		string = string.replace("RDQT", "''"); // Replace quotes
+		string = string.replace("LSQT", "`"); // Replace quotes
+		string = string.replace("RSQT", "'"); // Replace quotes
 		//replace(/(\))(\n)(\s*)/g, "$1$2")
 		$('#hierarchy-str').html(string);
 		var spinnerVal = document.getElementById("spinner").value;// spinner.spinner("value")
@@ -698,6 +708,10 @@
 		rawtext = reader.result;
 		trees = rawtext.split("\n\r");
 	    updatedTreesArray = rawtext.split("\n\r");
+		if (updatedTreesArray.length == 1) {
+			trees = rawtext.split("\n\n");
+			updatedTreesArray = rawtext.split("\n\n");
+			}
 	  };
 	  reader.readAsText(this.files[0]);
 	});
@@ -720,19 +734,30 @@
 															 $('#btn-export-txt').click(); //...then export
 															 $('#downloadlink').click(); //...then click on downloadlink
 															}); // e*x*port
+	// Save and move to next tree
 	$(document).bind('keydown', 'shift+z', function(event) { $('#btn-export').click(); // save 
 															 document.getElementById("spinner").value = parseInt(document.getElementById("spinner").value) +1; //increment
 															 $('#getvalue').click(); //...and go to next tree ">"
 															}); 
+	// Move to next tree without saving
+	$(document).bind('keydown', 'shift+.', function(event) {
+															 document.getElementById("spinner").value = parseInt(document.getElementById("spinner").value) +1; //increment
+															 $('#getvalue').click(); //...and go to next tree ">"
+															});
+															
 	$(document).bind('keydown', 'f9', function(event) { $('#btn-delete-nodes').click() }); // (intentionally not mnemonic, to reduce risk of unintended deletion)
+	$(document).bind('keydown', 'shift+2', function(event) { $('#btn-delete-nodes').click() }); // Alternative (intentionally not mnemonic, to reduce risk of unintended deletion)
 	$(document).bind('keydown', 'shift+e', function(event) { changeLabel(); }); // *e*dit label
 	$(document).bind('keydown', '`', function(event) { changeLabel(); }); // alternative - only one keystroke needed
 	
-	$(document).bind('keydown', '0', function(event) { $('#btn-pro').click() }); // 0 (phonologically null)
-	$(document).bind('keydown', '3', function(event) { $('#btn-pro').click() }); // alternative -- (phonologically null)
+	$(document).bind('keydown', '0', function(event) { $('#btn-pro').click() }); // 0 to add pro
 	$(document).bind('keydown', 'g', function(event) { $('#btn-trace').click() }); // ar*g*ument
 	$(document).bind('keydown', 'j', function(event) { $('#btn-adj-trace').click() }); // ad*j*unct
 	$(document).bind('keydown', '4', function(event) { $('#btn-comp').click() }); // Null *c*omp
+	$(document).bind('keydown', '3', function(event) { $('#btn-pro').click() }); // alternative for pro
+	$(document).bind('keydown', '2', function(event) { $('#btn-trace').click() }); // alternative for argument
+	$(document).bind('keydown', '1', function(event) { $('#btn-trace').click() }); // alternative for adjunct
+
 	
 	$(document).bind('keydown', 'i', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['INTJ'].map(function (item) {
@@ -746,6 +771,7 @@
 	$(document).bind('keydown', 's', function(event) { nonterm('S'); }); // Add a S node (useful for parentheticals)
 	$(document).bind('keydown', 'v', function(event) { nonterm('VP'); }); // Add a VP node (useful for null copulas)
 	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
+	$(document).bind('keydown', 'w', function(event) { nonterm('INTJ'); }); // alternative - interjection; INTJ
 	$(document).bind('keydown', 'r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
 	$(document).bind('keydown', 't', function(event) { nonterm('TOPICP'); }); // *t*opicP;
 	$(document).bind('keydown', 'c', function(event) { nonterm('CP'); }); // *C*omplementizerP;
