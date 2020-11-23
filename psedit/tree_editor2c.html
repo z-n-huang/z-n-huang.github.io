@@ -627,7 +627,11 @@
 		var currentLabel = $node[0].innerText;
 		oc.editLabel($node, currentLabel + '-'+flag.toString().toUpperCase())
 	}
-	
+	function addSpecifiedFlag(flag) {
+		var $node = $('#selected-node').data('node');
+		var currentLabel = $node[0].innerText;
+		oc.editLabel($node, currentLabel + '-'+flag.toString().toUpperCase())
+	}	
 	// z-n-huang: for changing a label
 	function changeLabel() {
 		var newLabel = prompt("New label:", '');
@@ -764,7 +768,8 @@
 																return item;
 															})); }); // change a current label to INTJ
 	$(document).bind('keydown', 'f', function(event) { addFlag() }); // Add *f*lag
-	$(document).bind('keydown', 'n', function(event) { var newLabel = prompt("New label:", '');
+	$(document).bind('keydown', 'shift+a', function(event) { addSpecifiedFlag('ADV'); }); // *A*DV flag
+	$(document).bind('keydown', 'shift+n', function(event) { var newLabel = prompt("New label:", '');
 															 nonterm(newLabel.toUpperCase()); }); // Add a new *n*onterminal
 	
 	$(document).bind('keydown', 'q', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
@@ -775,6 +780,7 @@
 	$(document).bind('keydown', 'r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
 	$(document).bind('keydown', 't', function(event) { nonterm('TOPICP'); }); // *t*opicP;
 	$(document).bind('keydown', 'c', function(event) { nonterm('CP'); }); // *C*omplementizerP;
+	$(document).bind('keydown', 'n', function(event) { nonterm('NP'); }); // *N*P;
 
 	// For spinner
 	$( function() {
