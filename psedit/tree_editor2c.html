@@ -93,7 +93,7 @@
 	<ul style = "position: fixed; width:98%; z-index:10;">
 		<li><a href="#tabs-1">Tree</a></li>
 		<li><a href="#tabs-export">Bracketed form</a></li>
-		<li><a href="#tabs-all-trees">All edited trees</a></li>
+		<!-- li><a href="#tabs-all-trees">All edited trees</a></li-->
 		<li><a href="#tabs-help">Help</a></li>
 		<li><a href="#tabs-license">About</a></li>
 		<li><input type="file" id="fileInput" style = "position: relative; right: -40px;"></li>
@@ -174,16 +174,16 @@
 		
 		<div id= "chart-container" style ="position:absolute; top:100px; z-index:-4"></div>
 	</div>	
-	<div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
+	<!--div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
 		<textarea id = "all-strs" rows="20" cols="50" style="font-size: 10pt; font-family:monospace;"></textarea>
 		<br />
-		<button id="btn-export-txt">Export all trees to txt file</button>
 		<!--a download="current_all_trees.txt" id="downloadlink" style="display: none">Download</a-->
-	</div>
+	</div-->
 	
 	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
 		<!-- button type="button" id="btn-export">Generate</button><br / -->
-		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea>
+		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea><br / >
+		<button id="btn-export-txt">Export all trees to txt file</button>
 	</div>
 	
 	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
@@ -191,46 +191,49 @@
 	This interface reads in a text file containing a set of Penn Treebank-style parses. It then displays the parses in tree form. Users can edit the parse with by dragging and dropping nodes in the tree. Edited trees can then be converted into Penn Treebank-style bracketed forms.
 		<h2>General procedure</h2>
 			<ol>
-			<li>Get a tree: Enter the index (the serial number, so to speak) of the tree in the Index box. Click the "Get tree" button.
+			<li>Load a file: Click on "Choose file", find the right .txt file withe parses. Once you hit OK, the file will be loaded.
+			<li>Load a tree: Enter the index (the serial number of a tree, so to speak) of the tree in the Index box. Click the "Load" button.
 			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
-			<li>Display tree: Click the "Display" button.
+			<li>Display tree: Click the "Display" button to visualise the tree in the Input box.
 			<li>Edit tree: see below.
-			<li>View edited tree: To view the revised bracketed version of the tree, first log the tree ("Log" button or shift-s), then click on "Bracketed form" tab. 
-			<li>Save a tree: Click the "Log" button (shift-s). The current version of the tree will be added to the textbox in "All edited trees". Copy and paste from this textbox to a text file. (Much manual intervention needed. See wishlist below.) 
-			<li>Export a tree: On the "All edited trees" tab, click "Export all trees to txt file" (shift-x); click on the link to download.
-			<b>Be careful:</b>
-				<ul>
-				<li>If you click on the "Log" button for the same tree multiple times, multiple copies of the tree will be added.
-				<li>If you accidentally close the window or hit the Refresh button, <u>all edits will be lost</u>!
+			<li>Save a tree: Shift+z (which will load the next tree). Alternatively, click the "Log" button (Shift+l): The current version of the tree will be added to the textbox in "Bracketed Form". Copy and paste from this textbox to a text file.
+			<li>Export a tree: Shift+x will autogenerate and download a text file with all corrected trees. Alternatively, on the "All edited trees" tab, click "Export all trees to txt file" to download.
+			<li><b>Be careful</b>: If you accidentally close the window or hit the Refresh button, <u>all edits will be lost</u>!
 				</ul>		
 			</ol>
 	
 		<h2>Keyboard shortcuts</h2>
 		<ol>
-			<li>Log tree inside browser: shift-l (*l*og)
 			<li>Export all trees -- including edited ones -- to text file: shift-x (e*x*port; this is the same as clicking on the button)
-			<li>Save current tree and then view next tree: shift+. (i.e. ">". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
-			<li>Delete: F9
-			<li>Add terminal nodes
+			<li>Save current tree and then view next tree: shift+z (i.e. "Z". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
+			<li>Delete node and all daughters: @ (shift + 2)
+			<li>Keyboard shortcut for adding null elements
 			<ol>
-				<li>Add pro: shift-0 (zero)
-				<li>Add argument trace: shift-g
-				<li>Add adjunct trace: shift-j
-				<li>Add null complementizer: shift-4 (i.e. dollar sign)
-			</ol>
-			<li>Modify nonterminal nodes
+				<li>Add null complementiser: 4 (mnemoic: "comp" has 4 letters)
+				<li>Add pro: the number 3 ("pro" has 3 letters)
+				<li>Add argument trace: the number 2 ("NP" has 2 letters)
+				<li>Add adjunct trace: the number 1
+				<li>Add empty verb: b (ver"b")
+			<li>Keyboard shortcuts for adding nonterminal nodes
 			<ol>
-				<li>Edit (change) label: shift-e OR ` (the key on the left of "1", "unshifted" tilde)
-				<li>Edit a label to INTJ: shift-i
-				<li>Add flag to label: shift-f
-				<li>Add a new PRN/Parenthetical nonterminal node: shift-p
-				<li>Add a new INTJ/Interjection nonterminal node: shift-u
-				<li>Add a new EDITED/restarts nonterminal node: shift-r
-				<li>Add a new S nonterminal node: shift-s
-				<li>Add a new VP nonterminal node: shift-v
-				
+				<li>"S": s
+				<li>"VP": v
+				<li>"NP": n
+				<li>"CP": c
+				<li>"TOPICP": t
+				<li>"PRN": q (for parentheticals, hedges like 'I mean", "you know")
+				<li>"INTJ": w (for interjections, like "right", "ok", "yah")
+				<li>"EDITED": r (for material that was "discarded" and restarted)
+				<li>Add a node and specify its label: shift+n
 			</ol>
-		</ol>
+			<li>Keyboard shortcuts for modifying nonterminal nodes
+			<ol>
+				<li>Edit (change) label: ` (the key on the left of "1")
+				<li>Edit a label to INTJ: i
+				<li>Edit node label to CONJP: d (for "and then", "but then")
+				<li>Add flag to label: f (e.g. change "NP" to "NP-ADV")
+			</ol>
+		</ol></ol>
 		
 		<h2>How to edit a tree</h2>
 			<ol>
@@ -254,7 +257,12 @@
 			</ol>
 		</ol>
 	
-			
+		<h2>What happens if you make a mistake?</h2>
+		Unfortunately there is no undo function. Two options:
+		<ol>
+		<li>Add nodes back manually, using the New Node interface.
+		<li>Click "Display" or "Load" button to show the original tree, and edit the tree all over again.
+		</ol>
 		<h2>Wishlist, in descending order of priority</h2>
 		<ol>
 		<li>How to write trees directly to a database -- but solving this problem could lead to overwriting trees by mistake!
@@ -504,10 +512,10 @@
     $('#btn-delete-nodes').on('click', function() {
       var $node = $('#selected-node').data('node');
       if (!$node) {
-        alert('Please select one node in orgchart');
+        alert('Please select one node in the tree');
         return;
       } else if ($node[0] === $('.orgchart').find('.node:first')[0]) {
-        if (!window.confirm('Are you sure you want to delete the whole chart?')) {
+        if (!window.confirm('Are you sure you want to delete the whole tree?')) {
           return;
         }
       }
