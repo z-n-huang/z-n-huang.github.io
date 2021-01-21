@@ -204,34 +204,40 @@
 	
 		<h2>Keyboard shortcuts</h2>
 		<ol>
-			<li>Export all trees -- including edited ones -- to text file: shift-x (e*x*port; this is the same as clicking on the button)
-			<li>Save current tree and then view next tree: shift+z (i.e. "Z". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
-			<li>Delete node and all daughters: @ (shift + 2)
+			<li>Export all trees -- including edited ones -- to text file: <b>shift-x</b> (e*x*port; this is the same as clicking on the button)
+			<li>Save current tree and then view next tree: <b>shift+z</b> (i.e. "Z". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
+			<li>Delete node and all daughters: <b>@</b> (shift + 2)
 			<li>Keyboard shortcut for adding null elements
 			<ol>
-				<li>Add null complementiser: 4 (mnemoic: "comp" has 4 letters)
-				<li>Add pro: the number 3 ("pro" has 3 letters)
-				<li>Add argument trace: the number 2 ("NP" has 2 letters)
-				<li>Add adjunct trace: the number 1
-				<li>Add empty verb: b (ver"b")
+				<li>Add null complementiser: <b>4</b> (mnemoic: "comp" has 4 letters)
+				<li>Add pro: the number <b>3</b> ("pro" has 3 letters)
+				<li>Add argument trace: the number <b>2</b> ("NP" has 2 letters)
+				<li>Add adjunct trace: the number <b>1</b>
+				<li>Add empty verb: <b>b</b> (ver"b")
 			<li>Keyboard shortcuts for adding nonterminal nodes
 			<ol>
-				<li>"S": s
-				<li>"VP": v
-				<li>"NP": n
-				<li>"CP": c
-				<li>"TOPICP": t
-				<li>"PRN": q (for parentheticals, hedges like 'I mean", "you know")
-				<li>"INTJ": w (for interjections, like "right", "ok", "yah")
-				<li>"EDITED": r (for material that was "discarded" and restarted)
-				<li>Add a node and specify its label: shift+n
+				<li>"S": <b>s</b>
+				<li>"SBAR": <b>shift+s</b>
+				<li>"VP": <b>v</b>
+				<li>"NP": <b>n</b>
+				<li>"CP": <b>c</b>
+				<li>"TOPICP": <b>t</b>
+				<li>"PRN": <b>q</b> (for parentheticals, hedges like 'I mean", "you know")
+				<li>"INTJ": <b>w</b> (for interjections, like "right", "ok", "yah")
+				<li>"EDITED": <b>r</b> (for material that was "discarded" and restarted)
+				<li>"QUP": <b>shift+q</b> (for "or not")
+				<li>Add a node and specify its label: <b>shift+n</b>
 			</ol>
 			<li>Keyboard shortcuts for modifying nonterminal nodes
 			<ol>
-				<li>Edit (change) label: ` (the key on the left of "1")
-				<li>Edit a label to INTJ: i
-				<li>Edit node label to CONJP: d (for "and then", "but then")
-				<li>Add flag to label: f (e.g. change "NP" to "NP-ADV")
+				<li>Edit (change) label: <b>`</b> (the key on the left of "1")
+				<li>Edit a label to INTJ: <b>i</b>
+				<li>Edit node label to CONJP: <b>d</b> (for "and then", "but then")
+				<li>Add tag to label: <b>f</b> (e.g. change "NP" to "NP-ADV")
+				<li>Add -ADV tag: <b>shift+a</b>
+				<li>Add -TOP tag: <b>shift+t</b>
+				<li>Add -RDL tag: <b>shift+d</b> (for afterthoughts/ right-dislocation)
+				<li>Add -FRAG tag: <b>shift+f</b> (for incomplete utterances)
 			</ol>
 		</ol></ol>
 		
@@ -803,11 +809,15 @@
 															})); }); // change a current label to CONJP
 
 	$(document).bind('keydown', 'f', function(event) { addFlag() }); // Add *f*lag
-	$(document).bind('keydown', 'shift+a', function(event) { addSpecifiedFlag('ADV'); }); // *A*DV flag
+	$(document).bind('keydown', 'shift+a', function(event) { addSpecifiedFlag('ADV'); }); // *A*DV tag
+	$(document).bind('keydown', 'shift+t', function(event) { addSpecifiedFlag('TOP'); }); // *T*OP tag
+	$(document).bind('keydown', 'shift+d', function(event) { addSpecifiedFlag('RDL'); }); // Right *Dislocated* tag
+	$(document).bind('keydown', 'shift+f', function(event) { addSpecifiedFlag('FRAG'); }); // *F*rag flag
 	$(document).bind('keydown', 'shift+n', function(event) { var newLabel = prompt("New label:", '');
 															 nonterm(newLabel.toUpperCase()); }); // Add a new *n*onterminal
 	$(document).bind('keydown', 'q', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
 	$(document).bind('keydown', 's', function(event) { nonterm('S'); }); // Add a S node (useful for parentheticals)
+	$(document).bind('keydown', 'shift+q', function(event) { nonterm('QUP'); }); // Add a QUP node
 	$(document).bind('keydown', 'shift+s', function(event) { nonterm('SBAR'); }); // Add a SBAR node (useful for parentheticals)
 	$(document).bind('keydown', 'v', function(event) { nonterm('VP'); }); // Add a VP node (useful for null copulas)
 	$(document).bind('keydown', 'b', function(event) { terminal('VB', '*?*'); }); // null ver*b*
