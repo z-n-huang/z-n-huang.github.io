@@ -160,7 +160,7 @@
 		</span>
 		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
 		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
-		<!--button type="button" id="btn-export" style = "background-color: #7f8">Log</button-->
+		<button type="button" id="btn-export" style = "background-color: #7f8; visibility:hidden">Log</button>
 		<button type="button" id="btn-pro"  style = "display: none; ">Add pro</button>
 		<button type="button" id="btn-trace" style = "display: none; ">Add argument trace</button>
 		<button type="button" id="btn-adj-trace" style = "display: none; ">Add adjunct trace</button>
@@ -180,11 +180,11 @@
 		<!--a download="current_all_trees.txt" id="downloadlink" style="display: none">Download</a-->
 	</div-->
 	
-	<!--div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
+	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;visibility:hidden">
 	
 		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea><br / >
 		<button id="btn-export-txt">Export all trees to txt file</button>
-	</div-->
+	</div>
 	
 	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
 	<h2>What this interface does</h2>
@@ -331,7 +331,7 @@
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
 	  d = d.replace(/(\[)([\w-\$]+)/g, '$1"$2", '); // For tags
 	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
-	  d = d.replace(/(\[)([\.\,\?\!\:\\\/]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
+	  d = d.replace(/(\[)([\.\,\?\!\:\\\#\/]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
 	  d = d.replace(/(\[)(\`\`)(\s+)/g, '$1"LDQT", '); // For quote tags, convert `` to LDQT
 	  d = d.replace(/(\[)(\'\')(\s+)/g, '$1"RDQT", '); // For quote tags, convert '' to RDQT
 	  d = d.replace(/(\[)(\`)(\s+)/g, '$1"LSQT", '); // For quote tags, convert ` to LSQT
