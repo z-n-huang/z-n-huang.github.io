@@ -163,6 +163,7 @@
 		<button type="button" id="btn-export" style = "background-color: #7f8; visibility:hidden">Log</button>
 		<button type="button" id="btn-pro"  style = "display: none; ">Add pro</button>
 		<button type="button" id="btn-trace" style = "display: none; ">Add argument trace</button>
+		<button type="button" id="btn-null" style = "display: none; ">Add null element</button>
 		<button type="button" id="btn-adj-trace" style = "display: none; ">Add adjunct trace</button>
 		<button type="button" id="btn-comp" style = "display: none; ">Add null C</button>
 		
@@ -239,11 +240,8 @@
 			<li>Delete node and all daughters: <b>@</b> (shift + 2)
 			<li>Keyboard shortcut for adding null elements
 			<ol>
-				<li>Add null complementiser: <b>4</b> (mnemoic: "comp" has 4 letters)
-				<li>Add pro: the number <b>3</b> ("pro" has 3 letters)
-				<li>Add argument trace: the number <b>2</b> ("NP" has 2 letters)
-				<li>Add adjunct trace: the number <b>1</b>
-				<li>Add empty verb: <b>b</b> (ver"b")
+				<li>Add null complementiser: <b>4</b>
+				<li>Add null NP: <b>1</b>
 			<li>Keyboard shortcuts for adding nonterminal nodes
 			<ol>
 				<li>"S": <b>s</b>
@@ -251,7 +249,7 @@
 				<li>"VP": <b>v</b>
 				<li>"NP": <b>n</b>
 				<li>"CP": <b>c</b>
-				<li>"TOPICP": <b>t</b>
+				<li>"TBAR": <b>t</b>
 				<li>"PRN": <b>q</b> (for parentheticals, hedges like 'I mean", "you know")
 				<li>"INTJ": <b>w</b> (for interjections, like "right", "ok", "yah")
 				<li>"EDITED": <b>r</b> (for material that was "discarded" and restarted)
@@ -263,7 +261,7 @@
 			<ol>
 				<li>Edit (change) label: <b>`</b> (the key on the left of "1")
 				<li>Edit a label to INTJ: <b>i</b>
-				<li>Edit node label to CONJP: <b>d</b> (for "and then", "but then")
+				<!--li>Edit node label to CONJP: <b>d</b> (for "and then", "but then") -->
 				<li>Add tag to label: <b>f</b> (e.g. change "NP" to "NP-ADV")
 				<li>Add -ADV tag: <b>shift+a</b>
 				<li>Add -TOP tag: <b>shift+t</b>
@@ -586,7 +584,24 @@
             }));
         }
 	})
-
+	// z-n-huang: for generating generic null arguments
+	$('#btn-null').on('click', function() {
+		var nodeVals = ["NP"]; // label
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': "*", 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
 	// z-n-huang: for generating adjunct traces
 	$('#btn-adj-trace').on('click', function() {
 		var nodeVals = ["ADVP"]; // label
@@ -801,23 +816,23 @@
 	$(document).bind('keydown', 'shift+e', function(event) { changeLabel(); }); // *e*dit label
 	$(document).bind('keydown', '`', function(event) { changeLabel(); }); // alternative - only one keystroke needed
 	
-	$(document).bind('keydown', '0', function(event) { $('#btn-pro').click() }); // 0 to add pro
+	//$(document).bind('keydown', '0', function(event) { $('#btn-pro').click() }); // 0 to add pro
 	$(document).bind('keydown', 'g', function(event) { $('#btn-trace').click() }); // ar*g*ument
 	$(document).bind('keydown', 'j', function(event) { $('#btn-adj-trace').click() }); // ad*j*unct
 	$(document).bind('keydown', '4', function(event) { $('#btn-comp').click() }); // Null *c*omp
-	$(document).bind('keydown', '3', function(event) { $('#btn-pro').click() }); // alternative for pro
-	$(document).bind('keydown', '2', function(event) { $('#btn-trace').click() }); // alternative for argument
-	$(document).bind('keydown', '1', function(event) { $('#btn-trace').click() }); // alternative for adjunct
+	//$(document).bind('keydown', '3', function(event) { $('#btn-pro').click() }); // alternative for pro
+	//$(document).bind('keydown', '2', function(event) { $('#btn-trace').click() }); // alternative for argument
+	$(document).bind('keydown', '1', function(event) { $('#btn-null').click() }); // alternative for adjunct
 
 	
 	$(document).bind('keydown', 'i', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['INTJ'].map(function (item) {
 																return item;
 															})); }); // change a current label to INTJ
-	$(document).bind('keydown', 'd', function(event) { oc.editLabel($('#selected-node').data('node'), 
-																		['CONJP'].map(function (item) {
-																return item;
-															})); }); // change a current label to CONJP
+	//$(document).bind('keydown', 'd', function(event) { oc.editLabel($('#selected-node').data('node'), 
+	//																	['CONJP'].map(function (item) {
+	//															return item;
+	//														})); }); // change a current label to CONJP
 
 	$(document).bind('keydown', 'f', function(event) { addFlag() }); // Add *f*lag
 	$(document).bind('keydown', 'shift+a', function(event) { addSpecifiedFlag('ADV'); }); // *A*DV tag
@@ -836,7 +851,7 @@
 	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
 	$(document).bind('keydown', 'w', function(event) { nonterm('INTJ'); }); // alternative - interjection; INTJ
 	$(document).bind('keydown', 'r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
-	$(document).bind('keydown', 't', function(event) { nonterm('TOPICP'); }); // *t*opicP;
+	$(document).bind('keydown', 't', function(event) { nonterm('TBAR'); }); // *t*opicP;
 	$(document).bind('keydown', 'c', function(event) { nonterm('CP'); }); // *C*omplementizerP;
 	$(document).bind('keydown', 'n', function(event) { nonterm('NP'); }); // *N*P;
 
