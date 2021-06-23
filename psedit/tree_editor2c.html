@@ -81,6 +81,55 @@
     #edit-panel.view-state .radio-panel input[type='radio']+label { vertical-align: -webkit-baseline-middle; }
     #btn-add-nodes { margin-left: 20px; }
 	
+	<!-- for matching brackets -->
+	.richtext {
+    display: inline-block;
+    overflow: hidden;
+    margin: 2px 0;
+    vertical-align: top;
+	}
+	.richtext > pre {
+		display: inline-block;
+		border2: 1px solid transparent;
+		z-index: 1;
+		position: absolute;
+		overflow: hidden;
+		height: 25px;
+		background: #fff;
+	}
+	input, .richtext {
+		padding: 5px;
+		color: #282828;
+		background: #fff;
+		outline: 0;
+		border: 1px solid #BABABA;
+	}
+	input, .richtext > pre {
+		font-family: monaco, courier;
+		font-size: 100%;
+		width: 400px;
+	}
+	.unmatched {
+		background: red;
+	}    
+	.paren_0 { /* 5 */
+		background: #00ff00;
+	}
+	.paren_1 {
+		background: #b6e4b6;
+	}
+	.paren_2 {
+		background: #c0c000;
+	}
+	.paren_3 {
+		background: #008000;
+	}
+	.paren_4 {
+		background: #808000;
+	}
+	.selected_paren {
+		background: #ff0000 !important;
+	}
   </style>
   <!-- for tabs-->
   
@@ -291,7 +340,75 @@
 
   <script type="text/javascript" src="js/jquery.min.js"></script>
   <script type="text/javascript" src="js/jquery.orgchart.js"></script>
-
+  <script type="text/javascript"> 
+  // Bracket matching highlighting, http://jsfiddle.net/Axvgf/
+    
+    function colorize(text, pos) {
+        var i = 0, current_times = 0;
+        var startc = '(', endc = ')';
+        var current = -1;
+        
+        var entities = {'>': '&gt;','<':'&lt;'}; 
+        var p2 = 0;
+        var regex = new RegExp(Object.keys(entities).join("|"),'g');   
+        var converted = text.replace(regex, function(x, j) {
+            if(pos > j) p2 += entities[x].length - 1; 
+            return entities[x];
+        });
+        
+        pos += p2;
+        var parens = [], indices = [], o = {};
+        var newText = converted.replace(/((?:\\)*)([()])/g, function(full, escape, x, idx) {
+            var len = escape.split(/\\/g).length - 1;
+            if (len % 2 == 0) {
+                indices.push(idx);
+                if (x == startc) ++i;
+                o[idx] = { selected: false, type: x, depth: i, idx: idx, pair: -1, extra: escape };
+                if (idx == pos) o[idx].selected = true;
+                if (x == startc) parens.push(idx);
+                else {
+                    if (parens.length > 0) {
+                        var p = parens.pop();
+                        o[idx].pair = p;
+                        if (o[p].selected) o[idx].selected = true;
+                        o[p].pair = idx;
+                        if (o[idx].selected) o[p].selected = true;
+                    }
+                    --i
+                }
+            }
+        });
+        newtext = converted;     
+        indices = indices.sort(function(x,y) { return Number(y) - Number(x); });
+        indices.forEach(function(i) {
+            newtext = newtext.substr(0,i) + o[i].extra +
+            "<span class='" + (o[i].pair == -1 ? "unmatched " : "paren_" + (o[i].depth % 5)) + 
+            (o[i].selected ? " selected_paren": "") + "'>" + o[i].type + "</span>" + 
+            newtext.substr(i + 1 + o[i].extra.length)
+        });
+        return newtext;
+    }
+    
+    (function($) {
+        $.fn.getCursorPosition = function() {
+            var input = this.get(0);
+            if (!input) return; // No (input) element found
+            if ('selectionStart' in input) {
+                // Standard-compliant browsers
+                return input.selectionStart;
+            } else if (document.selection) {
+                // IE
+                input.focus();
+                var sel = document.selection.createRange();
+                var selLen = document.selection.createRange().text.length;
+                sel.moveStart('character', -input.value.length);
+                return sel.text.length - selLen;
+            }
+        }
+    })(jQuery);
+    
+    createRichInput("#brackets-input");
+  </script>
   <script type="text/javascript">
 	var updatedTreesDict = {};
 	function jsonTree() {
@@ -714,7 +831,7 @@
 		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
 		string = string.replace(/(\()(\n)(\s*)/g, "$1").replace(/    /g, " "); // no "stray" left parentheses; remove extra spaces
 		string = string.replace(/(\w\$*)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
-		string = string.replace(/([\.\,\?\!\\\/\`\']+)(\n)(\s*)([\.\,\?\!\\\/\`\"]+)/g, '$1 $4'); // punctuation
+		string = string.replace(/([\.\,\?\!\\\/\`\'\:]+)(\n)(\s*)([\.\,\?\!\\\/\`\"\:]+)/g, '$1 $4'); // punctuation
 		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
 		string = string.replace(/\(\)/g, "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
 		//string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
@@ -750,8 +867,8 @@
 		rawtext = data;
 		// this assumes two line breaks between trees; two different ways of representing line breaks
 	    //trees = rawtext.split("\r\n\r\n").split("\n\n");
-		trees = rawtext.split("\n\n");
-		updatedTreesArray = rawtext.split("\n\n");
+		trees = rawtext.split("\n\n").split("\r\r");
+		updatedTreesArray = rawtext.split("\n\n").split("\r\r");
 		}, 'text');
 	console.log(trees);
 
@@ -778,6 +895,7 @@
 			trees = rawtext.split("\r\n\r\n");
 			updatedTreesArray = rawtext.split("\r\n\r\n");
 			}
+			
 	  };
 	  reader.readAsText(this.files[0]);
 	});
