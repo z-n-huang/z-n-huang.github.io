@@ -189,8 +189,8 @@
 			<input type="text" id="selected-node" class="selected-node-group" size = 4 style="display: none">
 		&nbsp;&nbsp;<label>New node:</label>
 			<ul id="new-nodelist">
-			  <li><input type="text" id = "gen-new-node" class="new-node" size = 4></li>
-			  <li><input type="text" id = "gen-new-node-content" class="new-node-name" size = 4></li>
+			  <li><input type="text" id = "gen-new-node" class="new-node" size = '2'></li>
+			  <li><input type="text" id = "gen-new-node-content" class="new-node-name" size = '2'></li>
 			</ul>
 		<!-- z-n-huang removed -->
 		<!--i class="oci oci-plus-circle btn-inputs" id="btn-add-input"></i>
@@ -222,7 +222,7 @@
 		
 		</div>
 		
-		<div id= "chart-container" style ="position:absolute; top:100px; z-index:-4"></div>
+		<div id= "chart-container" style ="position:absolute; top:130px; z-index:-4"></div>
 	</div>	
 	<!--div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
 		<textarea id = "all-strs" rows="20" cols="50" style="font-size: 10pt; font-family:monospace;"></textarea>
@@ -297,8 +297,9 @@
 				<li>"SBAR": <b>shift+s</b>
 				<li>"VP": <b>v</b>
 				<li>"NP": <b>n</b>
-				<li>"CP": <b>c</b>
+				<!--<li>"CP": <b>c</b>-->
 				<li>"TBAR": <b>t</b>
+				<li>"ADVP": <b>shift+v</b>
 				<li>"PRN": <b>q</b> (for parentheticals, hedges like 'I mean", "you know")
 				<li>"INTJ": <b>w</b> (for interjections, like "right", "ok", "yah")
 				<li>"EDITED": <b>r</b> (for material that was "discarded" and restarted)
@@ -308,8 +309,10 @@
 			</ol>
 			<li>Keyboard shortcuts for modifying nonterminal nodes
 			<ol>
-				<li>Edit (change) label: <b>`</b> (the key on the left of "1")
-				<li>Edit a label to INTJ: <b>i</b>
+				<li>Change (change) label: <b>`</b> (the key on the left of "1")
+				<li>Change label to INTJ: <b>i</b>
+				<li>Change label to SBAR: <b>shift+b</b>
+				
 				<!--li>Edit node label to CONJP: <b>d</b> (for "and then", "but then") -->
 				<li>Add tag to label: <b>f</b> (e.g. change "NP" to "NP-ADV")
 				<li>Add -ADV tag: <b>shift+a</b>
@@ -942,7 +945,14 @@
 	//$(document).bind('keydown', '2', function(event) { $('#btn-trace').click() }); // alternative for argument
 	$(document).bind('keydown', '1', function(event) { $('#btn-null').click() }); // alternative for adjunct
 
-	
+	$(document).bind('keydown', 'shift+p', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['PP'].map(function (item) {
+																return item;
+															})); }); // change a current label to PP
+	$(document).bind('keydown', 'shift+b', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['SBAR'].map(function (item) {
+																return item;
+															})); }); // change a current label to SBAR
 	$(document).bind('keydown', 'i', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['INTJ'].map(function (item) {
 																return item;
@@ -964,12 +974,14 @@
 	$(document).bind('keydown', 'shift+n', function(event) { var newLabel = prompt("New label:", '');
 															 nonterm(newLabel.toUpperCase()); }); // Add a new *n*onterminal
 	$(document).bind('keydown', 'q', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
+	$(document).bind('keydown', 'p', function(event) { nonterm('PP'); }); // Add a PP node
 	$(document).bind('keydown', 's', function(event) { nonterm('S'); }); // Add a S node (useful for parentheticals)
 	$(document).bind('keydown', 'shift+q', function(event) { nonterm('QUP'); }); // Add a QUP node
 	$(document).bind('keydown', 'shift+g', function(event) { nonterm('FRAG'); }); // Add a FRAG node
+	$(document).bind('keydown', 'shift+v', function(event) { nonterm('ADVP'); }); // Add a ADVP node
 	$(document).bind('keydown', 'shift+s', function(event) { nonterm('SBAR'); }); // Add a SBAR node (useful for parentheticals)
 	$(document).bind('keydown', 'v', function(event) { nonterm('VP'); }); // Add a VP node (useful for null copulas)
-	$(document).bind('keydown', 'b', function(event) { terminal('VB', '*?*'); }); // null ver*b*
+	$(document).bind('keydown', 'b', function(event) { terminal('VB', '*0*'); }); // null ver*b*
 	$(document).bind('keydown', '3', function(event) { terminal('ADVP', '*'); }); // Add adverb trace
 	$(document).bind('keydown', '2', function(event) { terminal('NP', '*'); }); // Add NP trace
 	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
