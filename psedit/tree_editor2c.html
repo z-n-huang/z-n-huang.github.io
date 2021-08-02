@@ -239,8 +239,9 @@
 		<button type="button" id="btn-export-txt">Export all trees to txt file</button>
 	</div>
 	<div id="tabs-brackets" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
-		<button id="btn-check-brackets">Check brackets</button></ br>
-		<span id="display-brackets"></span>
+		<button id="btn-check-brackets">Check brackets</button><br />
+		<u>Output format:</u><br /><i>S#[Sentence number] <b>Number of left brackets</b>/<b>Number of right brackets</b><br />[Parse]</i>
+		<span id="display-brackets"></span>pan id="display-brackets"></span>
 	</div>
 	
 	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
@@ -923,10 +924,11 @@
 	  };
 	  reader.readAsText(this.files[0]);
 	});
-
 	
+	// For tab that checks for mismatched brackets
 	$('#btn-check-brackets').on('click', function() {
 		var divOutput = '';
+		var nMismatched = 0;
 		//console.log(11 , updatedTreesArray.length);
 		for (var i = 0; i < updatedTreesArray.length; i++) {
 			var bracketedForm = updatedTreesArray[i];
@@ -935,11 +937,15 @@
 			
 			if (noLeftBrackets != noRightBrackets) {
 			console.log(i, noLeftBrackets, noRightBrackets);
-			divOutput = divOutput+ '<li>Sentence '+  i.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
+			divOutput = divOutput+ '<li>S#'+  i.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
+			nMismatched++;
 			}
-		} 
-		$('#display-brackets').html('<ul>'+divOutput+'</ul>'); 
+		}
+		$('#display-brackets').html('<ol>'+divOutput+'</ol>');
+		if (nMismatched == 0) { $('#display-brackets').html('<p>All brackets are matched!</p>'); }
+		
 	});
+	
 	
 	// For simplifying the generation of trees
 	// When you click the Bracketed Form ("tabs-export") tab
