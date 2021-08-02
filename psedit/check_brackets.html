@@ -140,212 +140,18 @@
 <!-- div id = "testoutput" / -->
 <div id="tabs" style = "width:98%; border: 0">
 	<ul style = "position: fixed; width:98%; z-index:10;">
-		<li><a href="#tabs-1">Tree</a></li>
-		<!--li><a href="#tabs-export">Bracketed form</a></li-->
-		<!-- li><a href="#tabs-all-trees">All edited trees</a></li-->
-		<li><a href="#tabs-help">Help</a></li>
+	
 		<li><a href="#tabs-brackets">Check brackets</a></li>
-		<li><a href="#tabs-license">About</a></li>
 		<li><input type="file" id="fileInput" style = "position: relative; right: -40px;"></li>
 		<li><a download="current_all_trees.txt" id="downloadlink" style="display: none; align: right;">Download txt</a><li>
 	</ul>
-	<div id="tabs-1" style = "">
-
-		<div style = "position: fixed; z-index:9; padding-top:80px; top: 0px; background: #fff;"><!-- z-n-huang removed id= "edit-panel"-->
-	    <!-- z-n-huang removed-->
-		<!--span id="chart-state-panel" class="radio-panel">
-		  <input type="radio" name="chart-state" id="rd-view" value="view"><label for="rd-view">View</label>
-		  <input type="radio" name="chart-state" id="rd-edit" value="edit" checked="true"><label for="rd-edit">Edit</label>
-		</span-->
-		
-		  <label for="spinner">Tree:</label>
-		  <input id="spinner" name="value" style = "width:50px" value = 5>
-		  <button id="getvalue">Load</button>
-		&nbsp;&nbsp;
-		<label>Input:</label>
-			<textarea id="brackets-input" name="brackets-input" rows="3" cols="40" style = "vertical-align: top;">
-			(EXAMPLE-TREE
-			  (S
-				(SBAR (IN Because)
-				  (S
-					(NP (PRP they))
-					(VP (VBP think))))
-				(NP (PRP it))
-				(VP (VBZ is)
-				  (ADJP (RB very) (JJ difficult)
-					(PP (IN for)
-					  (NP (PRP them))))
-				  (S
-					(VP (TO to)
-					  (VP (VB teach)
-						(NP (PRP me))
-						(NP (NN character)
-						  (CC and)
-						  (NNS values))))))
-				(. .)))
-			</textarea>
-			<button type="button" id="gen-tree">Display</button>
-		<label>Matched labels? </label><span id="brackets-count"></span>
-		<!-- z-n-huang: make "selected node" invisible. -->
-		<label class="selected-node-group" style="display: none">Selected node:</label>
-			<input type="text" id="selected-node" class="selected-node-group" size = 4 style="display: none">
-		&nbsp;&nbsp;<label>New node:</label>
-			<ul id="new-nodelist">
-			  <li><input type="text" id = "gen-new-node" class="new-node" style = "width:50px"></li>
-			  <li><input type="text" id = "gen-new-node-content" class="new-node-name" style = "width:50px"></li>
-			</ul>
-		<!-- z-n-huang removed -->
-		<!--i class="oci oci-plus-circle btn-inputs" id="btn-add-input"></i>
-		<i class="oci oci-minus-circle btn-inputs" id="btn-remove-input"></i-->
-		<span id="node-type-panel" class="radio-panel">
-		  <!-- z-n-huang removed -->
-		  <!--input type="radio" name="node-type" id="rd-parent" value="parent"><label for="rd-parent">Root</label-->
-		  <select id="edit-menu" style="width:140px">
-			<option name = "node-type" value = "children">Add as child</option>
-			<option name = "node-type" value = "siblings">Add as sibling</option>
-			<option name = "node-type" value = "edit-label">Edit label</option>
-		  </select>
-		  <!--input type="radio" name="node-type" id="rd-child" value="children"><label for="rd-child">Add as child</label>
-		  <input type="radio" name="node-type" id="rd-sibling" value="siblings"><label for="rd-sibling">Add as sibling</label>
-		  <input type="radio" name="node-type" id="edit-label" value="edit-label"><label for="edit-label">Edit label</label-->
-		</span>
-		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
-		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
-		<button type="button" id="btn-export" style = "background-color: #7f8; visibility:hidden">Log</button>
-		<button type="button" id="btn-pro"  style = "display: none; ">Add pro</button>
-		<button type="button" id="btn-trace" style = "display: none; ">Add argument trace</button>
-		<button type="button" id="btn-null" style = "display: none; ">Add null element</button>
-		<button type="button" id="btn-adj-trace" style = "display: none; ">Add adjunct trace</button>
-		<button type="button" id="btn-comp" style = "display: none; ">Add null C</button>
-		
-		<!-- z-n-huang removed --><!--button type="button" id="btn-reset">Reset</button-->
-		
-		<br />
-		
-		</div>
-		
-		<div id= "chart-container" style ="position:absolute; top:130px; z-index:-4"></div>
-	</div>	
-	<!--div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
-		<textarea id = "all-strs" rows="20" cols="50" style="font-size: 10pt; font-family:monospace;"></textarea>
-		<br />
-		<!--a download="current_all_trees.txt" id="downloadlink" style="display: none">Download</a-->
-	</div-->
-	
-	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;visibility:hidden">
-	
-		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea><br / >
-		
-		<button type="button" id="btn-export-txt">Export all trees to txt file</button>
-	</div>
 	<div id="tabs-brackets" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
-		<button id="btn-check-brackets">Check brackets</button></ br>
+		<button id="btn-check-brackets">Check brackets</button><br />
+		<u>Output format:</u><br /><i>S#[Sentence number] <b>Number of left brackets</b>/<b>Number of right brackets</b><br />[Parse]</i>
 		<span id="display-brackets"></span>
 	</div>
 	
-	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
-	<h2>What this interface does</h2>
-	This interface reads in a text file containing a set of Penn Treebank-style parses. It then displays the parses in tree form. Edit the parse by dragging and dropping nodes in the tree. Edited trees can then be converted into Penn Treebank-style bracketed forms.
-		<h2>General procedure</h2>
-			<ol>
-			<li>Load a file: Click on "Choose file", find the right .txt file with parses.
-			<li>Load a tree: Enter the index (the serial number of a tree, so to speak) of the tree in the Index box. Click the "Load" button.
-			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
-			<li>Display tree: Click the "Display" button to visualise the tree in the Input box.
-			<li>Edit tree: see below.
-			<li>Save a tree: Shift+z (which will load the next tree). <!--Alternatively, click the "Log" button (Shift+l): The current version of the tree will be added to the textbox in "Bracketed Form". Copy and paste from this textbox to a text file.-->
-			<li>Export a tree: Shift+x will autogenerate and download a text file with all corrected trees. Alternatively, on the "All edited trees" tab, click "Export all trees to txt file" to download.
-			<li><b>Warning</b>: If you accidentally close the window or hit the Refresh button, <u>all edits will be lost</u>!
-				</ul>		
-			</ol>
-		
-		<h2>How to edit a tree</h2>
-		<h3>By directly changing the input brackets</h3>
-		
-			<ol><li>Add or delete brackets, tags, labels in the "Input" textbox as appropriate.
-			<li>Once done, click on "Display" to update the tree.
-			<li>Repeat these steps as many times as needed.
-			<li>Be careful while making changes to the textbox. Make sure that the brackets are balanced (for every "(", there must be a ")"), otherwise the interface will not display the tree.
-			</ol>
-		<h3>Drag and drop interface</h3>
-			<ol>
-			<li>To re-attach a node: click on it and then drag and drop it to the desired parent node.
-			<li>To re-order nodes within a tree: 
-			<ol><li>Click on a node that is not on the right edge.
-			<li>Drag and drop it to its parent, as if re-attaching it. This moves the node to the right edge. 
-			<li>Repeat as necessary.
-			</ol>
-			<li>To change a non-terminal node label: 
-			<ol><li>Click on the node (the node should be highlighted in yellow). 
-			<li>Type in the corrected label in the top box of "New node" (feel free to leave the bottom box blank).
-			<li>Select "Edit label".
-			<li>Click "Update" button.
-			</ol>
-			<li>To add a child or sibling to a node:
-			<ol><li>Click on the node. 
-			<li>Type in the label and string in the top box of "New node". Feel free to leave the bottom box blank if it's a non-terminal node. Otherwise, type in the word.
-			<li>Select "Add as child" or "Add as sibling".
-			<li>Click "Update" button. The new node will appear on the right edge.
-			</ol>
-		</ol>
-		
-		<h2>Keyboard shortcuts</h2>
-		<ol>
-			<li>Export all trees -- including edited ones -- to text file: <b>shift-x</b> (e*x*port; this is the same as clicking on the button)
-			<li>Save current tree and then view next tree: <b>shift+z</b> (i.e. "Z". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
-			<li>Delete node and all daughters: <b>@</b> (shift + 2)
-			<li>Keyboard shortcut for adding null elements
-			<ol>
-				<li>Add null complementiser: <b>4</b>
-				<li>Add null NP: <b>1</b>
-			<li>Keyboard shortcuts for adding nonterminal nodes
-			<ol>
-				<li>"S": <b>s</b>
-				<li>"SBAR": <b>shift+s</b>
-				<li>"VP": <b>v</b>
-				<li>"NP": <b>n</b>
-				<!--<li>"CP": <b>c</b>-->
-				<li>"TBAR": <b>t</b>
-				<li>"ADVP": <b>shift+v</b>
-				<li>"PRN": <b>q</b> (for parentheticals, hedges like 'I mean", "you know")
-				<li>"INTJ": <b>w</b> (for interjections, like "right", "ok", "yah")
-				<li>"EDITED": <b>r</b> (for material that was "discarded" and restarted)
-				<li>"FRAG": <b>shift+g</b> (for material that cannot be grouped together)
-				<li>"QUP": <b>shift+q</b> (for "or not")
-				<li>Add a node and specify its label: <b>shift+n</b>
-			</ol>
-			<li>Keyboard shortcuts for modifying nonterminal nodes
-			<ol>
-				<li>Change (change) label: <b>`</b> (the key on the left of "1")
-				<li>Change label to INTJ: <b>i</b>
-				<li>Change label to SBAR: <b>shift+b</b>
-				
-				<!--li>Edit node label to CONJP: <b>d</b> (for "and then", "but then") -->
-				<li>Add tag to label: <b>f</b> (e.g. change "NP" to "NP-ADV")
-				<li>Add -ADV tag: <b>shift+a</b>
-				<li>Add -TOP tag: <b>shift+t</b>
-				<li>Add -RDL tag: <b>shift+d</b> (for afterthoughts/ right-dislocation)
-				<li>Add -FRAG tag: <b>shift+f</b> (for incomplete utterances)
-			</ol>
-		</ol></ol>
-		
-		
 	
-		<h2>What happens if you make a mistake?</h2>
-		Unfortunately there is no undo function. Two options:
-		<ol>
-		<li>Add nodes back manually, using the New Node interface.
-		<li>Click "Display" or "Load" button to show the original tree, and edit the tree all over again.
-		</ol>
-		<h2>Wishlist, in descending order of priority</h2>
-		<ol>
-		<li>How to write trees directly to a database -- but solving this problem could lead to overwriting trees by mistake!
-		<li>How to right click on a node and make edits directly on the node.
-		</ol>
-	</div>
-	<div id="tabs-license" style ="position:absolute; top:40px; z-index:-4">
-		<h2>Phrase Structure Tree Editor (beta version)</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present <a href = "https://github.com/z-n-huang" target = "_blank">z-n-huang</a>. All substantial changes can be identified by "z-n-huang" in comments in the source code.</p>
-	</div>
 </div>
 
   <script type="text/javascript" src="js/jquery.min.js"></script>
@@ -927,6 +733,7 @@
 	
 	$('#btn-check-brackets').on('click', function() {
 		var divOutput = '';
+		var nMismatched = 0;
 		//console.log(11 , updatedTreesArray.length);
 		for (var i = 0; i < updatedTreesArray.length; i++) {
 			var bracketedForm = updatedTreesArray[i];
@@ -935,10 +742,13 @@
 			
 			if (noLeftBrackets != noRightBrackets) {
 			console.log(i, noLeftBrackets, noRightBrackets);
-			divOutput = divOutput+ '<li>Sentence '+  i.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
+			divOutput = divOutput+ '<li>S#'+  i.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
+			nMismatched++;
 			}
-		} 
-		$('#display-brackets').html('<ul>'+divOutput+'</ul>'); 
+		}
+		$('#display-brackets').html('<ol>'+divOutput+'</ol>');
+		if (nMismatched == 0) { $('#display-brackets').html('<p>All brackets are matched!</p>'); }
+		
 	});
 	
 	// For simplifying the generation of trees
