@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Phrase structure tree editor</title>
+  <title>Check brackets</title>
   <!-- link rel="icon" href="img/logo.png"-->
   <!-- File reading works only if this page is run from a local server, like static-server -->
   <!-- Start tabs -->
@@ -145,8 +145,9 @@
 		<li><input type="file" id="fileInput" style = "position: relative; right: -40px;"></li>
 		<li><a download="current_all_trees.txt" id="downloadlink" style="display: none; align: right;">Download txt</a><li>
 	</ul>
+	<br />
 	<div id="tabs-brackets" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
-		<button id="btn-check-brackets">Check brackets</button><br />
+		<button id="btn-check-brackets">Analyse file</button><br />
 		<u>Output format:</u><br /><i>S#[Sentence number] <b>Number of left brackets</b>/<b>Number of right brackets</b><br />[Parse]</i>
 		<span id="display-brackets"></span>
 	</div>
