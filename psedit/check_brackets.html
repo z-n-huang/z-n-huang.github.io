@@ -141,15 +141,19 @@
 <div id="tabs" style = "width:98%; border: 0">
 	<ul style = "position: fixed; width:98%; z-index:10;">
 	
-		<li><a href="#tabs-brackets">Check brackets</a></li>
+		<li>Tool for checking brackets</li>
 		<li><input type="file" id="fileInput" style = "position: relative; right: -40px;"></li>
-		<li><a download="current_all_trees.txt" id="downloadlink" style="display: none; align: right;">Download txt</a><li>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="btn-check-brackets">Analyse file</button><br />
 	</ul>
-	<br />
-	<div id="tabs-brackets" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
-		<button id="btn-check-brackets">Analyse file</button><br />
-		<u>Output format:</u><br /><i>S#[Sentence number] <b>Number of left brackets</b>/<b>Number of right brackets</b><br />[Parse]</i>
-		<span id="display-brackets"></span>
+	
+	<div id="tabs-brackets" style ="background-color: #fff; position:absolute; top:50px; z-index:-4">
+	<table><tr><td>
+		<u>Instructions</u><ol><li>Click on "Choose file" to load a file.</li><li>Click on "Analyse file" to check for mismatched brackets.</li></ol>
+		</td><td></td><td>
+		<u>How to interpret output</u><p><i>S#[Sentence number] <b>Number of left brackets</b>/<b>Number of right brackets</b><br />[Parse]</i></p></td>
+		</tr></table>
+		<span id="display-brackets"></span> <br />
+		
 	</div>
 	
 	<div id="tabs-license" style ="position:absolute; top:40px; z-index:-4; visibility:hidden">
