@@ -724,8 +724,8 @@
 		// when the reader is done, the content is in reader.result.
 		//console.log(reader.result);
 		rawtext = reader.result;
-		trees = rawtext.split("\n\r");
-	    updatedTreesArray = rawtext.split("\n\r");
+		trees = rawtext.replace(/\r(\n*)(\s*)(\n*)\r/g,"\n\r").split("\n\r");
+	    updatedTreesArray = rawtext.replace(/\r(\n*)(\s*)(\n*)\r/g,"\n\r").split("\n\r");
 		if (updatedTreesArray.length == 1) {
 			trees = rawtext.split("\n\n");
 			updatedTreesArray = rawtext.split("\n\n");
@@ -750,9 +750,10 @@
 			var noRightBrackets = bracketedForm.length - bracketedForm.replace(/\)/g, "").length;
 			
 			if (noLeftBrackets != noRightBrackets) {
-			console.log(i, noLeftBrackets, noRightBrackets);
-			divOutput = divOutput+ '<li>S#'+  i.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
-			nMismatched++;
+				var displayNumber = i+1;
+				console.log(i, noLeftBrackets, noRightBrackets);
+				divOutput = divOutput+ '<li>S#'+ displayNumber.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
+				nMismatched++;
 			}
 		}
 		$('#display-brackets').html('<ol>'+divOutput+'</ol>');
