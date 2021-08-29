@@ -473,6 +473,10 @@
 	  d = d.replace(/\s\s+/g, '').replace(/\t/g, ''); // trim extra whitespace
 	  d = d.replace(/(\s+)(\))/g, '$2'); // trim extra whitespace before close parenthesis
 	  d = d.replace(/\n$/, ""); // remove trailing \n
+	  
+	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
+	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+	  
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace ( or ) with [ or ]
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
 	  d = d.replace(/(\[)([\w-\$]+)/g, '$1"$2", '); // For tags
