@@ -476,6 +476,7 @@
 	  
 	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
 	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
 	  
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace ( or ) with [ or ]
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
@@ -853,19 +854,25 @@
 		
 		$('#hierarchy-str').html('');
 		var string = JSON.stringify(hierarchy, null, 2);
+		
 		string = string.replace(/\{/g, "\(").replace(/\}/g, "\)").replace(/\]\n/g, ""); // replace braces with parentheses
 		string = string.replace(/\"lex\": \"\*\*\*\",\n/g, '').replace(/\"category\": \"/g, '').replace(/\"children\": \[\n/g, '');
 		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
 		string = string.replace(/(\()(\n)(\s*)/g, "$1").replace(/    /g, " "); // no "stray" left parentheses; remove extra spaces
 		string = string.replace(/(\w\$*)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
-		string = string.replace(/([\.\,\?\!\\\/\`\'\:]+)(\n)(\s*)([\.\,\?\!\\\/\`\"\:]+)/g, '$1 $4'); // punctuation
+		string = string.replace(/([\.\,\?\!\\\/\`\'\:\$]+)(\n)(\s*)([\.\,\?\!\\\/\`\"\:\$]+)/g, '$1 $4'); // punctuation
 		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
-		string = string.replace(/\(\)/g, "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
 		//string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
 		string = string.replace("LDQT", "``"); // Replace quotes
 		string = string.replace("RDQT", "''"); // Replace quotes
 		string = string.replace("LSQT", "`"); // Replace quotes
 		string = string.replace("RSQT", "'"); // Replace quotes
+		
+		string = string.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
+		string = string.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+		string = string.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+		string = string.replace(/\(\)/g, "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
+		
 		//replace(/(\))(\n)(\s*)/g, "$1$2")
 		$('#hierarchy-str').html(string);
 		
@@ -992,6 +999,18 @@
 	//$(document).bind('keydown', '2', function(event) { $('#btn-trace').click() }); // alternative for argument
 	$(document).bind('keydown', '1', function(event) { $('#btn-null').click() }); // alternative for adjunct
 
+	$(document).bind('keydown', 'a', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['ADVP'].map(function (item) {
+																return item;
+															})); }); // change a current label to ADVP
+	$(document).bind('keydown', 'ctrl+shift+b', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['SBARQ'].map(function (item) {
+																return item;
+															})); }); // change a current label to SBARQ
+	$(document).bind('keydown', 'ctrl+shift+q', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['SQ'].map(function (item) {
+																return item;
+															})); }); // change a current label to SQ
 	$(document).bind('keydown', 'shift+p', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['PP'].map(function (item) {
 																return item;
