@@ -288,6 +288,9 @@
 			<li>Select "Add as child" or "Add as sibling".
 			<li>Click "Update" button. The new node will appear on the right edge.
 			</ol>
+			<ol><li>Note: when you hit ctrl-z, the tool will automatically delete the following types of empty nodes: those that contain no leaves whatsoever (NP ) or (S ) or a node that contains such nodes, like (NP (NP )) or (SBAR (S )). 
+			<li>However, the tool will not automatically delete empty nodes that are nested multiple times, like (NP (NP (NP ))).
+			</ol>
 		</ol>
 		
 		<h2>Keyboard shortcuts</h2>
@@ -320,6 +323,9 @@
 				<li>Change (change) label: <b>`</b> (the key on the left of "1")
 				<li>Change label to INTJ: <b>i</b>
 				<li>Change label to SBAR: <b>shift+b</b>
+				<li>Change label to SBARQ: <b>shift+5</b> (i.e. %)
+				<li>Change label to SQ: <b>shift+4</b> (i.e. $)
+				<li>Change label to ADVP: <b>a</b>
 				
 				<!--li>Edit node label to CONJP: <b>d</b> (for "and then", "but then") -->
 				<li>Add tag to label: <b>f</b> (e.g. change "NP" to "NP-ADV")
@@ -1003,11 +1009,11 @@
 																		['ADVP'].map(function (item) {
 																return item;
 															})); }); // change a current label to ADVP
-	$(document).bind('keydown', 'ctrl+shift+b', function(event) { oc.editLabel($('#selected-node').data('node'), 
+	$(document).bind('keydown', 'shift+5', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['SBARQ'].map(function (item) {
 																return item;
 															})); }); // change a current label to SBARQ
-	$(document).bind('keydown', 'ctrl+shift+q', function(event) { oc.editLabel($('#selected-node').data('node'), 
+	$(document).bind('keydown', 'shift+4', function(event) { oc.editLabel($('#selected-node').data('node'), 
 																		['SQ'].map(function (item) {
 																return item;
 															})); }); // change a current label to SQ
