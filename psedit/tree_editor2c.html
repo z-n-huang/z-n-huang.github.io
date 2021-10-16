@@ -486,7 +486,7 @@
 	  
 	  d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace ( or ) with [ or ]
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
-	  d = d.replace(/(\[)([\w-\$]+)/g, '$1"$2", '); // For tags
+	  d = d.replace(/(\[)([\w-\$\:]+)/g, '$1"$2", '); // For tags
 	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
 	  d = d.replace(/(\[)([\.\,\?\!\:\\#\/]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
 	  d = d.replace(/(\[)(\`\`)(\s+)/g, '$1"LDQT", '); // For quote tags, convert `` to LDQT
