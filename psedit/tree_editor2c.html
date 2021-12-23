@@ -480,6 +480,7 @@
 	  d = d.replace(/\s\s+/g, ' ').replace(/\t/g, ''); // trim extra whitespace
 	  d = d.replace(/(\s+)(\))/g, '$2'); // trim extra whitespace before close parenthesis
 	  d = d.replace(/\n$/, ""); // remove trailing \n
+	  d = d.replace(/\"/, "''"); // quotation marks in terminal nodes
 	  console.log(99, d)
 	  
 	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
@@ -490,7 +491,7 @@
 	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
 	  d = d.replace(/(\[)([\w-\$\:]+)/g, '$1"$2", '); // For tags
 	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
-	  d = d.replace(/(\[)([\.\,\?\!\:\\#\/\;\-\%\"]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
+	  d = d.replace(/(\[)([\.\,\?\!\:\\#\/\;\-\%]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
 	  d = d.replace(/(\[)(\`\`)(\s+)/g, '$1"LDQT", '); // For quote tags, convert `` to LDQT
 	  d = d.replace(/(\[)(\'\')(\s+)/g, '$1"RDQT", '); // For quote tags, convert '' to RDQT
 	  d = d.replace(/(\[)(\`)(\s+)/g, '$1"LSQT", '); // For quote tags, convert ` to LSQT
@@ -867,7 +868,7 @@
 		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
 		string = string.replace(/(\()(\n)(\s*)/g, "$1").replace(/    /g, " "); // no "stray" left parentheses; remove extra spaces
 		string = string.replace(/(\w\$*)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
-		string = string.replace(/([\.\,\?\!\\\/\`\'\:\$\%\"]+)(\n)(\s*)([\.\,\?\!\\\/\`\"\:\$\%\"]+)/g, '$1 $4'); // punctuation
+		string = string.replace(/([\.\,\?\!\\\/\`\'\:\$\%]+)(\n)(\s*)([\.\,\?\!\\\/\`\:\$\%]+)/g, '$1 $4'); // punctuation
 		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
 		//string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
 		string = string.replace("LDQT", "``"); // Replace quotes
