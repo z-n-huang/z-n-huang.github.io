@@ -480,7 +480,7 @@
 	  d = d.replace(/\s\s+/g, ' ').replace(/\t/g, ''); // trim extra whitespace
 	  d = d.replace(/(\s+)(\))/g, '$2'); // trim extra whitespace before close parenthesis
 	  d = d.replace(/\n$/, ""); // remove trailing \n
-	  d = d.replace(/\"/, "''"); // quotation marks in terminal nodes
+	  d = d.replace(/\"/g, "''"); // quotation marks in terminal nodes
 	  console.log(99, d)
 	  
 	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
