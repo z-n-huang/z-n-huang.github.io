@@ -147,7 +147,8 @@
 		<li><a href="#tabs-brackets">Check brackets</a></li>
 		<li><a href="#tabs-license">About</a></li>
 		<li><input type="file" id="fileInput" style = "position: relative; right: -40px;"></li>
-		<li><a download="current_all_trees.txt" id="downloadlink" style="display: none; align: right;">Download txt</a><li>
+		<li><div id="file-n-trees" name="file-n-trees" style="position: relative; right: -50px; bottom: -5px;"></div></li>
+		<li><a download="current_all_trees.txt" id="downloadlink" style="display: none; position: relative; right: -100px; bottom: -5px;">Download txt</a><li>
 	</ul>
 	<div id="tabs-1" style = "">
 
@@ -939,7 +940,9 @@
 			trees = rawtext.split("\r\n\r\n");
 			updatedTreesArray = rawtext.split("\r\n\r\n");
 			}
-			
+		// print number of trees
+		
+		document.getElementById("file-n-trees").innerHTML = "Last tree is Tree " + (updatedTreesArray.length -1).toString();
 	  };
 	  reader.readAsText(this.files[0]);
 	});
