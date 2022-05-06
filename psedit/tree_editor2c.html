@@ -305,7 +305,7 @@
 				<li>Add null complementiser: <b>4</b>
 				<li>Add null NP: <b>1</b>
 				<li>Add null "have": <b>h</b>
-				<li>Add null "to": <b>t</b>
+				<li>Add null "to": <b>shift+t</b>
 			<li>Keyboard shortcuts for adding nonterminal nodes
 			<ol>
 				<li>"S": <b>s</b>
@@ -1065,7 +1065,7 @@
 	$(document).bind('keydown', 'b', function(event) { terminal('VB', '*0*'); }); // null ver*b*
 	$(document).bind('keydown', '3', function(event) { terminal('ADVP', '*'); }); // Add adverb trace
 	$(document).bind('keydown', 'h', function(event) { terminal('VBH', '*'); }); // Add a null "HAVE"
-	$(document).bind('keydown', 't', function(event) { terminal('TO', '*'); }); // Add a null "TO"
+	$(document).bind('keydown', 'shift+t', function(event) { terminal('TO', '*'); }); // Add a null "TO"
 	$(document).bind('keydown', '2', function(event) { terminal('NP', '*'); }); // Add NP trace
 	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
 	$(document).bind('keydown', 'w', function(event) { nonterm('INTJ'); }); // alternative - interjection; INTJ
