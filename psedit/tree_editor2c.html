@@ -306,6 +306,7 @@
 				<li>Add null NP: <b>1</b>
 				<li>Add null "have": <b>h</b>
 				<li>Add null "to": <b>shift+t</b>
+				<li>Add null "if" complementiser (e.g. "ask you can go or not", meaning "ask whether you can go"): <b>shift+i</b>
 			<li>Keyboard shortcuts for adding nonterminal nodes
 			<ol>
 				<li>"S": <b>s</b>
@@ -1066,6 +1067,7 @@
 	$(document).bind('keydown', 'h', function(event) { terminal('VBH', '*'); }); // Add a null "HAVE"
 	$(document).bind('keydown', 'shift+t', function(event) { terminal('TO', '*'); }); // Add a null "TO"
 	$(document).bind('keydown', '2', function(event) { terminal('NP', '*'); }); // Add NP trace
+	$(document).bind('keydown', 'shift+i', function(event) { terminal('C', '*if*'); }); // Add null if complementizer
 	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
 	$(document).bind('keydown', 'w', function(event) { nonterm('INTJ'); }); // alternative - interjection; INTJ
 	$(document).bind('keydown', 'r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
