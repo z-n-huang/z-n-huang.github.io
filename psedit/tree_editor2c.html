@@ -500,6 +500,7 @@
 	  d = d.replace(/(\[)(\'\')(\s+)/g, '$1"RDQT", '); // For quote tags, convert '' to RDQT
 	  d = d.replace(/(\[)(\`)(\s+)/g, '$1"LSQT", '); // For quote tags, convert ` to LSQT
 	  d = d.replace(/(\[)(\')(\s+)/g, '$1"RSQT", '); // For quote tags, convert ' to RSQT
+	  d = d.replace(/�/g, "'");
 	  d = d.replace(/\s+(\S+?)(\s*)(\])/g, ' "$1" $3'); // Terminal nodes
 	  //d = d.replace(/(\w+\$*)/g, '"$1", ');
 	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
