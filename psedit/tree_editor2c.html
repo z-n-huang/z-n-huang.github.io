@@ -508,9 +508,12 @@
 	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
 	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
 	  d = d.trim().substring(0, d.length -1); // changes last "]," to "]"
+	  
+	  var regTerminal = /(\s\")(\S+)(\"\s)/g
 	  if (d.substr(-1) == ",") {
 		 d = d.substring(0, d.length -1);
 		 console.log(999, d);
+		 console.log(888, d.match(regTerminal));
 	  }
 	  
 	  //console.log(98, d)
@@ -868,7 +871,6 @@
 		
 		$('#hierarchy-str').html('');
 		var string = JSON.stringify(hierarchy, null, 2);
-		
 		string = string.replace(/\{/g, "\(").replace(/\}/g, "\)").replace(/\]\n/g, ""); // replace braces with parentheses
 		string = string.replace(/\"lex\": \"\*\*\*\",\n/g, '').replace(/\"category\": \"/g, '').replace(/\"children\": \[\n/g, '');
 		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
@@ -891,11 +893,19 @@
 		$('#hierarchy-str').html(string);
 		
 		var spinnerVal = document.getElementById("spinner").value;// spinner.spinner("value")
-		//console.log(spinnerVal, string);
-		$('#all-strs').append("\n// Tree id: " + spinnerVal.toString() + "\n\n");
-		$('#all-strs').append(string);
-		updatedTreesDict[spinnerVal] = string;
-		updatedTreesArray[spinnerVal] = string;
+		
+		editedStr = string.replace(/(\(\S+\s+)/g, '').replace(/(\)+)/g, '').replace(/\s+/g, ' ').trim();
+		origStr = updatedTreesArray[spinnerVal].replace(/(\(\S+\s+)/g, '').replace(/(\)+)/g, '').replace(/\s+/g, ' ').trim();
+		if (editedStr != origStr) {
+		    confirm("Word order mismatch. Proceed?");
+			console.log("mismatch - no, don't proceed");
+		} else {
+			//console.log(spinnerVal, string);
+			$('#all-strs').append("\n// Tree id: " + spinnerVal.toString() + "\n\n");
+			$('#all-strs').append(string);
+			updatedTreesDict[spinnerVal] = string;
+			updatedTreesArray[spinnerVal] = string;
+		}
       //}
     });
   
