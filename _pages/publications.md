@@ -3,6 +3,10 @@ layout: archive
 title: "Publications"
 permalink: /publications/
 author_profile: true
+redirect_from: 
+  - /publications/
+  - /publications.html
+
 ---
 Please email me if the manuscript is not available for download!
 
