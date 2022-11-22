@@ -9,6 +9,8 @@ Please email me if the manuscript is not available for download!
 Refereed journal publications
 ======
 + Submitted. An experimental investigation of bridge effects: what we thought we knew and what we need to find out. (With Diogo Almeida and Jon Sprouse.)
++ Accepted (with revisions). Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*.
++ To appear. Tagging Singapore English. *World Englishes*. DOI: [https://doi.org/10.1111/weng.12597] (with Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao. NH and ZB: corresponding authors)
 + 2022. How subjects and possessors can obviate phasehood. *Linguistic Inquiry* 53(3): 427–458. DOI: [https://doi.org/10.1162/ling_a_00414] {[manuscript](), [materials]()}
 + 2022. Syntactic bootstrapping attitude verbs despite impoverished morphosyntax. *Language Acquisition* 29(1): 27-53. (With Aaron Steven White, Chia-Hsuan Liao, Valentine Hacquard, and Jeffrey Lidz.) {[manuscript](), [scripts]()}
 + 2021. When missing NPs make double center-embedding sentences acceptable. (With Colin Phillips.) (Glossa* 6(1): 37. 1–28. DOI: [https://doi.org/10.5334/gjgl.1292] {[manuscript](), [materials]()}
