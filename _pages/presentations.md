@@ -1,14 +1,13 @@
 ---
-title: "Publications"
-permalink: /publications/
+title: "Presentations"
+permalink: /presentations/
 author_profile: true
 redirect_from: 
-  - /publications.html
+  - /presentations.html
 
 ---
-Please email me if the manuscript is not available for download!
 
-Refereed journal publications
+Selected presentation slides
 ======
 + Submitted. An experimental investigation of bridge effects. (With Diogo Almeida and Jon Sprouse.)
 + Accepted (with revisions). Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*.
@@ -20,7 +19,7 @@ Refereed journal publications
 + 2017\. The logic of syntactic priming and acceptability judgments (commentary article, with Phoebe Gaston and Colin Phillips). *Behavioral and Brain Sciences*, 40. DOI: <https://doi.org/10.1017/S0140525X17000371>
 
 
-Conference proceedings
+Selected conference posters
 ======
 
 

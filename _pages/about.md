@@ -6,6 +6,8 @@ redirect_from:
   - /about/
   - /about.html
 ---
+(Site under construction! Apologies for typos, broken links, etc.)
+======
 
 I am an assistant professor at the [Department of English, Linguistics and Theatre Studies](https://fass.nus.edu.sg/elts/) at the [National University of Singapore](https://www.nus.edu.sg/).
 
@@ -20,18 +22,18 @@ I am a linguist interested in understanding the relation between linguistic expe
 1. How are adults apply these rules in production and comprehension?
 1. And what even are these rules, anyway? And what are the facts like for production and comprehension, anyway?
  
-On a day-to-day basis, I develop more precise descriptions of linguistic knowledge and behaviour (Question 3), often taking a cross-linguistic perspective and using formal experiments. Addressing Question 3 sets the stage for tackling Questions 1 and 2, which I  a combination of corpus analyses and computational models. 
+On a day-to-day basis, I develop more precise descriptions of linguistic knowledge and behaviour (Question 3), often taking a cross-linguistic perspective and using formal experiments. Addressing Question 3 sets the stage for addressing Questions 1 and 2, via a combination of corpus analyses, computational models, and experiments.
 
 Finally, as someone who grew up in a multilingual, code-switching environment, I am also interested in dialectal variation and language contact, such as Singapore English.
 
 Some specific topics that I have worked on:
-+ cross-linguistic differences in the syntax and meaning of attitude verbs, such as *think*, *want*, *know*, and how children might learn what the facts are for these verbs in their native languages
-+ the syntax, pragmatics, and psycholinguistics of long distance dependencies (e.g. wh-questions)
++ cross-linguistic differences in the syntax and meaning of attitude verbs, such as *think*, *want*, *know*, and how children might learn what the facts are for these verbs in their native languages.
++ the syntax, pragmatics, and psycholinguistics of long distance dependencies (e.g. wh-questions).
 + Singapore English and how certain aspects of its grammar might be traced (or not!) to adstrate languages like English, Chinese, and Malay varieties.
 
-Supervision
+Supervision and collaboration
 ======
-NUS is an exciting place for doing linguistics (see "Resources"). Please get in touch if you are interested!
+NUS is an exciting place for doing linguistics (especially languages of East and Southeast Asia), with [lab facilities, corpora](https://z-n-huang.github.io/nus-resources/), and a community of [like-minded faculty and students](https://fass.nus.edu.sg/elts/). Please get in touch if you are interested!
 
 Recent updates
 ======
