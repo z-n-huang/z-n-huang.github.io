@@ -28,7 +28,8 @@ Finally, as someone who grew up in a multilingual environment in Singapore, I am
 
 Some specific topics that I have worked on:
 + cross-linguistic differences in the syntax and meaning of attitude verbs, such as "think", "want", "know", and how children might learn what the facts are for these verbs in their native languages.
-+ the syntax, pragmatics, and psycholinguistics of long distance dependencies (e.g. wh-questions).
++ the syntax, pragmatics, and psycholinguistics of long distance dependencies (e.g. wh-questions), which again involve attitude verbs.
++ cross-linguistic differences in whether ungrammatical sentences sound bad or surprisingly OK (i.e. "grammaticality illusions").
 + Singapore English and how certain aspects of its grammar might be traced (or not!) to adstrate languages like English, Chinese, and Malay varieties.
 
 Supervision and collaboration
