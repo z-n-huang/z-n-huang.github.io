@@ -6,11 +6,12 @@ redirect_from:
   - /publications.html
 
 ---
-Please email me if the manuscript is not available for download!
+Please email me if the manuscript is not available for download.
 
 Refereed journal publications
 ======
 + Submitted. An experimental investigation of bridge effects. (With Diogo Almeida and Jon Sprouse.)
++ Submitted. A future for desire verbs: Language change from a synchronic perspective. (With Annemarie van Dooren and Gesoel Mendes. AvD, NH, GM: joint first authors.)
 + Accepted (with revisions). Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*.
 + To appear. Tagging Singapore English. (with Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao. NH and ZB: corresponding authors) *World Englishes*. DOI: <https://doi.org/10.1111/weng.12597> 
 + 2022\. How subjects and possessors can obviate phasehood. *Linguistic Inquiry* 53(3): 427–458. DOI: <https://doi.org/10.1162/ling_a_00414> {[PDF](https://z-n-huang.github.io/files/Huang2022_LI_Subjects_Possessors_Phases.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/005834), [materials](https://z-n-huang.github.io/files/materials/Huang2022_LI_Subjects_Possessors_Phases_materials.pdf)}
