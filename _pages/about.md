@@ -7,8 +7,6 @@ redirect_from:
   - /about.html
 ---
 
-**(Site under construction! Apologies for typos, broken links, etc.)**
-
 I am an assistant professor at the [Department of English, Linguistics and Theatre Studies](https://fass.nus.edu.sg/elts/) at the [National University of Singapore](https://www.nus.edu.sg/).
 
 Email me at either:
