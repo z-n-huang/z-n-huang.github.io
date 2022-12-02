@@ -32,6 +32,8 @@ Some specific topics that I have worked on:
 + cross-linguistic differences in whether ungrammatical sentences sound bad or surprisingly OK (i.e. "grammaticality illusions").
 + Singapore English and how certain aspects of its grammar might be traced (or not!) to adstrate languages like English, Chinese, and Malay varieties.
 
+My CV can be found [here](https://z-n-huang.github.io/files/cv_Huang_Dec2022.pdf).
+
 Collaboration and supervision
 ======
 NUS is an exciting place for doing linguistics (especially languages of East and Southeast Asia), with [lab facilities, corpora](https://z-n-huang.github.io/nus-resources/), and a community of [like-minded faculty and students](https://fass.nus.edu.sg/elts/). Please get in touch if you are interested.
