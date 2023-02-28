@@ -10,9 +10,8 @@ Please email me if the manuscript is not available for download.
 
 Refereed journal publications
 ======
-+ Under review. An experimental investigation of bridge effects. (With Diogo Almeida and Jon Sprouse.)
 + Under review. A future for desire verbs: Language change from a synchronic perspective. (With Annemarie van Dooren and Gesoel Mendes. AvD, NH, GM: joint first authors.)
-+ Accepted (with revisions). Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*.
++ Accepted (with revisions). Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*. {[Lingbuzz](https://ling.auf.net/lingbuzz/007149), [materials](https://z-n-huang.github.io/files/materials/Huang_NLLT_materials.pdf)}}
 + To appear. Tagging Singapore English. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao. NH and ZB: corresponding authors) *World Englishes*. DOI: <https://doi.org/10.1111/weng.12597> 
 + 2022\. How subjects and possessors can obviate phasehood. *Linguistic Inquiry* 53(3): 427–458. DOI: <https://doi.org/10.1162/ling_a_00414> {[PDF](https://z-n-huang.github.io/files/Huang2022_LI_Subjects_Possessors_Phases.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/005834), [materials](https://z-n-huang.github.io/files/materials/Huang2022_LI_Subjects_Possessors_Phases_materials.pdf)}
 + 2022\. Syntactic bootstrapping attitude verbs despite impoverished morphosyntax. (With Aaron Steven White, Chia-Hsuan Liao, Valentine Hacquard, and Jeffrey Lidz.) *Language Acquisition* 29(1): 27-53. DOI: <https://doi.org/10.1080/10489223.2021.1934686> {[PDF](https://z-n-huang.github.io/files/HuangWhiteLiaoHacquardLidz2022_LA_syntactic_bootstrapping.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/005553), [scripts](https://github.com/z-n-huang/SyntacticBootstrappingModel)}
