@@ -1,7 +1,7 @@
 ---
 title: "Some remarks on data collection"
-permalink: /misc/experiments/
-author_profile: true
+permalink: /nus-resources/experiments/
+author_profile: false
 redirect_from: 
   - /experiment.html
 
