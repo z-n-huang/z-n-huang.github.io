@@ -7,10 +7,6 @@ redirect_from:
 
 ---
 
-
-Some remarks on data collection
-======
-
 You want to collect data over the internet but do not need specialised data, like eye movement or ERP data. There are two relatively easy to use options on the market at the moment:
 
 + [PCIbex](https://farm.pcibex.net/) (Zehr & Schwarz)
