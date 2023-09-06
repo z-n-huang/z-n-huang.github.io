@@ -28,15 +28,12 @@ My colleague [Aine Ito](https://aineito.github.io
   + National Corpus of Singapore English -- a treebank that Bao Zhiming and I have been developing. We are unable to make the raw files publicly available, but please reach out if you have any questions.
   + ... (NUS has a subscription to the Linguistic Data Consortium)
 
-Other resources
-======
-I gave a short tutorial on pros/cons of Qualtrics vs. PCIbex at a lab meeting. Notes and some useful links [here](/nus-resources/experiments/).
-
 Language and Linguistics Cluster
 ======
 The NUS [Language and Linguistics Cluster](https://fass.nus.edu.sg/language-and-linguistics-cluster/) organises talks and seminar around psycholinguistics, linguistic theory, and sociolinguistics. There are also reading groups on sociolinguistics and syntax-semantics (and some experimental linguistics)
 
+
 Other resources
 ======
 + [Phrase Structure Tree Editor](https://z-n-huang.github.io/psedit/tree_editor2c.html). An online drag-and-drop syntax tree editor I created as part of a Singapore English corpus project.
-
++ I gave a short tutorial on pros/cons of Qualtrics vs. PCIbex at a lab meeting in Sep 2023. Notes and some useful links [here](/nus-resources/experiments/).
