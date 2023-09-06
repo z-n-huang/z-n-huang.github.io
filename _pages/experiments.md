@@ -7,11 +7,11 @@ redirect_from:
 
 ---
 
-You want to collect data over the internet but do not need specialised data, like eye movement or ERP data. There are two relatively easy to use options on the market at the moment:
+You want to collect data over the internet but do not need specialised data, like eye movement or ERP data. There are two relatively easy to use / free-to-use (for NUS staff/students) options on the market at the moment:
 
 + [PCIbex](https://farm.pcibex.net/) (Zehr & Schwarz)
 + [Qualtrics](https://nus.au1.qualtrics.com/Q/MessagesSection?ContextLibraryID=UR_1H8xwes4UtHK6Sp&LibraryID=UR_1H8xwes4UtHK6Sp) (NUS login needed)
-+ Honourable mentions: Gorilla (but requires payment), Pavlovia/PsychoPy (but requires Python), Amazon Mechanical Turk (but data quality concerns)
++ Honourable mentions: Gorilla (but requires payment), Pavlovia/PsychoPy (but requires Python), Amazon Mechanical Turk (but data quality concerns), Wenjuanxing, ...
 
 
 Deciding between PCIbex and Qualtrics
