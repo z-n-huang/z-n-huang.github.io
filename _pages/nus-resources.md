@@ -28,6 +28,9 @@ My colleague [Aine Ito](https://aineito.github.io
   + National Corpus of Singapore English -- a treebank that Bao Zhiming and I have been developing. We are unable to make the raw files publicly available, but please reach out if you have any questions.
   + ... (NUS has a subscription to the Linguistic Data Consortium)
 
+Other resources
+======
+I gave a short tutorial on pros/cons of Qualtrics vs. PCIbex at a lab meeting. Notes and some useful links [here](/nus-resources/experiments/).
 
 Language and Linguistics Cluster
 ======
