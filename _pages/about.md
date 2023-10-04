@@ -41,7 +41,8 @@ Interested in participating in language research at NUS?
 ======
 For information about upcoming studies, click [here](https://blog.nus.edu.sg/langsci/)!
 
-Recent updates (August 2023)
+Recent updates (October 2023)
 ======
++ Gave an online department seminar at the Department of Linguistics at the University of Hong Kong, on attitude verbs, Chinese, and bootstrapping.
 + Started a three-year term on the editorial board of the [Journal of East Asian Linguistics](https://www.springer.com/journal/10831).
-+ Co-presenting with my colleague [Zheng Shen](https://zheng-shen.github.io/) experimental research on cross-linguistic variation in wh-dependencies (viz. English and Mandarin) at several upcoming conferences: Conference on Human Sentence Processing, GLOW 46, the UPenn workshop on Locality in Theory, Processing, and Acquisition, the Workshop on Theoretical East Asian Linguistics 13. This project builds on work by Zheng on wh-extraction from DPs as well as my own work, published in *[How subjects and possessors can obviate phasehood](https://doi.org/10.1162/ling_a_00414)* (*LI*, 2022)
++ Co-presented with my colleague [Zheng Shen](https://zheng-shen.github.io/) experimental research on cross-linguistic variation in wh-dependencies (viz. English and Mandarin) at several upcoming conferences: Conference on Human Sentence Processing, GLOW 46, the UPenn workshop on Locality in Theory, Processing, and Acquisition, the Workshop on Theoretical East Asian Linguistics 13. This project builds on work by Zheng on wh-extraction from DPs as well as my own work, published in *[How subjects and possessors can obviate phasehood](https://doi.org/10.1162/ling_a_00414)* (*LI*, 2022)
