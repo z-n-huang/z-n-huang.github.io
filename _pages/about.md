@@ -43,7 +43,7 @@ For information about upcoming studies, click [here](https://blog.nus.edu.sg/lan
 
 Recent updates (October 2023)
 ======
++ Presenting (with Serene Siow) two posters, one at [Many Paths to Language](https://www.mpi.nl/events/many-paths-language-mpal-2023), *Believe what you see: Children's interpretations of perception verbs used for beliefs* and then at [BUCLD](https://www.bu.edu/bucld/), *Learning factivity via syntax and pragmatics: a corpus study*.
 + Organizing the [8th Asian Junior Linguists](https://sites.google.com/view/ajl8nus/home) conference -- mid-November 2023!
 + Gave an online department seminar at the Department of Linguistics at the University of Hong Kong, on attitude verbs, Chinese, and bootstrapping.
 + Started a three-year term on the editorial board of the [Journal of East Asian Linguistics](https://www.springer.com/journal/10831).
-+ Co-presented with my colleague [Zheng Shen](https://zheng-shen.github.io/) experimental research on cross-linguistic variation in wh-dependencies (viz. English and Mandarin) at several upcoming conferences: Conference on Human Sentence Processing, GLOW 46, the UPenn workshop on Locality in Theory, Processing, and Acquisition, the Workshop on Theoretical East Asian Linguistics 13. This project builds on work by Zheng on wh-extraction from DPs as well as my own work, published in *[How subjects and possessors can obviate phasehood](https://doi.org/10.1162/ling_a_00414)* (*LI*, 2022)
