@@ -41,10 +41,10 @@ Interested in participating in language research at NUS?
 ======
 For information about upcoming studies, click [here](https://blog.nus.edu.sg/langsci/)!
 
-Recent updates (December 2023)
+Recent updates (January 2024)
 ======
++ Giving a talk at LSA 2024 on joint work with Serene Siow: *Assessing the feasibility of bootstrapping factivity through syntax and pragmatics*.
 + Now out in the latest issue of *World Englishes*: [Tagging Singapore English](https://doi.org/10.1111/weng.12597).
 + Presented (with Serene Siow) two posters, one at [Many Paths to Language](https://www.mpi.nl/events/many-paths-language-mpal-2023), *Believe what you see: Children's interpretations of perception verbs used for beliefs* and then at [BUCLD](https://www.bu.edu/bucld/), *Learning factivity via syntax and pragmatics: a corpus study*.
 + Organized the [8th Asian Junior Linguists](https://sites.google.com/view/ajl8nus/home) conference in November 2023.
-+ Gave an online department seminar at the Department of Linguistics at the University of Hong Kong, on attitude verbs, Chinese, and bootstrapping.
 + Started a three-year term on the editorial board of the [Journal of East Asian Linguistics](https://www.springer.com/journal/10831).
