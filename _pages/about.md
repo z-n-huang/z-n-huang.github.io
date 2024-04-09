@@ -7,7 +7,7 @@ redirect_from:
   - /about.html
 ---
 
-I am an assistant professor at the [Department of English, Linguistics and Theatre Studies](https://fass.nus.edu.sg/elts/) at the [National University of Singapore](https://www.nus.edu.sg/).
+I am an assistant professor at the [Department of English, Linguistics and Theatre Studies](https://fass.nus.edu.sg/elts/) at the [National University of Singapore](https://www.nus.edu.sg/). I currently serve on the editorial board of the [Journal of East Asian Linguistics](https://link.springer.com/journal/10831).
 
 Email me at either:
 + znhuang at nus dot edu dot sg, or
@@ -41,10 +41,9 @@ Interested in participating in language research at NUS?
 ======
 For information about upcoming studies, click [here](https://blog.nus.edu.sg/langsci/)!
 
-Recent updates (January 2024)
+Recent updates (April 2024)
 ======
-+ Giving a talk at LSA 2024 on joint work with Serene Siow: *Assessing the feasibility of bootstrapping factivity through syntax and pragmatics*.
++ Giving an invited talk at the Experimental Linguistics workshop at the National Tsing Hua University in May 2024.
 + Now out in the latest issue of *World Englishes*: [Tagging Singapore English](https://doi.org/10.1111/weng.12597).
-+ Presented (with Serene Siow) two posters, one at [Many Paths to Language](https://www.mpi.nl/events/many-paths-language-mpal-2023), *Believe what you see: Children's interpretations of perception verbs used for beliefs* and then at [BUCLD](https://www.bu.edu/bucld/), *Learning factivity via syntax and pragmatics: a corpus study*.
++ Gave a talk at LSA 2024 on joint work with Serene Siow: *Assessing the feasibility of bootstrapping factivity through syntax and pragmatics*.
 + Organized the [8th Asian Junior Linguists](https://sites.google.com/view/ajl8nus/home) conference in November 2023.
-+ Started a three-year term on the editorial board of the [Journal of East Asian Linguistics](https://www.springer.com/journal/10831).

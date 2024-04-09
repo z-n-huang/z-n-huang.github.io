@@ -10,7 +10,6 @@ Please email me if the manuscript is not available for download.
 
 Refereed journal publications
 ======
-+ Under review. A future for desire verbs: Language change from a synchronic perspective. (With Annemarie van Dooren and Gesoel Mendes. AvD, NH, GM: joint first authors.)
 + In press. Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*. DOI: <https://doi.org/10.1007/s11049-023-09591-4> {[Lingbuzz](https://ling.auf.net/lingbuzz/007149), [materials](https://z-n-huang.github.io/files/materials/Huang_NLLT_materials.pdf)}
 + 2023\. Tagging Singapore English. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao. NH and ZB: corresponding authors) *World Englishes* 42(4): 624-641. DOI: <https://doi.org/10.1111/weng.12597> 
 + 2022\. How subjects and possessors can obviate phasehood. *Linguistic Inquiry* 53(3): 427–458. DOI: <https://doi.org/10.1162/ling_a_00414> {[PDF](https://z-n-huang.github.io/files/Huang2022_LI_Subjects_Possessors_Phases.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/005834), [materials](https://z-n-huang.github.io/files/materials/Huang2022_LI_Subjects_Possessors_Phases_materials.pdf)}
