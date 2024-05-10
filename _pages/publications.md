@@ -11,6 +11,7 @@ Please email me if the manuscript is not available for download.
 Refereed journal publications
 ======
 + In press. Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory*. DOI: <https://doi.org/10.1007/s11049-023-09591-4> {[Lingbuzz](https://ling.auf.net/lingbuzz/007149), [materials](https://z-n-huang.github.io/files/materials/Huang_NLLT_materials.pdf)}
++ 2024\. Reversal of the concreteness effect can be detected in the natural speech of older adults with amnestic, but not non-amnestic, mild cognitive impairment. (With Luwen Cao et al.) *Alzheimer's & Dementia: Diagnosis, Assessment & Disease Monitoring* 16(2): e12588. DOI: <https://doi.org/10.1002/dad2.12588>.
 + 2023\. Tagging Singapore English. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao. NH and ZB: corresponding authors) *World Englishes* 42(4): 624-641. DOI: <https://doi.org/10.1111/weng.12597> 
 + 2022\. How subjects and possessors can obviate phasehood. *Linguistic Inquiry* 53(3): 427–458. DOI: <https://doi.org/10.1162/ling_a_00414> {[PDF](https://z-n-huang.github.io/files/Huang2022_LI_Subjects_Possessors_Phases.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/005834), [materials](https://z-n-huang.github.io/files/materials/Huang2022_LI_Subjects_Possessors_Phases_materials.pdf)}
 + 2022\. Syntactic bootstrapping attitude verbs despite impoverished morphosyntax. (With Aaron Steven White, Chia-Hsuan Liao, Valentine Hacquard, and Jeffrey Lidz.) *Language Acquisition* 29(1): 27-53. DOI: <https://doi.org/10.1080/10489223.2021.1934686> {[PDF](https://z-n-huang.github.io/files/HuangWhiteLiaoHacquardLidz2022_LA_syntactic_bootstrapping.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/005553), [scripts](https://github.com/z-n-huang/SyntacticBootstrappingModel)}
@@ -21,6 +22,7 @@ Refereed journal publications
 
 Conference proceedings
 ======
++ In press. Learning factivity via syntax and pragmatics: a corpus study. (With Serene Siow) *Proceedings of the 48th annual Boston University Conference on Language Development*. 
 + 2022\. Learning the subcategorization properties of attitude verbs in wh-in situ languages. (With Yu'an Yang (co-first author), Valentine Hacquard, and Jeffrey Lidz) *Proceedings of the 46th annual Boston University Conference on Language Development*, ed. Ying Gong and Felix Kpogo. 338-350. {[PDF](http://www.lingref.com/bucld/46/BUCLD46-26.pdf)} 
 + 2020\. “Wanting” the future: The case of future *yao*. (With Annemarie van Dooren and Gesoel Mendes.) *Proceedings of the 32nd North American Conference on Chinese Linguistics*, ed. Kaidi Chen. 189-205. Storrs, CT: University of Connecticut.  {[Lingbuzz](https://ling.auf.net/lingbuzz/005841)}
 + 2019\. On pronominalization and ellipsis in clausal idioms. (With Gesoel Mendes.) *Proceedings of the 49th annual meeting of the North East Linguistic Society*, ed. Maggie Baird and Jonathan Pesetsky, vol. 2, 123-130. Amherst, Mass.: GLSA. {[Lingbuzz](https://ling.auf.net/lingbuzz/004558)}
