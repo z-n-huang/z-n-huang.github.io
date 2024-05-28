@@ -30,7 +30,7 @@ Some specific topics that I have worked on:
 + cross-linguistic differences in whether ungrammatical sentences sound bad or surprisingly OK (i.e. "grammaticality illusions").
 + Singapore English and how certain aspects of its grammar might be traced (or not!) to adstrate languages like English, Chinese, and Malay varieties.
 
-My CV can be found [here](https://z-n-huang.github.io/files/cv_Huang_Dec2022.pdf).
+My CV can be found [here](https://z-n-huang.github.io/files/cv_Huang_Jan2024.pdf).
 
 Collaboration and supervision
 ======
@@ -43,7 +43,6 @@ For information about upcoming studies, click [here](https://blog.nus.edu.sg/lan
 
 Recent updates (April 2024)
 ======
-+ Giving an invited talk at the Experimental Linguistics workshop at the National Tsing Hua University in May 2024.
-+ Now out in the latest issue of *World Englishes*: [Tagging Singapore English](https://doi.org/10.1111/weng.12597).
++ Giving an invited talk at the [2024 NTHU Linguistics Forum](https://sites.google.com/gapp.nthu.edu.tw/nthu-ling-forum-2024/%E9%A6%96%E9%A0%81-home) at the National Tsing Hua University in May 2024.
 + Gave a talk at LSA 2024 on joint work with Serene Siow: *Assessing the feasibility of bootstrapping factivity through syntax and pragmatics*.
 + Organized the [8th Asian Junior Linguists](https://sites.google.com/view/ajl8nus/home) conference in November 2023.
