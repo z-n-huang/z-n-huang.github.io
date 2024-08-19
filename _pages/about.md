@@ -41,8 +41,9 @@ Interested in participating in language research at NUS?
 ======
 For information about upcoming studies, click [here](https://blog.nus.edu.sg/langsci/)!
 
-Recent updates (May 2024)
+Recent updates (Aug 2024)
 ======
++ Co-advising the organising of [COEDA 2024](https://sites.google.com/view/coeda/home) at NUS, 27-28 September. Excited to welcome colleagues and graduate students from Seoul National University, University of Hong Kong, and National Taiwan University!
 + Gave an invited talk at the [2024 NTHU Linguistics Forum](https://sites.google.com/gapp.nthu.edu.tw/nthu-ling-forum-2024/%E9%A6%96%E9%A0%81-home) at the National Tsing Hua University in May 2024.
 + Gave a talk at LSA 2024 on joint work with Serene Siow: *Assessing the feasibility of bootstrapping factivity through syntax and pragmatics*.
 + Organized the [8th Asian Junior Linguists](https://sites.google.com/view/ajl8nus/home) conference in November 2023.
