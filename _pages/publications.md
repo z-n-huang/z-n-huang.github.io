@@ -10,6 +10,7 @@ Please email me if the manuscript is not available for download.
 
 Refereed journal publications
 ======
++ Accepted (with revisions). A nearly exhaustive experimental investigation of bridge effects in English. (With Diogo Almeida and Jon Sprouse.) *Language*.
 + Accepted (with revisions). Treebanks and World Englishes: a Singapore English perspective. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao.) *English World-Wide*.
 + 2024\. Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory* 42(2): 533-556. DOI: <https://doi.org/10.1007/s11049-023-09591-4> {[Lingbuzz](https://ling.auf.net/lingbuzz/007149), [materials](https://z-n-huang.github.io/files/materials/Huang_NLLT_materials.pdf)}
 + 2024\. Reversal of the concreteness effect can be detected in the natural speech of older adults with amnestic, but not non-amnestic, mild cognitive impairment. (With Luwen Cao et al.) *Alzheimer's & Dementia: Diagnosis, Assessment & Disease Monitoring* 16(2): e12588. DOI: <https://doi.org/10.1002/dad2.12588>. {PDF: see journal link (open-access)}
@@ -24,7 +25,8 @@ Refereed journal publications
 Conference proceedings
 ======
 + In press. Learning factivity via syntax and pragmatics: a corpus study. (With Serene Siow) *Proceedings of the 48th annual Boston University Conference on Language Development*. 
-+ 2022\. Learning the subcategorization properties of attitude verbs in wh-in situ languages. (With Yu'an Yang (co-first author), Valentine Hacquard, and Jeffrey Lidz) *Proceedings of the 46th annual Boston University Conference on Language Development*, ed. Ying Gong and Felix Kpogo. 338-350. {[PDF](http://www.lingref.com/bucld/46/BUCLD46-26.pdf)} 
++ 2024\. The role of main verbs in subextraction of wh-phrases from NPs. (with Zheng Shen) *Proceedings of GLOW in Asia XIV*, ed. Xiangyu Li et al. 107-118. The Chinese University of Hong Kong. {[PDF](https://ling.cuhk.edu.hk/glowxiv/Proceedings_GLOWinAsia14th.pdf)}
++ 2022\. Learning the subcategorization properties of attitude verbs in wh-in situ languages. (With Yu'an Yang (co-first author), Valentine Hacquard, and Jeffrey Lidz) *Proceedings of the 46th annual Boston University Conference on Language Development*, ed. Ying Gong and Felix Kpogo. 338-350. Somerville, Mass.: Cascadilla Press. {[PDF](http://www.lingref.com/bucld/46/BUCLD46-26.pdf)} 
 + 2020\. “Wanting” the future: The case of future *yao*. (With Annemarie van Dooren and Gesoel Mendes.) *Proceedings of the 32nd North American Conference on Chinese Linguistics*, ed. Kaidi Chen. 189-205. Storrs, CT: University of Connecticut.  {[Lingbuzz](https://ling.auf.net/lingbuzz/005841)}
 + 2019\. On pronominalization and ellipsis in clausal idioms. (With Gesoel Mendes.) *Proceedings of the 49th annual meeting of the North East Linguistic Society*, ed. Maggie Baird and Jonathan Pesetsky, vol. 2, 123-130. Amherst, Mass.: GLSA. {[Lingbuzz](https://ling.auf.net/lingbuzz/004558)}
 + 2018\. The bound possessor effect: a new argument for the phasehood of definite DPs. *Proceedings of the 48th annual meeting of the North East Linguistic Society*, ed. Sherry Hucklebridge and Max Nelson, vol. 2, 39-52. Amherst, Mass.: GLSA. {[Lingbuzz](https://ling.auf.net/lingbuzz/004015)} (Superseded by "How subjects and possessors can obviate phasehood".)
