@@ -13,7 +13,7 @@ A course for advanced undergraduates, intended to illustrate how certain linguis
 + ELC5104 Approaches to language. 
 {[NUSMods](https://nusmods.com/modules/ELC5104/approaches-to-language), [Syllabus](https://z-n-huang.github.io/files/teaching/Huang_EL5104_Approaches_to_Language_2022Sem1.pdf)}
 An general introduction to the various subfields of linguistics for Masters students.
-+ HS2914 How to Get Humans and Machines to Talk to Each Other {[NUSMods](https://nusmods.com/courses/HS2914/how-to-get-humans-and-machines-to-talk-to-each-other)}. An interdisciplinary course, co-taught with A/P Vik Gopal (NUS Statistics and Data Science), that looks at the basic principles from linguistics and statistics that underlie language models. This course is aimed at a general student audience.
++ HS2914 How to Get Humans and Machines to Talk to Each Other {[NUSMods](https://nusmods.com/courses/HS2914/how-to-get-humans-and-machines-to-talk-to-each-other)}. An interdisciplinary course, co-taught with Dr. Vik Gopal (NUS Statistics and Data Science) and Dr. Jing Wen Chai (NUS ELTS), that looks at the basic principles from linguistics and statistics that underlie language models. This course is aimed at a general student audience.
 
 At the University of Maryland
 ======
