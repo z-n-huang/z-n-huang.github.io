@@ -10,8 +10,8 @@ Please email me if the manuscript is not available for download.
 
 Refereed journal publications
 ======
-+ Accepted (with revisions). A nearly exhaustive experimental investigation of bridge effects in English. (With Diogo Almeida and Jon Sprouse.) *Language*.
-+ Accepted (with revisions). Treebanks and World Englishes: a Singapore English perspective. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao.) *English World-Wide*.
++ Accepted (with revisions). A nearly exhaustive experimental investigation of bridge effects in English. (With Diogo Almeida and Jon Sprouse.) *Language*. {[manuscript](https://z-n-huang.github.io/files/materials/HuangAlmeidaSprouse_Bridge_effects_202410.pdf)}
++ Accepted (with revisions). Treebanks and World Englishes: a Singapore English perspective. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao.) *English World-Wide* {[manuscript](https://z-n-huang.github.io/files/materials/Huangetal_EWW_Treebanks_Singapore_English_202410_preprint.pdf)}.
 + 2024\. Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory* 42(2): 533-556. DOI: <https://doi.org/10.1007/s11049-023-09591-4> {[Lingbuzz](https://ling.auf.net/lingbuzz/007149), [materials](https://z-n-huang.github.io/files/materials/Huang_NLLT_materials.pdf)}
 + 2024\. Reversal of the concreteness effect can be detected in the natural speech of older adults with amnestic, but not non-amnestic, mild cognitive impairment. (With Luwen Cao et al.) *Alzheimer's & Dementia: Diagnosis, Assessment & Disease Monitoring* 16(2): e12588. DOI: <https://doi.org/10.1002/dad2.12588>. {PDF: see journal link (open-access)}
 + 2023\. Tagging Singapore English. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao. NH and ZB: corresponding authors) *World Englishes* 42(4): 624-641. DOI: <https://doi.org/10.1111/weng.12597> 
