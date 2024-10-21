@@ -24,8 +24,8 @@ Refereed journal publications
 
 Conference proceedings
 ======
-+ In press. Learning factivity via syntax and pragmatics: a corpus study. (With Serene Siow) *Proceedings of the 48th annual Boston University Conference on Language Development*. 
-+ 2024\. The role of main verbs in subextraction of wh-phrases from NPs. (with Zheng Shen) *Proceedings of GLOW in Asia XIV*, ed. Xiangyu Li et al. 107-118. The Chinese University of Hong Kong. {[PDF](https://ling.cuhk.edu.hk/glowxiv/Proceedings_GLOWinAsia14th.pdf)}
++ 2024\. Learning factivity via syntax and pragmatics: a corpus study. (With Serene Siow) *Proceedings of the 48th annual Boston University Conference on Language Development*, ed. by Hayat Abdullah Ali AlThagafi and Jupitara Ray. 522-535. Somerville, Mass.: Cascadilla Press. {{[PDF](http://www.lingref.com/bucld/48/BUCLD48-40.pdf)}}
++ 2024\. The role of main verbs in subextraction of wh-phrases from NPs. (With Zheng Shen) *Proceedings of GLOW in Asia XIV*, ed. Xiangyu Li et al. 107-118. The Chinese University of Hong Kong. {[PDF](https://ling.cuhk.edu.hk/glowxiv/Proceedings_GLOWinAsia14th.pdf)}
 + 2022\. Learning the subcategorization properties of attitude verbs in wh-in situ languages. (With Yu'an Yang (co-first author), Valentine Hacquard, and Jeffrey Lidz) *Proceedings of the 46th annual Boston University Conference on Language Development*, ed. Ying Gong and Felix Kpogo. 338-350. Somerville, Mass.: Cascadilla Press. {[PDF](http://www.lingref.com/bucld/46/BUCLD46-26.pdf)} 
 + 2020\. “Wanting” the future: The case of future *yao*. (With Annemarie van Dooren and Gesoel Mendes.) *Proceedings of the 32nd North American Conference on Chinese Linguistics*, ed. Kaidi Chen. 189-205. Storrs, CT: University of Connecticut.  {[Lingbuzz](https://ling.auf.net/lingbuzz/005841)}
 + 2019\. On pronominalization and ellipsis in clausal idioms. (With Gesoel Mendes.) *Proceedings of the 49th annual meeting of the North East Linguistic Society*, ed. Maggie Baird and Jonathan Pesetsky, vol. 2, 123-130. Amherst, Mass.: GLSA. {[Lingbuzz](https://ling.auf.net/lingbuzz/004558)}
