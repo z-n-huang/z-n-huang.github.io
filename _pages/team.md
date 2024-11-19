@@ -11,10 +11,10 @@ Social science is social
 + Current undergraduate student RAs:
   + Firdaus Moner
   + Joel Tan
++ Alumni RAs:
   + Mannfred Tan
   + Spencer Lim
   + Wong Zi Shu
-+ Alumni RAs:
   + Koh Rui En
   + Luqman Hakeem
 
