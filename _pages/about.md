@@ -13,6 +13,11 @@ Email me at either:
 + znhuang at nus dot edu dot sg, or
 + znhuang at terpmail dot umd dot edu
 
+Recent updates (Feb 2025)
+======
++ Visiting the US in March: first for [TEAL 2025](https://sites.google.com/view/teal14/home) (talk with Cai Jiajia) and then [HSP 2025](https://hsp2025.github.io/) (posters with Colin Phillips; Serene Siow).
++ Co-organising [AMLaP Asia 2024](https://blog.nus.edu.sg/amlapasia2024/) at NUS, 5-7 December (and presenting a poster with Serene Siow and Rachel Dudley).
+
 What I do
 ======
 I am a linguist interested in understanding the relation between linguistic experience, sentence processing, and grammatical rules and what that relation might mean for our theories of language and the mind. More specifically, I'm interested in questions like:
@@ -40,9 +45,3 @@ Please get in touch if you are interested.
 Interested in participating in language research at NUS?
 ======
 For information about upcoming studies, click [here](https://blog.nus.edu.sg/langsci/)!
-
-Recent updates (Nov 2024)
-======
-+ Co-organising [AMLaP Asia 2024](https://blog.nus.edu.sg/amlapasia2024/) at NUS, 5-7 December (and presenting a poster with Serene Siow and Rachel Dudley).
-+ Co-advising the organising of [COEDA 2024](https://sites.google.com/view/coeda/home) at NUS, 27-28 September. Excited to welcome colleagues and graduate students from Seoul National University, University of Hong Kong, and National Taiwan University!
-+ Gave an invited talk at the [2024 NTHU Linguistics Forum](https://sites.google.com/gapp.nthu.edu.tw/nthu-ling-forum-2024/%E9%A6%96%E9%A0%81-home) at the National Tsing Hua University in May 2024.
