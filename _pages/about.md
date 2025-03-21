@@ -15,7 +15,7 @@ Email me at either:
 
 Recent updates (Feb 2025)
 ======
-+ Visiting the US in March: first for [TEAL 2025](https://sites.google.com/view/teal14/home) (talk with Cai Jiajia) and then [HSP 2025](https://hsp2025.github.io/) (posters with Colin Phillips; Serene Siow).
++ Journey to the West: in the US in March, first for [TEAL 2025](https://sites.google.com/view/teal14/home) (talk with Cai Jiajia) and then [HSP 2025](https://hsp2025.github.io/) (posters with Colin Phillips; Serene Siow).
 + Co-organised [AMLaP Asia 2024](https://blog.nus.edu.sg/amlapasia2024/) at NUS, 5-7 December 2024, and presented a poster with Serene Siow and Rachel Dudley.
 
 What I do
