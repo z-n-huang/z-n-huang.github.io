@@ -15,7 +15,7 @@ Email me at either:
 
 Recent updates (Apr 2025)
 ======
-+ Now out in *Language*: "A nearly exhaustive experimental investigation of bridge effects in English". This paper, coauthored with Diogo Almeida and Jon Sprouse, evaluates existing theories of bridge verbs / bridge effects with experiments covering 640 English verbs, and presents a new multivariate account involving a morphosyntactic licensing component.
++ Now out in *Language*: ["A nearly exhaustive experimental investigation of bridge effects in English"](https://dx.doi.org/10.1353/lan.2025.a954229). This paper, coauthored with Diogo Almeida and Jon Sprouse, evaluates existing theories of bridge verbs / bridge effects with experiments covering 640 English verbs, and presents a new multivariate account involving a morphosyntactic licensing component.
 + Journey to the West: in the US in March, first for [TEAL 2025](https://sites.google.com/view/teal14/home) (talk with Cai Jiajia) and then [HSP 2025](https://hsp2025.github.io/) (posters with Colin Phillips; Serene Siow).
 + Co-organised [AMLaP Asia 2024](https://blog.nus.edu.sg/amlapasia2024/) at NUS, 5-7 December 2024, and presented a poster with Serene Siow and Rachel Dudley.
 
