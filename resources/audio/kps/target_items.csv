@@ -1,0 +1,17 @@
+﻿remarks,group,item,condition,context,audio1,audio2,trial_type
+x,A,101,bind,context_101,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_101.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_101.wav,exp
+x,B,102,bind,context_102,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_102.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_102.wav,exp
+x,C,103,bind,context_103,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_103.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_103.wav,exp
+x,D,104,bind,context_104,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_104.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_104.wav,exp
+x,D,101,bind,context_101,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_101.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_101.wav,exp
+x,A,102,bind,context_102,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_102.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_102.wav,exp
+x,B,103,bind,context_103,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_103.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_103.wav,exp
+x,C,104,bind,context_104,https://z-n-huang.github.io/resources/audio/kps/exp_bind_prn_104.wav,https://z-n-huang.github.io/resources/audio/kps/exp_bind_null_104.wav,exp
+x,C,101,boundvar_poss,context_101,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_101.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_101.wav,exp
+x,D,102,boundvar_poss,context_102,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_102.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_102.wav,exp
+x,A,103,boundvar_poss,context_103,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_103.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_103.wav,exp
+x,B,104,boundvar_poss,context_104,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_104.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_104.wav,exp
+x,B,101,boundvar_poss,context_101,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_101.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_101.wav,exp
+x,C,102,boundvar_poss,context_102,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_102.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_102.wav,exp
+x,D,103,boundvar_poss,context_103,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_103.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_103.wav,exp
+x,A,104,boundvar_poss,context_104,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_prn_104.wav,https://z-n-huang.github.io/resources/audio/kps/exp_boundvar_poss_null_104.wav,exp
