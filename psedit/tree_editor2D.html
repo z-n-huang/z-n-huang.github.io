@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Phrase structure tree editor</title>
+  <!-- link rel="icon" href="img/logo.png"-->
+  <!-- File reading works only if this page is run from a local server, like static-server -->
+  <!-- Start tabs -->
+  <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css">
+  <!-- end tabs -->
+  <link rel="stylesheet" href="css/jquery.orgchart.css">
+  
+  <style type="text/css">
+    #chart-container { background-color: #fff; /*height: 500px; */ }
+    .orgchart { background: #fff; }
+    .orgchart.edit-state .edge { display: none; }
+    .orgchart .node .title { height: 30px; line-height: 30px; }
+    #edit-panel {
+	  font-family: sans-serif;
+	  font-size: 14px;
+      position: relative;
+      /*left: 10px;*/
+      /*width: calc(100%);*/
+      border-radius: 4px;
+      float: left;
+      margin-top: 10px;
+      padding: 10px;
+      color: #000;
+      /*background-color: #fff;*/
+    }
+    #edit-panel .btn-inputs::before {
+      background-color: #fff;
+      color: #449d44;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 1.5rem;
+    }
+    #edit-panel .btn-inputs { vertical-align: sub; }
+    #edit-panel.edit-parent-node .btn-inputs { display: none; }
+    #edit-panel .btn-inputs:hover::before { font-weight: bolder; }
+    #edit-panel.edit-state>:not(#chart-state-panel) { display: none; }
+    #edit-panel label { font-weight: bold; }
+    #edit-panel.edit-parent-node .selected-node-group { display: none; }
+    #chart-state-panel, #selected-node, #btn-remove-input { margin-right: 20px; }
+    #edit-panel button {
+      color: #333;
+      background-color: #fff;
+      display: inline-block;
+      padding: 6px 12px;
+      margin-bottom: 0;
+      line-height: 1.42857143;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      -ms-touch-action: manipulation;
+      touch-action: manipulation;
+      cursor: pointer;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      background-image: none;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #edit-panel.edit-parent-node button:not(#btn-add-nodes) { display: none; }
+    #edit-panel button:hover,.edit-panel button:focus,.edit-panel button:active {
+      border-color: #eea236;
+      box-shadow:  0 0 10px #eea236;
+    }
+    #new-nodelist {
+      display: inline-block;
+      list-style:none;
+      margin-top: -2px;
+      padding: 0;
+      vertical-align: text-top;
+    }
+    #new-nodelist>* { padding-bottom: 4px; }
+    .radio-panel input[type='radio'] { display: inline-block;height: 24px;width: 20px;vertical-align: top; }
+    #edit-panel.view-state .radio-panel input[type='radio']+label { vertical-align: -webkit-baseline-middle; }
+    #btn-add-nodes { margin-left: 20px; }
+	
+	<!-- for matching brackets -->
+	.richtext {
+    display: inline-block;
+    overflow: hidden;
+    margin: 2px 0;
+    vertical-align: top;
+	}
+	.richtext > pre {
+		display: inline-block;
+		border2: 1px solid transparent;
+		z-index: 1;
+		position: absolute;
+		overflow: hidden;
+		height: 25px;
+		background: #fff;
+	}
+	input, .richtext {
+		padding: 5px;
+		color: #282828;
+		background: #fff;
+		outline: 0;
+		border: 1px solid #BABABA;
+	}
+	input, .richtext > pre {
+		font-family: monaco, courier;
+		font-size: 100%;
+		width: 400px;
+	}
+	.unmatched {
+		background: red;
+	}    
+	.paren_0 { /* 5 */
+		background: #00ff00;
+	}
+	.paren_1 {
+		background: #b6e4b6;
+	}
+	.paren_2 {
+		background: #c0c000;
+	}
+	.paren_3 {
+		background: #008000;
+	}
+	.paren_4 {
+		background: #808000;
+	}
+	.selected_paren {
+		background: #ff0000 !important;
+	}
+  </style>
+  <!-- for tabs-->
+  
+</head>
+<body>
+
+  
+<!-- div id = "testoutput" / -->
+<div id="tabs" style = "width:98%; border: 0">
+	<ul style = "position: fixed; width:98%; z-index:10;">
+		<li><a href="#tabs-1">Tree</a></li>
+		<!--li><a href="#tabs-export">Bracketed form</a></li-->
+		<!-- li><a href="#tabs-all-trees">All edited trees</a></li-->
+		<li><a href="#tabs-help">Help</a></li>
+		<li><a href="#tabs-brackets">Check brackets</a></li>
+		<li><a href="#tabs-license">About</a></li>
+		<li><input type="file" id="fileInput" style = "position: relative; right: -40px;"></li>
+		<li><div id="file-n-trees" name="file-n-trees" style="position: relative; right: -50px; bottom: -5px;"></div></li>
+		<li><a download="current_all_trees.txt" id="downloadlink" style="display: none; position: relative; right: -100px; bottom: -5px;">Download txt</a><li>
+	</ul>
+	<div id="tabs-1" style = "">
+
+		<div style = "position: fixed; z-index:9; padding-top:80px; top: 0px; background: #fff;"><!-- z-n-huang removed id= "edit-panel"-->
+	    <!-- z-n-huang removed-->
+		<!--span id="chart-state-panel" class="radio-panel">
+		  <input type="radio" name="chart-state" id="rd-view" value="view"><label for="rd-view">View</label>
+		  <input type="radio" name="chart-state" id="rd-edit" value="edit" checked="true"><label for="rd-edit">Edit</label>
+		</span-->
+		
+		  <label for="spinner">Tree:</label>
+		  <input id="spinner" name="value" style = "width:50px" value = 5>
+		  <button id="getvalue">Load</button>
+		&nbsp;&nbsp;
+		<label>Input:</label>
+			<textarea id="brackets-input" name="brackets-input" rows="3" cols="40" style = "vertical-align: top;">
+			(EXAMPLE-TREE
+			  (S
+				(SBAR (IN Because)
+				  (S
+					(NP (PRP they))
+					(VP (VBP think))))
+				(NP (PRP it))
+				(VP (VBZ is)
+				  (ADJP (RB very) (JJ difficult)
+					(PP (IN for)
+					  (NP (PRP them))))
+				  (S
+					(VP (TO to)
+					  (VP (VB teach)
+						(NP (PRP me))
+						(NP (NN character)
+						  (CC and)
+						  (NNS values))))))
+				(: 
+				     - ) (. .)))
+			</textarea>
+			<button type="button" id="gen-tree">Display</button>
+		<label>Matched labels? </label><span id="brackets-count"></span>
+		<!-- z-n-huang: make "selected node" invisible. -->
+		<label class="selected-node-group" style="display: none">Selected node:</label>
+			<input type="text" id="selected-node" class="selected-node-group" size = 4 style="display: none">
+		&nbsp;&nbsp;<label>New node:</label>
+			<ul id="new-nodelist">
+			  <li><input type="text" id = "gen-new-node" class="new-node" style = "width:50px"></li>
+			  <li><input type="text" id = "gen-new-node-content" class="new-node-name" style = "width:50px"></li>
+			</ul>
+		<!-- z-n-huang removed -->
+		<!--i class="oci oci-plus-circle btn-inputs" id="btn-add-input"></i>
+		<i class="oci oci-minus-circle btn-inputs" id="btn-remove-input"></i-->
+		<span id="node-type-panel" class="radio-panel">
+		  <!-- z-n-huang removed -->
+		  <!--input type="radio" name="node-type" id="rd-parent" value="parent"><label for="rd-parent">Root</label-->
+		  <select id="edit-menu" style="width:140px">
+			<option name = "node-type" value = "children">Add as child</option>
+			<option name = "node-type" value = "siblings">Add as sibling</option>
+			<option name = "node-type" value = "edit-label">Edit label</option>
+		  </select>
+		  <!--input type="radio" name="node-type" id="rd-child" value="children"><label for="rd-child">Add as child</label>
+		  <input type="radio" name="node-type" id="rd-sibling" value="siblings"><label for="rd-sibling">Add as sibling</label>
+		  <input type="radio" name="node-type" id="edit-label" value="edit-label"><label for="edit-label">Edit label</label-->
+		</span>
+		<button type="button" id="btn-add-nodes">Update</button>&nbsp;&nbsp;&nbsp;&nbsp;
+		<button type="button" id="btn-delete-nodes" style = "background-color: #d88">Delete node</button>
+		<button type="button" id="btn-export" style = "background-color: #7f8; visibility:hidden">Log</button>
+		<button type="button" id="btn-pro"  style = "display: none; ">Add pro</button>
+		<button type="button" id="btn-trace" style = "display: none; ">Add argument trace</button>
+		<button type="button" id="btn-null" style = "display: none; ">Add null element</button>
+		<button type="button" id="btn-adj-trace" style = "display: none; ">Add adjunct trace</button>
+		<button type="button" id="btn-comp" style = "display: none; ">Add null C</button>
+		
+		<!-- z-n-huang removed --><!--button type="button" id="btn-reset">Reset</button-->
+		
+		<br />
+		
+		</div>
+		
+		<div id= "chart-container" style ="position:absolute; top:130px; z-index:-4"></div>
+	</div>	
+	<!--div id="tabs-all-trees" style = "position: fixed; z-index:10; top: 60px; background: #fff;">
+		<textarea id = "all-strs" rows="20" cols="50" style="font-size: 10pt; font-family:monospace;"></textarea>
+		<br />
+		<!--a download="current_all_trees.txt" id="downloadlink" style="display: none">Download</a-->
+	</div-->
+	
+	<div id="tabs-export" style = "position: fixed; z-index:10; top: 60px; background: #fff;visibility:hidden">
+	
+		<textarea id = "hierarchy-str" rows="20" cols="50" style="font-size: 10pt; font-family:monospace"></textarea><br / >
+		
+		<button type="button" id="btn-export-txt">Export all trees to txt file</button>
+	</div>
+	<div id="tabs-brackets" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
+		<button id="btn-check-brackets">Check brackets</button><br />
+		<u>Output format:</u><br /><i>S#[Sentence number] <b>Number of left brackets</b>/<b>Number of right brackets</b><br />[Parse]</i>
+		<span id="display-brackets"></span>pan id="display-brackets"></span>
+	</div>
+	
+	<div id="tabs-help" style ="background-color: #fff; position:absolute; top:40px; z-index:-4">
+	<h2>What this interface does</h2>
+	This interface reads in a text file containing a set of Penn Treebank-style parses. It then displays the parses in tree form. Edit the parse by dragging and dropping nodes in the tree. Edited trees can then be converted into Penn Treebank-style bracketed forms.
+		<h2>General procedure</h2>
+			<ol>
+			<li>Load a file: Click on "Choose file", find the right .txt file with parses.
+			<li>Load a tree: Enter the index (the serial number of a tree, so to speak) of the tree in the Index box. Click the "Load" button.
+			<li>Input tree: Enter Penn Treebank-style trees (round brackets/parentheses, not square brackets) in the Input box.
+			<li>Display tree: Click the "Display" button to visualise the tree in the Input box.
+			<li>Edit tree: see below.
+			<li>Save a tree: Shift+z (which will load the next tree). <!--Alternatively, click the "Log" button (Shift+l): The current version of the tree will be added to the textbox in "Bracketed Form". Copy and paste from this textbox to a text file.-->
+			<li>Export a tree: Shift+x will autogenerate and download a text file with all corrected trees. Alternatively, on the "All edited trees" tab, click "Export all trees to txt file" to download.
+			<li><b>Warning</b>: If you accidentally close the window or hit the Refresh button, <u>all edits will be lost</u>!
+				</ul>		
+			</ol>
+		
+		<h2>How to edit a tree</h2>
+		<h3>By directly changing the input brackets</h3>
+		
+			<ol><li>Add or delete brackets, tags, labels in the "Input" textbox as appropriate.
+			<li>Once done, click on "Display" to update the tree.
+			<li>Repeat these steps as many times as needed.
+			<li>Be careful while making changes to the textbox. Make sure that the brackets are balanced (for every "(", there must be a ")"), otherwise the interface will not display the tree.
+			</ol>
+		<h3>Drag and drop interface</h3>
+			<ol>
+			<li>To re-attach a node: click on it and then drag and drop it to the desired parent node.
+			<li>To re-order nodes within a tree: 
+			<ol><li>Click on a node that is not on the right edge.
+			<li>Drag and drop it to its parent, as if re-attaching it. This moves the node to the right edge. 
+			<li>Repeat as necessary.
+			</ol>
+			<li>To change a non-terminal node label: 
+			<ol><li>Click on the node (the node should be highlighted in yellow). 
+			<li>Type in the corrected label in the top box of "New node" (feel free to leave the bottom box blank).
+			<li>Select "Edit label".
+			<li>Click "Update" button.
+			</ol>
+			<li>To add a child or sibling to a node:
+			<ol><li>Click on the node. 
+			<li>Type in the label and string in the top box of "New node". Feel free to leave the bottom box blank if it's a non-terminal node. Otherwise, type in the word.
+			<li>Select "Add as child" or "Add as sibling".
+			<li>Click "Update" button. The new node will appear on the right edge.
+			</ol>
+			<ol><li>Note: when you hit ctrl-z, the tool will automatically delete the following types of empty nodes: those that contain no leaves whatsoever (NP ) or (S ) or a node that contains such nodes, like (NP (NP )) or (SBAR (S )). 
+			<li>However, the tool will not automatically delete empty nodes that are nested multiple times, like (NP (NP (NP ))).
+			</ol>
+		</ol>
+		
+		<h2>Keyboard shortcuts</h2>
+		<ol>
+			<li>Export all trees -- including edited ones -- to text file: <b>shift-x</b> (e*x*port; this is the same as clicking on the button)
+			<li>Save current tree and then view next tree: <b>shift+z</b> (i.e. "Z". To encourage people to finalise trees ASAP instead of skipping forward, no shortcut for backtracking.)
+			<li>Delete node and all daughters: <b>@</b> (shift + 2)
+			<li>Keyboard shortcut for adding null elements
+			<ol>
+				<li>Add null complementiser: <b>4</b>
+				<li>Add null NP: <b>1</b>
+				<li>Add null "have": <b>h</b>
+				<li>Add null "to": <b>shift+t</b>
+				<li>Add null "if" complementiser (e.g. "ask you can go or not", meaning "ask whether you can go"): <b>shift+i</b>
+			<li>Keyboard shortcuts for adding nonterminal nodes
+			<ol>
+				<li>"S": <b>s</b>
+				<li>"SBAR": <b>shift+s</b>
+				<li>"VP": <b>v</b>
+				<li>"NP": <b>n</b>
+				<!--<li>"CP": <b>c</b>-->
+				<li>"TBAR": <b>t</b>
+				<li>"ADVP": <b>shift+v</b>
+				<li>"ADJP": <b>shift+j</b>
+				<li>"PRN": <b>q</b> (for parentheticals, hedges like 'I mean", "you know")
+				<li>"INTJ": <b>w</b> (for interjections, like "right", "ok", "yah")
+				<li>"EDITED": <b>r</b> (for material that was "discarded" and restarted)
+				<li>"FRAG": <b>shift+g</b> (for material that cannot be grouped together)
+				<li>"QUP": <b>shift+q</b> (for "or not")
+				<li>Add a node and specify its label: <b>shift+n</b>
+			</ol>
+			<li>Keyboard shortcuts for modifying nonterminal nodes
+			<ol>
+				<li>Change (change) label: <b>`</b> (the key on the left of "1")
+				<li>Change label to INTJ: <b>i</b>
+				<li>Change label to SBAR: <b>shift+b</b>
+				<li>Change label to SBARQ: <b>shift+5</b> (i.e. %)
+				<li>Change label to SQ: <b>shift+4</b> (i.e. $)
+				<li>Change label to ADVP: <b>a</b>
+				
+				<!--li>Edit node label to CONJP: <b>d</b> (for "and then", "but then") -->
+				<li>Add tag to label: <b>f</b> (e.g. change "NP" to "NP-ADV")
+				<li>Add -ADV tag: <b>shift+a</b>
+				<li>Add -RDL tag: <b>shift+d</b> (for afterthoughts/ right-dislocation)
+				<li>Add -FRAG tag: <b>shift+f</b> (for incomplete utterances)
+			</ol>
+		</ol></ol>
+		
+		
+	
+		<h2>What happens if you make a mistake?</h2>
+		Unfortunately there is no undo function. Two options:
+		<ol>
+		<li>Add nodes back manually, using the New Node interface.
+		<li>Click "Display" or "Load" button to show the original tree, and edit the tree all over again.
+		</ol>
+		<h2>Wishlist, in descending order of priority</h2>
+		<ol>
+		<li>How to write trees directly to a database -- but solving this problem could lead to overwriting trees by mistake!
+		<li>How to right click on a node and make edits directly on the node.
+		</ol>
+	</div>
+	<div id="tabs-license" style ="position:absolute; top:40px; z-index:-4">
+		<h2>Phrase Structure Tree Editor (beta version)</h2><p>Based on <a href="https://github.com/dabeng/OrgChart" target = "_blank">OrgChart</a> by <a href = "https://github.com/dabeng" target = "_blank">dabeng</a>, originally released under the MIT License. <p>Modified work (c) 2020-present <a href = "https://github.com/z-n-huang" target = "_blank">z-n-huang</a>. All substantial changes can be identified by "z-n-huang" in comments in the source code.</p>
+	</div>
+</div>
+
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/jquery.orgchart.js"></script>
+  <script type="text/javascript"> 
+  // Bracket matching highlighting, http://jsfiddle.net/Axvgf/
+    
+    function colorize(text, pos) {
+        var i = 0, current_times = 0;
+        var startc = '(', endc = ')';
+        var current = -1;
+        
+        var entities = {'>': '&gt;','<':'&lt;'}; 
+        var p2 = 0;
+        var regex = new RegExp(Object.keys(entities).join("|"),'g');   
+        var converted = text.replace(regex, function(x, j) {
+            if(pos > j) p2 += entities[x].length - 1; 
+            return entities[x];
+        });
+        
+        pos += p2;
+        var parens = [], indices = [], o = {};
+        var newText = converted.replace(/((?:\\)*)([()])/g, function(full, escape, x, idx) {
+            var len = escape.split(/\\/g).length - 1;
+            if (len % 2 == 0) {
+                indices.push(idx);
+                if (x == startc) ++i;
+                o[idx] = { selected: false, type: x, depth: i, idx: idx, pair: -1, extra: escape };
+                if (idx == pos) o[idx].selected = true;
+                if (x == startc) parens.push(idx);
+                else {
+                    if (parens.length > 0) {
+                        var p = parens.pop();
+                        o[idx].pair = p;
+                        if (o[p].selected) o[idx].selected = true;
+                        o[p].pair = idx;
+                        if (o[idx].selected) o[p].selected = true;
+                    }
+                    --i
+                }
+            }
+        });
+        newtext = converted;     
+        indices = indices.sort(function(x,y) { return Number(y) - Number(x); });
+        indices.forEach(function(i) {
+            newtext = newtext.substr(0,i) + o[i].extra +
+            "<span class='" + (o[i].pair == -1 ? "unmatched " : "paren_" + (o[i].depth % 5)) + 
+            (o[i].selected ? " selected_paren": "") + "'>" + o[i].type + "</span>" + 
+            newtext.substr(i + 1 + o[i].extra.length)
+        });
+        return newtext;
+    }
+    
+    (function($) {
+        $.fn.getCursorPosition = function() {
+            var input = this.get(0);
+            if (!input) return; // No (input) element found
+            if ('selectionStart' in input) {
+                // Standard-compliant browsers
+                return input.selectionStart;
+            } else if (document.selection) {
+                // IE
+                input.focus();
+                var sel = document.selection.createRange();
+                var selLen = document.selection.createRange().text.length;
+                sel.moveStart('character', -input.value.length);
+                return sel.text.length - selLen;
+            }
+        }
+    })(jQuery);
+    
+    createRichInput("#brackets-input");
+  </script>
+  <script type="text/javascript">
+	var updatedTreesDict = {};
+	function jsonTree() {
+		$('#chart-container').html('');
+		$('#hierarchy-str').html('');
+
+		// z-n-huang added: Converts a tree in the form of a JS array into a JS dictionary
+		function tree2dict(tree) {
+			var n_children = tree.length;
+			var tree_dict = {};
+			var children = [];
+			var i;
+			for (i = 0; i < n_children; i++) {
+				if (i == 0) {
+					tree_dict["name"] = tree[0];
+				}
+				else {
+					var tt = tree[i];
+					if (Array.isArray(tree[i])) {
+						tree_dict["title"] = undefined;
+						var child = tree2dict(tt);
+						children.push(child);
+					} else {
+						tree_dict["title"] = tt;
+					}
+				}
+				if (children.length > 0) {
+					tree_dict["children"] = children;
+				}
+			}
+			return tree_dict;
+		};
+	  var d = "";
+	  var oc = "";
+	  var hierarchy = "";
+	  
+	  //Mismatched brackets: how many (s and )s?
+ 	  $('#brackets-count').html('');
+	  var bracketedForm = $('#brackets-input').val();
+	  var noLeftBrackets = bracketedForm.length - bracketedForm.replace(/\(/g, "").length;
+	  var noRightBrackets = bracketedForm.length - bracketedForm.replace(/\)/g, "").length;
+	  console.log(noLeftBrackets, bracketedForm.length)
+	  $('#brackets-count').html("<b>" + noLeftBrackets.toString() + "</b>/<b>"+ noRightBrackets.toString() +"</b>");
+	
+	
+	  console.log(899, d)
+	  // z-n-huang added: Converts tree in round brackets/parentheses format into a JS array
+	  d = $('#brackets-input').val(); // get input from "brackets-input"
+	  //d = d.replace(/\'/g, "\'")// fix apostrophes
+	  d = d.replace(/\$/g, '\$'); // convert $
+	  d = d.replace(/\s\s+/g, ' ').replace(/\t/g, ''); // trim extra whitespace
+	  d = d.replace(/(\s+)(\))/g, '$2'); // trim extra whitespace before close parenthesis
+	  d = d.replace(/\n$/, ""); // remove trailing \n
+	  d = d.replace(/\"/g, "''"); // quotation marks in terminal nodes
+	  d = d.replace(/\\/g, "\/\/"); // replace \ with //
+	  d = d.replace(/\]/g, "-RSQB-").replace(/\[/g, "LSQB-"); // replace [ with LSQB and ] with RSQB
+	  console.log(99, d)
+	  
+	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
+	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+	  d = d.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+	  
+	
+      d = d.replace(/\(/g, "[").replace(/\)/g, "],"); // replace ( or ) with [ or ]
+	  d = d.replace(/(\[)(\�)(\s+)/g, '$1"LSQT", '); // For quote tags, convert ` to LSQT
+	  d = d.replace(/�/g, "'"); // replace this funny symbol (apostrophe?) with '
+	  //d = d.replace(/(\S+) (?=\S*['-])([a-zA-Z'-]+\$*)/g, '$1$1 "$2$3", ');
+	  d = d.replace(/(\[)([\w-\$\:]+)/g, '$1"$2", '); // For tags
+	  d = d.replace(/(\[)(S)(\[)/g, '$1"$2", $3'); // For S
+	  d = d.replace(/(\[)([\.\,\?\!\:\\#\/\;\-\%]+)(\s+)/g, '$1"$2", $3'); // For punctuation tags
+	  d = d.replace(/(\[)(\`\`)(\s+)/g, '$1"LDQT", '); // For quote tags, convert `` to LDQT
+	  d = d.replace(/(\[)(\'\')(\s+)/g, '$1"RDQT", '); // For quote tags, convert '' to RDQT
+	  d = d.replace(/(\[)(\`)(\s+)/g, '$1"LSQT", '); // For quote tags, convert ` to LSQT
+	  d = d.replace(/(\[)(\')(\s+)/g, '$1"RSQT", '); // For quote tags, convert ' to RSQT
+	  d = d.replace(/\s+(\S+?)(\s*)(\])/g, ' "$1" $3'); // Terminal nodes
+	  //d = d.replace(/(\w+\$*)/g, '"$1", ');
+	  d = d.replace(/(\[)([\.\,\?\!\\\/]+)(\s*)([\.\,\?\!\\\/]+)/g, '$1 "$2",$3 "$4", '); // punctuation
+	  d = d.replace(/\, \]/g, "]").replace(/(\]\,\])/g, "]]").replace(/(\]\,\])/g, "]]");
+	  //d = d.replace(/\n/g, " ").trim(); // removes trailing spaces (and leading ones)
+	  d = d.trim().substring(0, d.length -1); // changes last "]," to "]"
+	  
+	  var regTerminal = /(\s\")(\S+)(\"\s)/g
+	  if (d.substr(-1) == ",") {
+		 d = d.substring(0, d.length -1);
+		 console.log(999, d);
+		 console.log(888, d.match(regTerminal));
+	  }
+	  
+	  //console.log(98, d)
+	  var tree = JSON.parse(d); // z-n-huang added: generate a dictionary
+	  
+	  datascource = tree2dict(tree); // z-n-huang added: transform dictionary to JSON format
+	  return datascource;
+	  
+	};
+	
+    var getId = function() {
+      return (new Date().getTime()) * 1000 + Math.floor(Math.random() * 1001);
+    };
+
+	var oc = "";
+	
+	function gen_oc() {
+    var oc = $('#chart-container').orgchart({
+      'data' : jsonTree(), // 'data' : datascource, 
+      'chartClass': 'edit-state',
+      'exportButton': false,
+      'exportFilename': 'SportsChart',
+      'createNode': function($node, data) {
+        $node[0].id = getId();
+		$node.name = data.name;
+        $node.title = data.title;
+		
+		},
+      'nodeContent': 'title',
+      'draggable': true,
+      'dropCriteria': function($draggedNode, $dragZone, $dropZone) {
+        if($draggedNode.find('.content').text().indexOf('manager') > -1 && $dropZone.find('.content').text().indexOf('engineer') > -1) {
+          return false;
+        }
+        return true;
+      }
+      
+    });
+	return oc;
+	};
+	
+	oc = gen_oc();
+	// z-n-huang: If you click on the "Display" button, you should update oc
+	$('#gen-tree').on('click', function() { oc = gen_oc() } );
+	
+    oc.$chartContainer.on('click', '.node', function() {
+      var $this = $(this);
+      $('#selected-node').val($this.find('.title').text()).data('node', $this);
+    });
+
+    oc.$chartContainer.on('click', '.orgchart', function(event) {
+      if (!$(event.target).closest('.node').length) {
+        $('#selected-node').val('');
+      }
+    });
+	
+	
+  
+
+    $('input[name="chart-state"]').on('click', function() {
+      $('.orgchart').toggleClass('edit-state', this.value !== 'view');
+      $('#edit-panel').toggleClass('edit-state', this.value === 'view');
+      if ($(this).val() === 'edit') {
+        $('.orgchart').find('tr').removeClass('hidden')
+          .find('td').removeClass('hidden')
+          .find('.node').removeClass('slide-up slide-down slide-right slide-left');
+      } else {
+        $('#btn-reset').trigger('click');
+      }
+    });
+
+    $('input[name="node-type"]').on('click', function() {
+      var $this = $(this);
+      if ($this.val() === 'parent') {
+        $('#edit-panel').addClass('edit-parent-node');
+        //$('#new-nodelist').children(':gt(0)').remove(); //z-n-huang: do not remove the box for children
+      } else {
+        $('#edit-panel').removeClass('edit-parent-node');
+      }
+    });
+
+    $('#btn-add-input').on('click', function() {
+      $('#new-nodelist').append('<li><input type="text" class="new-node"><input type="text" class="new-node-name"></li><li></li>');
+    });
+
+    $('#btn-remove-input').on('click', function() {
+      var inputs = $('#new-nodelist').children('li');
+      if (inputs.length > 2) { // original = length > 1
+        inputs.last().remove();
+      }
+    });
+
+    $('#btn-add-nodes').on('click', function() {
+      var $chartContainer = $('#chart-container');
+      var nodeVals = [];
+      $('#new-nodelist').find('.new-node').each(function(index, item) {
+        var validVal = item.value.trim();
+        if (validVal.length) {
+          nodeVals.push(validVal);
+        }
+      });
+	  // z-n-huang: Add names = leaves
+	  var nodeValsName = [];
+      $('#new-nodelist').find('.new-node-name').each(function(index, item) {
+        var validValName = item.value.trim();
+        if (validValName.length) {
+          nodeValsName.push(validValName);
+        }
+      });
+      var $node = $('#selected-node').data('node');
+      if (!nodeVals.length) {
+        alert('Please input value for new node');
+        return;
+      }
+      var nodeType = $('#edit-menu'); //z-n-huang: previously $('input[name="node-type"]:checked'); 
+	  console.log(11, nodeType);
+      if (!nodeType.length) {
+        alert('Please specify what kind of edit you want');
+        return;
+      }
+      if (nodeType.val() !== 'parent' && !$('.orgchart').length) {
+        alert('Please create the root node first when you want to build the tree from scratch'); // z-n-huang: fixed typo
+        return;
+      }
+      if (nodeType.val() !== 'parent' && !$node) {
+        alert('Please select a node');
+        return;
+      }
+      if (nodeType.val() === 'parent') {
+        if (!$chartContainer.children('.orgchart').length) {// if the original chart has been deleted
+          oc = $chartContainer.orgchart({
+            'data' : { 'name': nodeVals[0] }, // z-n-huang: this is where the node info gets added
+            'exportButton': true,
+            'exportFilename': 'SportsChart',
+            'createNode': function($node, data) {
+              $node[0].id = getId();
+            }
+          });
+          oc.$chart.addClass('view-state');
+        } else {
+          oc.addParent($chartContainer.find('.node:first'), { 'name': nodeVals[0], 'title': '', 'id': getId() });
+        }
+      } else if (nodeType.val() === 'edit-label') { // z-n-huang added edit label
+		    oc.editLabel($node, nodeVals.map(function (item) {
+			return item;
+		}));
+	  } else if (nodeType.val() === 'siblings') {
+        if ($node[0].id === oc.$chart.find('.node:first')[0].id) {
+          alert('You are not allowed to directly add sibling nodes to root node');
+          return;
+        }
+        oc.addSiblings($node, nodeVals.map(function (item) {
+            return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+          }));
+      } else {
+        var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+			//console.log(nodeValsName, nodeVals);
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+			//console.log(nodeValsName, nodeVals);
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+      }
+    });
+
+    $('#btn-delete-nodes').on('click', function() {
+      var $node = $('#selected-node').data('node');
+      if (!$node) {
+        alert('Please select one node in the tree');
+        return;
+      } else if ($node[0] === $('.orgchart').find('.node:first')[0]) {
+        if (!window.confirm('Are you sure you want to delete the whole tree?')) {
+          return;
+        }
+      }
+      oc.removeNodes($node);
+      $('#selected-node').val('').data('node', null);
+    });
+
+    $('#btn-reset').on('click', function() {
+      $('.orgchart').find('.focused').removeClass('focused');
+      $('#selected-node').val('');
+      $('#new-nodelist').find('input:first').val('').parent().siblings().remove();
+      $('#node-type-panel').find('input').prop('checked', false);
+    });
+	
+	// z-n-huang: for generating pros and traces
+	$('#btn-pro').on('click', function() {
+		var nodeVals = ["NP"]; // label
+		var nodeValsName = ["*pro*"]; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	
+	// z-n-huang: for generating argument traces
+	$('#btn-trace').on('click', function() {
+		var nodeVals = ["NP"]; // label
+		var nodeValsName = prompt("Index?", 1); // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': "*-"+nodeValsName[0].toString(), 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	// z-n-huang: for generating generic null arguments
+	$('#btn-null').on('click', function() {
+		var nodeVals = ["NP"]; // label
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': "*", 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	// z-n-huang: for generating adjunct traces
+	$('#btn-adj-trace').on('click', function() {
+		var nodeVals = ["ADVP"]; // label
+		var nodeValsName = prompt("Index?", 1); // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': "*-"+nodeValsName[0].toString(), 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+
+	// z-n-huang: for generating null complementizer
+	$('#btn-comp').on('click', function() {
+		var nodeVals = ["C"]; // label
+		var nodeValsName = ["*0*"]; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, $node[0].id);
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+	})
+	
+	// z-n-huang: for generating nonterminal nodes
+	function nonterm(nontermlabel) {
+		var nodeVals = [nontermlabel]; // label
+		var nodeValsName = []
+		var $node = $('#selected-node').data('node');
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+	}
+	// z-n-huang: for generating terminal nodes
+	function terminal(nontermlabel, termlabel) {
+		var nodeVals = [nontermlabel]; // label
+		var nodeValsName = [termlabel]
+		var $node = $('#selected-node').data('node');
+		
+	    var hasChild = $node.parent().attr('colspan') > 0 ? true : false;
+        if (!hasChild) {
+		  var rel = nodeVals.length > 1 ? '110' : '100';
+          oc.addChildren($node, nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': rel, 'id': getId() };
+            }));
+        } else {
+          oc.addSiblings($node.closest('tr').siblings('.nodes').find('.node:first'), nodeVals.map(function (item) {
+              return { 'name': item, 'title': nodeValsName[0], 'relationship': '110', 'id': getId() };
+            }));
+        }
+	}
+	// z-n-huang: for adding tags to nonterminal nodes
+	function addFlag() {
+		var $node = $('#selected-node').data('node');
+		var flag = prompt("Tag:", '');
+		var currentLabel = $node[0].innerText;
+		oc.editLabel($node, currentLabel + '-'+flag.toString().toUpperCase())
+	}
+	function addSpecifiedFlag(flag) {
+		var $node = $('#selected-node').data('node');
+		var currentLabel = $node[0].innerText;
+		oc.editLabel($node, currentLabel + '-'+flag.toString().toUpperCase())
+	}	
+	// z-n-huang: for changing a label
+	function changeLabel() {
+		var newLabel = prompt("New label:", '');
+		var nodeVals = [newLabel.toUpperCase()] // label
+		var nodeValsName = []; // leaf
+		var $node = $('#selected-node').data('node');
+		console.log(77, nodeVals, $node[0].id);
+		
+        oc.editLabel($node, nodeVals.map(function (item) {
+			return item;
+		}))
+	}
+	
+	// z-n-huang: for generating updated tree
+  	$('#btn-export').on('click', function() {
+      
+		var hierarchy = oc.getHierarchy();
+		
+		$('#hierarchy-str').html('');
+		var string = JSON.stringify(hierarchy, null, 2);
+		string = string.replace(/\{/g, "\(").replace(/\}/g, "\)").replace(/\]\n/g, ""); // replace braces with parentheses
+		string = string.replace(/\"lex\": \"\*\*\*\",\n/g, '').replace(/\"category\": \"/g, '').replace(/\"children\": \[\n/g, '');
+		string = string.replace(/\"lex\": \"/g, '').replace(/\"/g, "").replace(/\,/g, ""); // remove certain keywords and quotes
+		string = string.replace(/(\()(\n)(\s*)/g, "$1").replace(/    /g, " "); // no "stray" left parentheses; remove extra spaces
+		string = string.replace(/(\w\$*)(\n)(\s*)()/g, "$1 $4").replace(/(\w)(\n)(\s*)()/g, "$1 $4"); // words
+		string = string.replace(/([\.\,\?\!\\\/\`\'\:\$\%]+)(\n)(\s*)([\.\,\?\!\\\/\`\:\$\%]+)/g, '$1 $4'); // punctuation
+		string = string.replace(/(\))(\n\s*)(\))/g, "$1 $3"); // no "stray" right parenthenses
+		//string = string.replace("PRPS", "PRP\$"); // We replaced $ with S; change them back to $
+		string = string.replace("LDQT", "``"); // Replace quotes
+		string = string.replace("RDQT", "''"); // Replace quotes
+		string = string.replace("LSQT", "`"); // Replace quotes
+		string = string.replace("RSQT", "'"); // Replace quotes
+		
+		string = string.replace(/\([\w-\$]+[\s]*\)/g, ''); // delete null brackets without leaves
+		string = string.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+		string = string.replace(/\([\w-\$]+[\s]*\)/g, ''); // the prior deletion might produce another null brackets without leaves. Delete that one, too
+		string = string.replace(/\(\)/g, "\(, ,\)"); // We probably stripped out commas, producing "()". Add them back
+		string = string.replace(/\/\//g, "\\"); // replace // with \
+		//replace(/(\))(\n)(\s*)/g, "$1$2")
+		$('#hierarchy-str').html(string);
+		
+		var spinnerVal = document.getElementById("spinner").value;// spinner.spinner("value")
+		
+		editedStr = string.replace(/(\(\S+\s+)/g, '').replace(/(\)+)/g, '').replace(/\s+/g, ' ').trim();
+		origStr = updatedTreesArray[spinnerVal].replace(/(\(\S+\s+)/g, '').replace(/(\)+)/g, '').replace(/\s+/g, ' ').trim();
+		if (editedStr != origStr) {
+		    confirm("Word order mismatch. Proceed?");
+			console.log("mismatch - no, don't proceed");
+			
+			//NH: save anyway
+			$('#all-strs').append("\n// Tree id: " + spinnerVal.toString() + "\n\n");
+			$('#all-strs').append(string);
+			updatedTreesDict[spinnerVal] = string;
+			updatedTreesArray[spinnerVal] = string;
+		} else {
+			//console.log(spinnerVal, string);
+			$('#all-strs').append("\n// Tree id: " + spinnerVal.toString() + "\n\n");
+			$('#all-strs').append(string);
+			updatedTreesDict[spinnerVal] = string;
+			updatedTreesArray[spinnerVal] = string;
+		}
+      //}
+    });
+  
+	
+  </script>
+  
+
+<!-- Added by NH, for reading text files and displaying information in tabs and spinners -->
+<!--script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script-->
+	<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+	<script src="jquery-ui-1.12.1/jquery.hotkeys.js"></script>
+
+	<script type="text/javascript">
+	// For reading a text file on a server
+	var rawtext = "";
+	var trees = [];
+	var updatedTreesArray = [];
+	$.get('parsedc_S1a-028.txt', function(data) {
+		rawtext = data;
+		// this assumes two line breaks between trees; two different ways of representing line breaks
+	    //trees = rawtext.split("\r\n\r\n").split("\n\n");
+		trees = rawtext.split("\n\n").split("\r\r");
+		updatedTreesArray = rawtext.split("\n\n").split("\r\r");
+		}, 'text');
+	console.log(trees);
+
+	// Read a local file
+	// http://www.50linesofco.de/post/2019-07-05-reading-local-files-with-javascript
+	document.getElementById('fileInput').addEventListener('change', function selectedFileChanged() {
+	  if (this.files.length === 0) {
+		console.log('No file selected.');
+		return;
+	  }
+
+	  const reader = new FileReader();
+	  reader.onload = function fileReadCompleted() {
+		// when the reader is done, the content is in reader.result.
+		//console.log(reader.result);
+		rawtext = reader.result.trim();
+		trees = rawtext.replace(/\r(\n*)(\s*)(\n*)\r/g,"\n\r").split("\n\r");
+	    updatedTreesArray = rawtext.replace(/\r(\n*)(\s*)(\n*)\r/g,"\n\r").split("\n\r");
+		if (updatedTreesArray.length == 1) {
+			trees = rawtext.split("\n\n");
+			updatedTreesArray = rawtext.split("\n\n");
+			}
+		if (updatedTreesArray.length == 1) { // Another line split option
+			trees = rawtext.split("\r\n\r\n");
+			updatedTreesArray = rawtext.split("\r\n\r\n");
+			}
+		// print number of trees
+		
+		document.getElementById("file-n-trees").innerHTML = "Last tree is Tree " + (updatedTreesArray.length -1).toString();
+	  };
+	  reader.readAsText(this.files[0]);
+	});
+	
+	// For tab that checks for mismatched brackets
+	$('#btn-check-brackets').on('click', function() {
+		var divOutput = '';
+		var nMismatched = 0;
+		//console.log(11 , updatedTreesArray.length);
+		for (var i = 0; i < updatedTreesArray.length; i++) {
+			var bracketedForm = updatedTreesArray[i];
+			var noLeftBrackets = bracketedForm.length - bracketedForm.replace(/\(/g, "").length;
+			var noRightBrackets = bracketedForm.length - bracketedForm.replace(/\)/g, "").length;
+			if (noLeftBrackets != noRightBrackets) {
+				var displayNumber = i + 1;
+				console.log(i, noLeftBrackets, noRightBrackets);
+				divOutput = divOutput+ '<li>S#'+  displayNumber.toString() + ': <b>' + noLeftBrackets.toString() +'/'+noRightBrackets.toString() + '</b><br />' + bracketedForm + '</li>'; 
+				nMismatched++;
+			}
+		}
+		$('#display-brackets').html('<ol>'+divOutput+'</ol>');
+		if (nMismatched == 0) { $('#display-brackets').html('<p>All brackets are matched!</p>'); }
+		
+	});
+	
+	
+	// For simplifying the generation of trees
+	// When you click the Bracketed Form ("tabs-export") tab
+	$(document).ready(function() { 
+		$( "#tabs-export" ).click(function(event) { 
+			console.log(88)
+			// Click the "Generate" button as well
+			$("btn-export").click();
+			}
+		) }
+	)
+	
+	// For keyboard shortcuts ("Hot keys")
+	$(document).bind('keydown', 'shift+l', function(event) { $('#btn-export').click() }); // *l*og
+	$(document).bind('keydown', 'shift+x', function(event) { $('#btn-export').click(); // save...
+															 $('#btn-export-txt').click(); //...then export
+															 $('#downloadlink').click(); //...then click on downloadlink
+															}); // e*x*port
+	// Save and move to next tree
+	$(document).bind('keydown', 'shift+z', function(event) { $('#btn-export').click(); // save 
+															 document.getElementById("spinner").value = parseInt(document.getElementById("spinner").value) +1; //increment
+															 $('#getvalue').click(); //...and go to next tree ">"
+															}); 
+	// Move to next tree without saving
+	$(document).bind('keydown', 'shift+.', function(event) {
+															 document.getElementById("spinner").value = parseInt(document.getElementById("spinner").value) +1; //increment
+															 $('#getvalue').click(); //...and go to next tree ">"
+															});
+															
+	$(document).bind('keydown', 'f9', function(event) { $('#btn-delete-nodes').click() }); // (intentionally not mnemonic, to reduce risk of unintended deletion)
+	$(document).bind('keydown', 'shift+2', function(event) { $('#btn-delete-nodes').click() }); // Alternative (intentionally not mnemonic, to reduce risk of unintended deletion)
+	$(document).bind('keydown', 'shift+e', function(event) { changeLabel(); }); // *e*dit label
+	$(document).bind('keydown', '`', function(event) { changeLabel(); }); // alternative - only one keystroke needed
+	
+	//$(document).bind('keydown', '0', function(event) { $('#btn-pro').click() }); // 0 to add pro
+	$(document).bind('keydown', 'g', function(event) { $('#btn-trace').click() }); // ar*g*ument
+	$(document).bind('keydown', 'j', function(event) { $('#btn-adj-trace').click() }); // ad*j*unct
+	$(document).bind('keydown', '4', function(event) { $('#btn-comp').click() }); // Null *c*omp
+	//$(document).bind('keydown', '3', function(event) { $('#btn-pro').click() }); // alternative for pro
+	//$(document).bind('keydown', '2', function(event) { $('#btn-trace').click() }); // alternative for argument
+	$(document).bind('keydown', '1', function(event) { $('#btn-null').click() }); // alternative for adjunct
+
+	$(document).bind('keydown', 'a', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['ADVP'].map(function (item) {
+																return item;
+															})); }); // change a current label to ADVP
+	$(document).bind('keydown', 'shift+5', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['SBARQ'].map(function (item) {
+																return item;
+															})); }); // change a current label to SBARQ
+	$(document).bind('keydown', 'shift+4', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['SQ'].map(function (item) {
+																return item;
+															})); }); // change a current label to SQ
+	$(document).bind('keydown', 'shift+p', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['PP'].map(function (item) {
+																return item;
+															})); }); // change a current label to PP
+	$(document).bind('keydown', 'shift+b', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['SBAR'].map(function (item) {
+																return item;
+															})); }); // change a current label to SBAR
+	$(document).bind('keydown', 'i', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['INTJ'].map(function (item) {
+																return item;
+															})); }); // change a current label to INTJ
+	$(document).bind('keydown', 'f', function(event) { oc.editLabel($('#selected-node').data('node'), 
+																		['FRAG'].map(function (item) {
+																return item;
+															})); }); // change a current label to FRAG
+	//$(document).bind('keydown', 'd', function(event) { oc.editLabel($('#selected-node').data('node'), 
+	//																	['CONJP'].map(function (item) {
+	//															return item;
+	//														})); }); // change a current label to CONJP
+
+	$(document).bind('keydown', 'g', function(event) { addFlag() }); // Add *f*lag
+	$(document).bind('keydown', 'shift+a', function(event) { addSpecifiedFlag('ADV'); }); // *A*DV tag
+	//$(document).bind('keydown', 'shift+t', function(event) { addSpecifiedFlag('TOP'); }); // *T*OP tag
+	$(document).bind('keydown', 'shift+d', function(event) { addSpecifiedFlag('RDL'); }); // Right *Dislocated* tag
+	$(document).bind('keydown', 'shift+f', function(event) { addSpecifiedFlag('FRAG'); }); // *F*rag flag
+	$(document).bind('keydown', 'shift+n', function(event) { var newLabel = prompt("New label:", '');
+															 nonterm(newLabel.toUpperCase()); }); // Add a new *n*onterminal
+	$(document).bind('keydown', 'q', function(event) { nonterm('PRN'); }); // *p*arenthetical; PRN
+	$(document).bind('keydown', 'p', function(event) { nonterm('PP'); }); // Add a PP node
+	$(document).bind('keydown', 's', function(event) { nonterm('S'); }); // Add a S node (useful for parentheticals)
+	$(document).bind('keydown', 'shift+q', function(event) { nonterm('QUP'); }); // Add a QUP node
+	$(document).bind('keydown', 'shift+g', function(event) { nonterm('FRAG'); }); // Add a FRAG node
+	$(document).bind('keydown', 'shift+v', function(event) { nonterm('ADVP'); }); // Add a ADVP node
+	$(document).bind('keydown', 'shift+j', function(event) { nonterm('ADJP'); }); // Add a ADJP node
+	$(document).bind('keydown', 'shift+s', function(event) { nonterm('SBAR'); }); // Add a SBAR node (useful for parentheticals)
+	$(document).bind('keydown', 'v', function(event) { nonterm('VP'); }); // Add a VP node (useful for null copulas)
+	$(document).bind('keydown', 'b', function(event) { terminal('VB', '*0*'); }); // null ver*b*
+	$(document).bind('keydown', '3', function(event) { terminal('ADVP', '*'); }); // Add adverb trace
+	$(document).bind('keydown', 'h', function(event) { terminal('VBH', '*'); }); // Add a null "HAVE"
+	$(document).bind('keydown', 'shift+t', function(event) { terminal('TO', '*'); }); // Add a null "TO"
+	$(document).bind('keydown', '2', function(event) { terminal('NP', '*'); }); // Add NP trace
+	$(document).bind('keydown', 'shift+i', function(event) { terminal('C', '*if*'); }); // Add null if complementizer
+	$(document).bind('keydown', 'u', function(event) { nonterm('INTJ'); }); // interjection; INTJ
+	$(document).bind('keydown', 'w', function(event) { nonterm('INTJ'); }); // alternative - interjection; INTJ
+	$(document).bind('keydown', 'r', function(event) { nonterm('EDITED'); }); // *r*estarts; EDITED
+	$(document).bind('keydown', 't', function(event) { nonterm('TBAR'); }); // *t*opicP;
+	$(document).bind('keydown', 'c', function(event) { nonterm('CP'); }); // *C*omplementizerP;
+	$(document).bind('keydown', 'n', function(event) { nonterm('NP'); }); // *N*P;
+
+	// For spinner
+	$( function() {
+		var spinner = $( "#spinner" ).spinner();
+	 
+		$( "#disable" ).on( "click", function() {
+		  if ( spinner.spinner( "option", "disabled" ) ) {
+			spinner.spinner( "enable" );
+		  } else {
+			spinner.spinner( "disable" );
+		  }
+		});
+		$( "#destroy" ).on( "click", function() {
+		  if ( spinner.spinner( "instance" ) ) {
+			spinner.spinner( "destroy" );
+		  } else {
+			spinner.spinner();
+		  }
+		});
+		$( "#getvalue" ).on( "click", function() {
+		  //alert( trees[spinner.spinner( "value" )] );
+		  $('#brackets-input').val( 
+			trees[spinner.spinner( "value" )]
+			);
+		  $('#gen-tree').click();
+		});
+		$( "#setvalue" ).on( "click", function() {
+		  spinner.spinner( "value", 5 );
+		});
+	 
+		$( "button" ).button();
+	  } );
+	 
+	// For select menu
+	$( "#selectmenu" ).selectmenu();
+	// For tabs
+	$( "#tabs" ).tabs();
+
+	// For exporting to text file. See https://stackoverflow.com/questions/21012580/is-it-possible-to-write-data-to-file-using-only-javascript
+	var textFile = null,
+		makeTextFile = function (text) {
+			var data = new Blob([text], {type: 'text/plain'});
+
+			// If we are replacing a previously generated file we need to
+			// manually revoke the object URL to avoid memory leaks.
+			if (textFile !== null) {
+			  window.URL.revokeObjectURL(textFile);
+			}
+
+			textFile = window.URL.createObjectURL(data);
+
+			return textFile;
+		  };
+
+
+	var create = document.getElementById('btn-export-txt');
+		// textbox = document.getElementById('textbox'); // NH: no need for a textbox link
+
+	create.addEventListener('click', function () {
+		var link = document.getElementById('downloadlink');
+		link.href = makeTextFile(updatedTreesArray.join('\n\n'));
+		link.style.display = 'block';
+		
+		 // wait for the link to be added to the document
+		window.requestAnimationFrame(function () {
+		  var event = new MouseEvent('click');
+		  link.dispatchEvent(event);
+		  //document.body.removeChild(link);
+		});
+
+	  }, false);
+
+	$( function() {
+		var availableTags = [
+		  "VP", "NP", "ADVP", "SFP", "CC", "VB", "NN", 
+		  
+		];
+		$( "#gen-new-node" ).autocomplete({
+		  source: availableTags
+		});
+	  } );
+</script>
+<!-- end Tabs -->
+  </body>
+
+</html>
