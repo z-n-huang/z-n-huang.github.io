@@ -13,12 +13,12 @@ Email me at either:
 + znhuang at nus dot edu dot sg, or
 + znhuang at terpmail dot umd dot edu
 
-Recent updates (Apr 2025)
+Recent updates (July 2025)
 ======
++ Giving an online talk on recent work on Chaozhou (Teochew; joint work with Jiajia Cai) at the [Yushan Linguistics Salon](https://www.eng.ntnu.edu.tw/index.php/en/yushan-salon/) hosted at the National Taiwan Normal University in July 2025.
++ Co-teaching with [Sandra Villata](https://sandravillata.com/) a course on [experimental syntax](https://nyispb.org/v-nyi-10-program/ling/theoretical-linguistics-cognitive-science_652.html) at the [Virtual NYI program](https://nyispb.org/general-information/). If you have missed the official registration deadline, feel free to contact me or the organisers if you would like to register!
 + Now out in *English World-Wide*: ["Treebanks and World Englishes: a Singapore English perspective"](https://doi.org/10.1075/eww.23069.hua). This paper, coauthored with several NUS colleagues, considers how effectively we can leverage off-the-shelf American English statistical parsers for parsing Singapore English, despite the grammatical and lexical divergences between the two varieties.
 + Now out in *Language*: ["A nearly exhaustive experimental investigation of bridge effects in English"](https://dx.doi.org/10.1353/lan.2025.a954229). This paper, coauthored with Diogo Almeida and Jon Sprouse, evaluates existing theories of bridge verbs / bridge effects with experiments covering 640 English verbs, and presents a new multivariate account involving a morphosyntactic licensing component.
-+ Journey to the West: in the US in March, first for [TEAL 2025](https://sites.google.com/view/teal14/home) (talk with Cai Jiajia) and then [HSP 2025](https://hsp2025.github.io/) (posters with Colin Phillips; Serene Siow).
-+ Co-organised [AMLaP Asia 2024](https://blog.nus.edu.sg/amlapasia2024/) at NUS, 5-7 December 2024, and presented a poster with Serene Siow and Rachel Dudley.
 
 What I do
 ======
