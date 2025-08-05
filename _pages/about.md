@@ -13,10 +13,11 @@ Email me at either:
 + znhuang at nus dot edu dot sg, or
 + znhuang at terpmail dot umd dot edu
 
-Recent updates (July 2025)
+Recent updates (August 2025)
 ======
-+ Giving an online talk on recent work on Chaozhou (Teochew; joint work with Jiajia Cai) at the [Yushan Linguistics Salon](https://www.eng.ntnu.edu.tw/index.php/en/yushan-salon/) hosted at the National Taiwan Normal University in July 2025.
-+ Co-teaching with [Sandra Villata](https://sandravillata.com/) a course on [experimental syntax](https://nyispb.org/v-nyi-10-program/ling/theoretical-linguistics-cognitive-science_652.html) at the [Virtual NYI program](https://nyispb.org/general-information/). If you have missed the official registration deadline, feel free to contact me or the organisers if you would like to register!
++ Mohamed Hafiz (representing a team of researchers including myself) giving a talk on Singapore English passive constructions at [NWAV-Asia Pacific 8](https://www.ntu.edu.sg/nie/new-ways-of-analysing-variation-asia-pacific-8-singapore/programme) at Nanyang Technological University.
++ Gave an online talk on recent work on Chaozhou (Teochew; joint work with Jiajia Cai) at the [Yushan Linguistics Salon](https://www.eng.ntnu.edu.tw/index.php/en/yushan-salon/) hosted at the National Taiwan Normal University in July 2025.
++ Co-taught with [Sandra Villata](https://sandravillata.com/) a course on [experimental syntax](https://nyispb.org/v-nyi-10-program/ling/theoretical-linguistics-cognitive-science_652.html) at the [Virtual NYI program](https://nyispb.org/general-information/). If you have missed the official registration deadline, feel free to contact me or the organisers if you would like to register!
 + Now out in *English World-Wide*: ["Treebanks and World Englishes: a Singapore English perspective"](https://doi.org/10.1075/eww.23069.hua). This paper, coauthored with several NUS colleagues, considers how effectively we can leverage off-the-shelf American English statistical parsers for parsing Singapore English, despite the grammatical and lexical divergences between the two varieties.
 + Now out in *Language*: ["A nearly exhaustive experimental investigation of bridge effects in English"](https://dx.doi.org/10.1353/lan.2025.a954229). This paper, coauthored with Diogo Almeida and Jon Sprouse, evaluates existing theories of bridge verbs / bridge effects with experiments covering 640 English verbs, and presents a new multivariate account involving a morphosyntactic licensing component.
 
