@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CoNLL-U Tree Navigator + 2-Row POS View + Edits</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- jQuery (no SRI to avoid integrity errors) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.5;
+    }
+    .controls {
+      margin: 10px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    textarea {
+      width: 100%;
+      height: 40vh;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      white-space: pre;
+    }
+    button {
+      padding: 8px 14px;
+      border: 1px solid #888;
+      border-radius: 6px;
+      background: #f7f7f7;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .status {
+      margin-top: 8px;
+      color: #555;
+      font-size: 0.95em;
+    }
+    .file-info {
+      font-size: 0.95em;
+      color: #333;
+    }
+
+    /* Two-row POS grid (tokens row + UPOS row) */
+    .pos-grid-wrapper {
+      margin-top: 16px;
+      overflow-x: auto;
+    }
+    .pos-grid {
+      border-collapse: collapse;
+      width: auto;
+      table-layout: auto;
+    }
+    .pos-grid td {
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 120ms ease;
+    }
+
+    /* Color rules for POS (apply to both token and POS cells) */
+    .upos-verb { color: #d32f2f; font-weight: 700; }   /* VERB red */
+    .upos-blue { color: #1e4fa3; font-weight: 700; }   /* NOUN/PROPN/PRON blue */
+    .upos-intj { color: #d08a00; font-weight: 700; }   /* INTJ orange */
+    .upos-black { color: #111; font-weight: 700; }     /* ADV/AUX/copulas black */
+    .upos-grey { color: #9aa0a6; }                     /* others greyed (still legible) */
+
+    /* Selection highlight for the clicked token’s cells */
+    .selected {
+      background: #e6f0ff;
+      outline: 2px solid #84a9ff;
+      outline-offset: -2px;
+    }
+	/* For summaries */
+	.dep-summary {
+	  margin-top: 12px;
+	  font-size: 14px;
+	}
+	.dep-summary ul {
+	  margin: 6px 0 6px 20px;
+	}
+	.dep-summary li {
+	  margin: 2px 0;
+	}
+	.dep-summary .verb-head {
+	  font-weight: 600;
+	}
+	.dep-summary .nil {
+	  color: #9aa0a6;   /* greyed out NIL */
+	}
+  </style>
+</head>
+<body>
+  <h1>CoNLL-U Tree Navigator</h1>
+  <p>
+    Shortcuts (disabled while typing): “<” = Prev, “>” = Next, Shift+S = Export all edits.
+    Click a token to select it. Edits on selected token: r = root, v = VERB, n = NOUN, a = ADV, p = INTJ.
+  </p>
+
+  <div class="controls">
+    <input type="file" id="fileInput" accept=".conllu,.txt" />
+    <span class="file-info" id="fileInfo"></span>
+  </div>
+
+  <div class="controls">
+    <button id="prevBtn" disabled>Prev</button>
+    <button id="nextBtn" disabled>Next</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <textarea id="treeBox" placeholder="Load a CoNLL-U file to begin..." disabled></textarea>
+
+  <div class="pos-grid-wrapper">
+    <table id="posGrid" class="pos-grid" aria-label="Token and POS grid"></table>
+	<div id="depSummary" class="dep-summary"></div>
+  </div>
+
+  <script>
+    // Global state
+    let trees = [];            // Array of strings, each a single tree block
+    let currentIndex = -1;     // Current tree index
+    let debounceTimer = null;
+    let originalFileName = 'trees.conllu';
+    let selectedTokenId = null; // ID string of the selected token (column 1)
+	// Two-step action state
+	let pendingTwoStep = null;   // one of: 'b','c','p','t','x'
+	let anchorTokenId = null;    // token A (first click before the key, or currently selected)
+	
+    // Split CoNLL-U text into trees by blank lines
+    function parseConllu(text) {
+      const normalized = (text || '').replace(/\r\n/g, '\n');
+      const trimmed = normalized.trim();
+      if (!trimmed) return [];
+      return trimmed.split(/\n\s*\n+/);
+    }
+
+    // Robust column splitter: tabs preferred; fallback to >=2 spaces
+    function splitConlluCols(line) {
+      if (line.indexOf('\t') !== -1) return line.split('\t');
+      return line.trim().split(/ {2,}|\t/);
+    }
+
+    // Parse current tree to tokens; keep lineIndex for each token
+    function parseTreeToTokens(treeText) {
+      const lines = (treeText || '').split('\n');
+      const tokens = [];
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const line = raw.trimEnd();
+        if (!line || line.startsWith('#')) continue;
+
+        const cols = splitConlluCols(line);
+        if (cols.length < 10) continue;
+
+        const id = cols[0];
+        if (id.includes('-') || id.includes('.')) continue; // skip MWT / empty nodes
+
+        tokens.push({
+          lineIndex: i,
+          id: cols[0],
+          form: cols[1],
+          lemma: cols[2],
+          upos: cols[3],
+          xpos: cols[4],
+          feats: cols[5],
+          head: cols[6],
+          deprel: cols[7],
+          deps: cols[8],
+          misc: cols[9],
+        });
+      }
+      return tokens;
+    }
+
+    // Decide color class based on UPOS and DEPREL
+    // - VERB => red; NOUN/PROPN/PRON => blue; INTJ => orange
+    // - ADV/AUX and tokens with deprel=cop => black
+    // - Others => grey
+    function uposClass(token) {
+      const up = (token.upos || '').toUpperCase();
+      const dep = (token.deprel || '').toLowerCase();
+      if (dep === 'cop') return 'upos-black';
+      if (up === 'VERB') return 'upos-verb';
+      if (up === 'NOUN' || up === 'PROPN' || up === 'PRON') return 'upos-blue';
+      if (up === 'INTJ') return 'upos-intj';
+      if (up === 'ADV' || up === 'AUX') return 'upos-black';
+      return 'upos-grey';
+    }
+
+    // Render 2-row grid (Tokens row, UPOS row). Add data attributes for selection.
+    function renderPosGrid() {
+      const table = $('#posGrid');
+      table.empty();
+      if (currentIndex < 0 || currentIndex >= trees.length) return;
+
+      const tokens = parseTreeToTokens(trees[currentIndex]);
+      const $tokensRow = $('<tr/>');
+      const $uposRow = $('<tr/>');
+
+      for (const tok of tokens) {
+        const klass = uposClass(tok);
+        const isSel = selectedTokenId && tok.id === selectedTokenId;
+
+        const tdToken = $('<td/>', {
+          'data-token-id': tok.id,
+          'data-line-index': tok.lineIndex,
+          class: klass + (isSel ? ' selected' : ''),
+          text: tok.form || ''
+        });
+
+        const tdUpos = $('<td/>', {
+          'data-token-id': tok.id,
+          'data-line-index': tok.lineIndex,
+          class: klass + (isSel ? ' selected' : ''),
+          text: (tok.upos || '').toUpperCase()
+        });
+
+        $tokensRow.append(tdToken);
+        $uposRow.append(tdUpos);
+      }
+
+      table.append($tokensRow, $uposRow);
+
+	  // Click selection: token or POS cell
+	  table.find('td').on('click', function() {
+		  const id = $(this).attr('data-token-id');
+		  if (!id) return;
+
+		  // If we're waiting for B, this click is B
+		  if (pendingTwoStep && anchorTokenId) {
+			const B = id;
+			const kind = pendingTwoStep;
+
+			// Clear pending state before executing (to avoid accidental double actions)
+			pendingTwoStep = null;
+
+			// Keep A as selected
+			selectedTokenId = anchorTokenId;
+
+			performTwoStepAction(kind, anchorTokenId, B);
+			$('#status').text(`Applied '${kind}' from ${anchorTokenId} to ${B}`);
+			renderPosGrid();
+			return;
+		  }
+
+		  // Otherwise, set A (anchor) and also as selected
+		  selectedTokenId = id;
+		  anchorTokenId = id;
+		  renderPosGrid();
+		  $('#status').text(`Selected token A = ${id}. Press b/c/p/t/x, then click token B.`);
+	  });
+      // Status hint if nothing was parsed
+      if (tokens.length === 0) {
+        $('#status').text(`Tree ${currentIndex + 1} of ${trees.length} — no visualisable tokens (check separators are tabs or 2+ spaces)`);
+      }
+	  
+	  renderDependencySummary();
+    }
+
+    // Render the current tree into the textarea and grid
+    function renderCurrentTree() {
+      const box = $('#treeBox');
+      const status = $('#status');
+
+      if (currentIndex < 0 || currentIndex >= trees.length) {
+        box.val('');
+        box.prop('disabled', true);
+        status.text('No tree loaded.');
+        $('#prevBtn').prop('disabled', true);
+        $('#nextBtn').prop('disabled', true);
+        $('#posGrid').empty();
+        selectedTokenId = null;
+        return;
+      }
+
+      box.val(trees[currentIndex]);
+      box.prop('disabled', false);
+      status.text(`Tree ${currentIndex + 1} of ${trees.length}`);
+
+      $('#prevBtn').prop('disabled', currentIndex <= 0);
+      $('#nextBtn').prop('disabled', currentIndex >= trees.length - 1);
+
+      renderPosGrid();
+	  renderDependencySummary();
+    }
+
+    // Save the current textbox content back into the trees array
+    function saveCurrentEdits() {
+      if (currentIndex >= 0 && currentIndex < trees.length) {
+        const edited = $('#treeBox').val();
+        trees[currentIndex] = edited;
+      }
+    }
+
+    // Update a single token line by token ID, using an updater on its 10 columns
+    function updateTokenById(tokenId, updater) {
+      if (currentIndex < 0) return false;
+      const treeText = trees[currentIndex] || '';
+      const lines = treeText.split('\n');
+      let changed = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        if (!raw || raw.startsWith('#')) continue;
+
+        const cols = splitConlluCols(raw);
+        if (cols.length < 10) continue;
+
+        const id = cols[0];
+        if (id.includes('-') || id.includes('.')) continue; // skip non-word lines
+        if (id !== tokenId) continue;
+
+        while (cols.length < 10) cols.push('_'); // ensure 10 columns
+        updater(cols); // modify columns in place
+        lines[i] = cols.slice(0, 10).join('\t'); // write back as tabs
+        changed = true;
+        break;
+      }
+
+      if (changed) {
+        const newTree = lines.join('\n');
+        trees[currentIndex] = newTree;
+        $('#treeBox').val(newTree);
+        renderPosGrid();
+      }
+      return changed;
+    }
+	
+	
+	// Batch-edit the current tree by visiting each token row (10 columns).
+	// updater(cols) may mutate cols in place; return true if changed for that row.
+	function batchUpdateTree(updater) {
+	  if (currentIndex < 0) return false;
+	  const lines = (trees[currentIndex] || '').split('\n');
+	  let anyChanged = false;
+
+	  for (let i = 0; i < lines.length; i++) {
+		const raw = lines[i];
+		if (!raw || raw.startsWith('#')) continue;
+		const cols = splitConlluCols(raw);
+		if (cols.length < 10) continue;
+		const id = cols[0];
+		if (id.includes('-') || id.includes('.')) continue; // skip MWT/empty
+
+		while (cols.length < 10) cols.push('_');
+		const changed = updater(cols) === true;
+		if (changed) {
+		  lines[i] = cols.slice(0, 10).join('\t');
+		  anyChanged = true;
+		}
+	  }
+
+	  if (anyChanged) {
+		const newTree = lines.join('\n');
+		trees[currentIndex] = newTree;
+		$('#treeBox').val(newTree);
+		renderPosGrid();
+	  }
+	  return anyChanged;
+	}
+
+	// Convenience: read all token objects for the current tree (indexed by id)
+	function getCurrentTokens() {
+	  const tokens = parseTreeToTokens(trees[currentIndex] || '');
+	  const byId = new Map(tokens.map(t => [t.id, t]));
+	  return { tokens, byId };
+	}
+    // Debounced re-render when user edits the textbox
+    function scheduleReparseAndRender() {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        saveCurrentEdits();
+        // keep selection only if the ID still exists
+        const tokens = parseTreeToTokens(trees[currentIndex]);
+        if (!tokens.some(t => t.id === selectedTokenId)) {
+          selectedTokenId = null;
+        }
+        renderPosGrid();
+		renderDependencySummary();
+      }, 250);
+    }
+
+	// Get the tokens of the current tree (parsed)
+	function getCurrentTokens() {
+	  if (currentIndex < 0 || currentIndex >= trees.length) return [];
+	  return parseTreeToTokens(trees[currentIndex]);
+	}
+
+	// Set B's head and deprel in one go, then refresh
+	function setHeadAndDep(tokenId, headId, deprel) {
+	  updateTokenById(tokenId, cols => {
+		cols[6] = String(headId); // HEAD
+		cols[7] = deprel;         // DEPREL
+	  });
+	}
+
+	// Find any existing subject of headId (nsubj/csubj), return their IDs
+	function findSubjectsOf(headId) {
+	  const toks = getCurrentTokens();
+	  const hid = String(headId);
+	  return toks.filter(t => t.head === hid && /^(nsubj|csubj)$/i.test(t.deprel || ''));
+	}
+
+	// Heuristic: is B a non-finite verb (look for a 'to' dependent)
+	function isNonFiniteVerb(bTok, allToks) {
+	  if (!bTok || (bTok.upos || '').toUpperCase() !== 'VERB') return false;
+	  // If FEATS suggests infinitive/participle, treat as non-finite
+	  if ((bTok.feats || '').match(/\bVerbForm=(Inf|Part|Ger)\b/i)) return true;
+	  // Otherwise, look for a dependent 'to' with XPOS=TO or form 'to'
+	  const bid = String(bTok.id);
+	  return allToks.some(t =>
+		t.head === bid &&
+		(
+		  (t.xpos || '').toUpperCase() === 'TO' ||
+		  (t.form || '').toLowerCase() === 'to'
+		)
+	  );
+	}
+
+	// Execute an action for A(sourceId) and B(targetId)
+	function performTwoStepAction(type, sourceId, targetId) {
+	  const toks = getCurrentTokens();
+	  const A = toks.find(t => t.id === String(sourceId));
+	  const B = toks.find(t => t.id === String(targetId));
+	  if (!A || !B) return;
+
+	  if (type === 'b') {
+		// 1) Make B the subject of A.
+		// Demote any current subject(s) of A to 'fmrsubj'
+		const subs = findSubjectsOf(A.id);
+		for (const s of subs) {
+		  setHeadAndDep(s.id, A.id, 'fmrsubj');
+		}
+		// If B is a VERB => csubj, else nsubj
+		const isVerbB = (B.upos || '').toUpperCase() === 'VERB';
+		const newDep = isVerbB ? 'csubj' : 'nsubj';
+		setHeadAndDep(B.id, A.id, newDep);
+		$('#status').text(`Set token ${B.id} as ${newDep} of ${A.id}; demoted ${subs.length} subject(s) to fmrsubj`);
+	  } else if (type === 'c') {
+		// 2) Set B as A's complement based on B's properties:
+		// - dobj if B is NOUN
+		// - xcomp if B is a nonfinite VERB (heuristic with 'to')
+		// - CCOMP if B is a finite verb (elsewhere)
+		const up = (B.upos || '').toUpperCase();
+		let dep;
+		if (up === 'NOUN' || up === 'PROPN' || up === 'PRON') {
+		  dep = 'dobj';
+		} else if (up === 'VERB') {
+		  dep = isNonFiniteVerb(B, toks) ? 'xcomp' : 'CCOMP';
+		} else {
+		  // fallback: treat non-noun non-verb as obj
+		  dep = 'dobj';
+		}
+		setHeadAndDep(B.id, A.id, dep);
+		$('#status').text(`Set token ${B.id} as ${dep} of ${A.id}`);
+	  } else if (type === 'p') {
+		// 3) B's dependency DISCOURSE with A as head
+		setHeadAndDep(B.id, A.id, 'DISCOURSE');
+		$('#status').text(`Set token ${B.id} as DISCOURSE of ${A.id}`);
+	  } else if (type === 't') {
+		// 4) B's dependency dislocated with A as head
+		setHeadAndDep(B.id, A.id, 'dislocated');
+		$('#status').text(`Set token ${B.id} as dislocated of ${A.id}`);
+	  } else if (type === 'x') {
+		// 5) B's dependency parataxis with A as head
+		setHeadAndDep(B.id, A.id, 'parataxis');
+		$('#status').text(`Set token ${B.id} as parataxis of ${A.id}`);
+	  }
+
+	  // Clear pending action and update selection to B (optional)
+	  pendingAction = null;
+	  selectedTokenId = String(B.id);
+	  renderPosGrid();
+	}
+
+    // Export all trees as a .conllu file
+    function exportAllTrees() {
+      if (!trees.length) return;
+      saveCurrentEdits();
+      const content = trees.join('\n\n') + '\n';
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      const base = (originalFileName || 'trees.conllu').replace(/\.[^.]+$/, '');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${base}-edited.conllu`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+      $('#status').text(`Exported ${trees.length} tree(s) to ${base}-edited.conllu`);
+    }
+
+    // Utility: are we typing (focus inside input/textarea/contenteditable)?
+    function isTypingTarget(el) {
+      if (!el) return false;
+      const $el = $(el);
+      if ($el.is('input, textarea')) return true;
+      if ($el.is('[contenteditable=""], [contenteditable="true"]')) return true;
+      return false;
+    }
+
+    // Apply requested keyboard edits to the selected token
+    function handleEditKey(key) {
+      if (!selectedTokenId) return;
+      const k = key.toLowerCase();
+
+      if (k === 'r') {
+		  // Re-root: old root -> deprel="sth", head=selected; selected -> root with head=0
+		  rerootTree(selectedTokenId, 'sth');
+		  return;
+	  } else if (k === 'v') {
+        updateTokenById(selectedTokenId, cols => { cols[3] = 'VERB'; });
+      } else if (k === 'n') {
+        updateTokenById(selectedTokenId, cols => { cols[3] = 'NOUN'; });
+      } else if (k === 'a') {
+        updateTokenById(selectedTokenId, cols => { cols[3] = 'ADV'; });
+      } else if (k === 'p') {
+        updateTokenById(selectedTokenId, cols => { cols[3] = 'INTJ'; });
+      }
+    }
+	console.log('Helpers loaded OK');
+	// Re-root the tree on the given token ID.
+	// formerRootDeprel is what the old root becomes (default: "sth").
+	function rerootTree(selectedId, formerRootDeprel = 'sth') {
+	  if (currentIndex < 0 || !trees.length || !selectedId) return;
+
+	  const treeText = trees[currentIndex] || '';
+	  const lines = treeText.split('\n');
+
+	  let selIdx = -1, rootIdx = -1;
+	  let selCols = null, rootCols = null;
+
+	  // Locate selected token line and current root line
+	  for (let i = 0; i < lines.length; i++) {
+		const raw = lines[i];
+		if (!raw || raw.startsWith('#')) continue;
+
+		const cols = splitConlluCols(raw);
+		if (cols.length < 10) continue;
+
+		const id = cols[0];
+		if (id.includes('-') || id.includes('.')) continue; // skip MWT/empty nodes
+
+		const deprel = (cols[7] || '').toLowerCase();
+		if (id === selectedId) {
+		  selIdx = i;
+		  selCols = cols;
+		}
+		if (deprel === 'root') {
+		  // Take the first root we find; UD should have exactly one
+		  if (rootIdx === -1) {
+			rootIdx = i;
+			rootCols = cols;
+		  }
+		}
+	  }
+
+	  // Nothing to do if selected not found
+	  if (selIdx === -1 || !selCols) return;
+
+	  // If selected is already root, no change
+	  const selIsRoot = (selCols[7] || '').toLowerCase() === 'root';
+	  if (selIsRoot && (selCols[6] === '0' || selCols[6] === 0)) {
+		$('#status').text(`Token ${selectedId} is already root`);
+		return;
+	  }
+
+	  // Update former root if present and not the same as selected
+	  if (rootIdx !== -1 && rootIdx !== selIdx && rootCols) {
+		rootCols[6] = String(selectedId);    // HEAD = selected token
+		rootCols[7] = formerRootDeprel;      // DEPREL = "sth" (or your chosen label)
+		lines[rootIdx] = rootCols.slice(0, 10).join('\t');
+	  }
+
+	  // Set selected token as new root
+	  selCols[6] = '0';            // HEAD=0
+	  selCols[7] = 'root';         // DEPREL=root
+	  lines[selIdx] = selCols.slice(0, 10).join('\t');
+
+	  // Write back
+	  const newTree = lines.join('\n');
+	  trees[currentIndex] = newTree;
+	  $('#treeBox').val(newTree);
+	  renderPosGrid();
+	  $('#status').text(`Re-rooted on token ${selectedId}`);
+	}
+	
+	// Build index maps and children lists from the current tree tokens
+	function buildHeadChildren(tokens) {
+	  const byId = new Map(tokens.map(t => [t.id, t]));
+	  const children = new Map(); // headId -> array of child tokens
+	  for (const t of tokens) {
+		const headId = t.head;
+		if (!children.has(headId)) children.set(headId, []);
+		children.get(headId).push(t);
+	  }
+	  return { byId, children };
+	}
+
+	function findFirstChildWithDep(childrenMap, headId, depLabels) {
+	  const kids = childrenMap.get(headId) || [];
+	  const wanted = (Array.isArray(depLabels) ? depLabels : [depLabels]).map(d => d.toLowerCase());
+	  for (const k of kids) {
+		const d = (k.deprel || '').toLowerCase();
+		if (wanted.includes(d)) return k;
+	  }
+	  return null;
+	}
+
+	function hasChildWithDep(childrenMap, headId, depRegex) {
+	  const kids = childrenMap.get(headId) || [];
+	  for (const k of kids) {
+		const d = (k.deprel || '');
+		if (depRegex.test(d)) return true;
+	  }
+	  return false;
+	}
+
+	function isVerbTok(tok) {
+	  return tok && (tok.upos || '').toUpperCase() === 'VERB';
+	}
+	function isNounTok(tok) {
+	  const up = (tok.upos || '').toUpperCase();
+	  return up === 'NOUN' || up === 'PROPN';
+	}
+	function isPronTok(tok) {
+	  return (tok.upos || '').toUpperCase() === 'PRON';
+	}
+	
+    function isRootTok(t) {
+	  return (t.deprel || '').toLowerCase() === 'root';
+	}
+
+	// Check if a head has any child whose deprel matches ANY of the given regex patterns
+	function hasChildWithDeps(childrenMap, headId, depPatterns) {
+	  const kids = childrenMap.get(headId) || [];
+	  return kids.some(k => depPatterns.some(re => re.test(k.deprel || '')));
+	}
+	
+	// Complement labels (case-insensitive): obj/dobj, xcomp, ccomp/CCOMP
+	function findComplement(childrenMap, headId) {
+	  const kids = childrenMap.get(headId) || [];
+	  // Prefer dobj/obj, then xcomp, then ccomp/CCOMP
+	  const order = [
+		/^(obj|dobj)$/i,
+		/^xcomp$/i,
+		/^ccomp$/i,
+		/^CCOMP$/i
+	  ];
+	  for (const re of order) {
+		const found = kids.find(k => re.test(k.deprel || ''));
+		if (found) return found;
+	  }
+	  return null;
+	}
+
+	// Particles: include UD compound:prt and discourse/ DISCOURSE
+	function findParticles(childrenMap, headId) {
+	  const kids = childrenMap.get(headId) || [];
+	  return kids.filter(k => /^(compound:prt|discourse|DISCOURSE)$/i.test(k.deprel || ''));
+	}
+
+	// Position helper: show token ID (and before/after relative to head)
+	function positionLabel(headTok, depTok) {
+	  try {
+		const h = parseInt(headTok.id, 10);
+		const d = parseInt(depTok.id, 10);
+		if (!isFinite(h) || !isFinite(d)) return String(depTok.id);
+		const rel = d < h ? 'before' : (d > h ? 'after' : 'same');
+		return `[${depTok.id}, ${rel}]`;
+	  } catch {
+		return String(depTok.id);
+	  }
+	}
+	
+	function renderDependencySummary() {
+	  const container = $('#depSummary');
+	  container.empty();
+
+	  if (currentIndex < 0 || currentIndex >= trees.length) return;
+
+	  const tokens = parseTreeToTokens(trees[currentIndex]);
+	  if (!tokens.length) return;
+
+	  const { byId, children } = buildHeadChildren(tokens);
+
+	  // Heads to include:
+	  // - any VERB
+	  // - any token with DEPREL=root
+	  // - any token that has a child with deprel=parataxis
+	  // - any token that has a child with deprel=acl:relcl (or plain 'relcl' if present)
+	const heads = tokens.filter(t =>
+		  isVerbTok(t) ||
+		  isRootTok(t) ||
+		  hasChildWithDeps(children, t.id, [
+			/^parataxis$/i,
+			/^acl(:relcl)?$/i,
+			/^advcl$/i,
+			/^xcomp$/i,
+			/^ccomp$/i,
+			/^csubj$/i
+		  ])
+		);
+
+	  if (!heads.length) return;
+
+	  const $ul = $('<ul/>');
+
+	  for (const head of heads) {
+		const headLabel = `${head.form || ''} [${head.id}] ${(head.upos || '').toUpperCase()}`;
+		const $liHead = $('<li/>', { class: 'verb-head', text: headLabel });
+		const $sub = $('<ul/>');
+
+		// Subject: must indicate presence or absence
+		// Prefer csubj (verb subjects), then nsubj; if none: NIL NIL
+		const subj = findFirstChildWithDep(children, head.id, ['csubj', 'nsubj']) ||
+					 findFirstChildWithDep(children, head.id, ['nsubj', 'csubj']);
+		if (subj) {
+		  $sub.append($('<li/>').text(`subject: ${subj.form} ${positionLabel(head, subj)}`));
+		} else {
+		  $sub.append($('<li/>', { class: 'nil', text: 'subject： NIL NIL' }));
+		}
+
+		// Complement (optional)
+		const comp = findComplement(children, head.id);
+		if (comp) {
+		  $sub.append($('<li/>').text(`complement ${comp.form} ${positionLabel(head, comp)} (${comp.deprel})`));
+		}
+
+		// Particles (optional)
+		const parts = findParticles(children, head.id);
+		if (parts.length) {
+		  const labels = parts.map(p => `${p.form}: ${positionLabel(head, p)} (${p.deprel})`).join(', ');
+		  $sub.append($('<li/>').text(`particles ${labels}`));
+		}
+
+		$liHead.append($sub);
+		$ul.append($liHead);
+	  }
+
+	  container.append($ul);
+	}
+
+
+	
+	
+    // Handlers
+    $(function() {
+      $('#fileInput').on('change', function(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        originalFileName = file.name || 'trees.conllu';
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const text = ev.target.result || '';
+          trees = parseConllu(text);
+          selectedTokenId = null;
+
+          if (trees.length === 0) {
+            $('#fileInfo').text(`${file.name} — parsed 0 trees`);
+            currentIndex = -1;
+            renderCurrentTree();
+            return;
+          }
+
+          currentIndex = 0;
+          $('#fileInfo').text(`${file.name} — parsed ${trees.length} trees`);
+          renderCurrentTree();
+        };
+        reader.readAsText(file);
+      });
+
+      $('#prevBtn').on('click', function() {
+        saveCurrentEdits();
+        if (currentIndex > 0) {
+          currentIndex -= 1;
+          selectedTokenId = null;
+          renderCurrentTree();
+        }
+      });
+
+      $('#nextBtn').on('click', function() {
+        saveCurrentEdits();
+        if (currentIndex < trees.length - 1) {
+          currentIndex += 1;
+          selectedTokenId = null;
+          renderCurrentTree();
+        }
+      });
+
+      $('#treeBox').on('input', scheduleReparseAndRender);
+
+	function isRootTok(t) {
+	  return (t.deprel || '').toLowerCase() === 'root';
+	}
+
+	// Check if a head has any child whose deprel matches ANY of the given regex patterns
+	function hasChildWithDeps(childrenMap, headId, depPatterns) {
+	  const kids = childrenMap.get(headId) || [];
+	  return kids.some(k => depPatterns.some(re => re.test(k.deprel || '')));
+	}
+	
+	// Keyboard shortcuts: navigation, export, single-token edits, and two-step actions.
+	// Disabled while typing.
+	$(document).on('keydown', function(e) {
+	  if (isTypingTarget(e.target)) return;   // disable when typing
+	  if (currentIndex < 0) return;
+
+	  const key = e.key;
+	  const code = e.code;
+
+	  // Prev: '<' (Shift + Comma)
+	  if (key === '<' || (code === 'Comma' && e.shiftKey)) {
+		e.preventDefault();
+		$('#prevBtn').click();
+		return;
+	  }
+
+	  // Next: '>' (Shift + Period)
+	  if (key === '>' || (code === 'Period' && e.shiftKey)) {
+		e.preventDefault();
+		$('#nextBtn').click();
+		return;
+	  }
+
+	  // Export: Shift+S
+	  if (e.shiftKey && (key === 'S' || key === 's')) {
+		e.preventDefault();
+		exportAllTrees();
+		return;
+	  }
+
+	  // Single-token edits (including reroot 'r')
+	  if (['r','R','v','V','n','N','a','A','p','P'].includes(key)) {
+		e.preventDefault();
+		if (key.toLowerCase() === 'r') {
+		  // Use the new re-root behavior
+		  if (!selectedTokenId) {
+			$('#status').text('Select a token to re-root.');
+			return;
+		  }
+		  rerootTree(selectedTokenId, 'sth');
+		} else {
+		  handleEditKey(key);
+		}
+		return;
+	  }
+
+	  // Start two-step actions: b, c, p, t, x
+	  if (['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
+		if (!selectedTokenId) {
+		  $('#status').text('Select token A first, then press b/c/p/t/x.');
+		  return;
+		}
+		e.preventDefault();
+		pendingTwoStep = key.toLowerCase();
+		anchorTokenId = selectedTokenId;
+		$('#status').text(`Pending '${pendingTwoStep}' from A=${anchorTokenId}. Now click token B.`);
+		return;
+	  }
+	}); // END keydown handler
+	}); // END of $(function(){ ... })
+	
+  </script>
+</body>
+</html>
