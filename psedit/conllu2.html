@@ -125,6 +125,12 @@
 
 	/* Default: hide UD tree at load so table is emphasized */
 	#treeBox { display: none; }
+	/* Highlight the current anchor w1 during Guided Edit (batch) */
+	.guided-anchor {
+	  outline: 2px solid #ff9800;
+	  outline-offset: -2px;
+	  background: #fff7e6;
+	}
   </style>
 </head>
 <body>
@@ -239,7 +245,21 @@
 	// Alternative Mass edit mode
 	let massAwaitKey   = false;    // true when w2 is chosen and we’re waiting for a letter
 	let massPendingW2  = null;     // stores w2’s id while waiting for a key
-
+	// Guided Edit (batch) mode state
+	let guidedBatchActive = false;   // true while in batch mode
+	let guidedOp = null;             // one of 'b','c','p','t','x' (relation being annotated)
+	let guidedW1List = [];           // array of token IDs for w1 (tokens with deprel root/xcomp/ccomp/parataxis)
+	let guidedW1Idx = -1;            // index into guidedW1List for current w1
+	let guidedCandidateId = null;    // proposed existing dependent for current w1 (nullable)
+	let guidedMultiSelect = false;   // true for c/p/t/x (click many, finish with Escape); false for b
+	
+	// Guided (interactive panel) optional state (used by panel buttons)
+	let guidedEditActive  = false;
+	//let guidedAnchorId    = null;
+	//let guidedPendingKind = null;
+	//let guidedAwaitKey    = false;
+	//let guidedPendingW2   = null;
+	
     // Split CoNLL-U text into trees by blank lines
     function parseConllu(text) {
       const normalized = (text || '').replace(/\r\n/g, '\n');
@@ -505,150 +525,109 @@
       return 'upos-grey';
     }
 
-    // Render 2-row grid (Tokens row, UPOS row). Add data attributes for selection.
     function renderPosGrid() {
-      const table = $('#posGrid');
-      table.empty();
-      if (currentIndex < 0 || currentIndex >= trees.length) return;
+  const table = $('#posGrid');
+  table.empty();
+  if (currentIndex < 0 || currentIndex >= trees.length) return;
 
-      const tokens = parseTreeToTokens(trees[currentIndex]);
-	  const $indexRow  = $('<tr/>');
-      const $tokensRow = $('<tr/>');
-      const $uposRow = $('<tr/>');
+  const tokens = parseTreeToTokens(trees[currentIndex]);
 
-      for (let i = 0; i < tokens.length; i++) {
-		const tok = tokens[i];
-		const klass = uposClass(tok);
-		const isSel = massEditActive
-		  ? (massAnchorId && tok.id === massAnchorId)
-		  : (selectedTokenId && tok.id === selectedTokenId);
+  const $indexRow  = $('<tr/>');
+  const $tokensRow = $('<tr/>');
+  const $uposRow   = $('<tr/>');
 
-		// Index cell (not clickable)
-		$indexRow.append($('<td/>', {
-		  class: 'index-cell',
-		  text: String(i + 1)
-		}));
+  const guidedW1 = typeof currentGuidedW1Id === 'function' ? currentGuidedW1Id() : null;
 
-		// Token cell (clickable)
-		$tokensRow.append($('<td/>', {
-		  'data-token-id': tok.id,
-		  'data-line-index': tok.lineIndex,
-		  class: klass + (isSel ? ' selected' : ''),
-		  text: tok.form || ''
-		}));
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    const klass = uposClass(tok);
 
-		// POS cell (clickable)
-		$uposRow.append($('<td/>', {
-		  'data-token-id': tok.id,
-		  'data-line-index': tok.lineIndex,
-		  class: klass + (isSel ? ' selected' : ''),
-		  text: (tok.upos || '').toUpperCase()
-		}));
-	  }
-      table.append($indexRow, $tokensRow, $uposRow);
+    const classes = [klass];
+    // guided batch anchor highlight
+    if (guidedBatchActive && guidedW1 && tok.id === guidedW1) classes.push('guided-anchor');
+    // else normal selection
+    else if (!guidedBatchActive && selectedTokenId && tok.id === selectedTokenId) classes.push('selected');
 
-	  // Click selection: token or POS cell
-	  table.find('td').on('click', function(e) {
-		  const id = $(this).attr('data-token-id');
-		  if (!id) return;
+    $indexRow.append($('<td/>', { class: 'index-cell', text: String(i + 1) }));
+    $tokensRow.append($('<td/>', { 'data-token-id': tok.id, class: classes.join(' '), text: tok.form || '' }));
+    $uposRow.append($('<td/>', { 'data-token-id': tok.id, class: classes.join(' '), text: (tok.upos || '').toUpperCase() }));
+  }
 
-		  // If we're waiting for B, this click is B
-		  if (pendingTwoStep && anchorTokenId) {
-			const B = id;
-			const kind = pendingTwoStep;
+  table.append($indexRow, $tokensRow, $uposRow);
 
-			// Clear pending state before executing (to avoid accidental double actions)
-			pendingTwoStep = null;
+  // Delegated click handler — paste this EXACTLY here
+  $('#posGrid')
+    .off('click', 'td[data-token-id]')
+    .on('click', 'td[data-token-id]', function(e) {
+      const id = $(this).attr('data-token-id');
+      if (!id) return;
 
-			// Keep A as selected
-			selectedTokenId = anchorTokenId;
-
-			performTwoStepAction(kind, anchorTokenId, B);
-			$('#status').text(`Applied '${kind}' from ${anchorTokenId} to ${B}`);
-			renderPosGrid();
-			return;
-		  }
-		  // If we are in a pending merge, this click is B
-		  if (pendingMerge) {
-			applyMergeWith(id);
-			// Keep A selected as the merged token (will be updated by applyMergeWith)
-			return;
-		  }
-
-		  // Otherwise, set A (anchor) and also as selected
-		  selectedTokenId = id;
-		  anchorTokenId = id;
-		  renderPosGrid();
-		  $('#status').text(`Selected token A = ${id}. Press b/c/p/t/x, then click token B.`);
-		  
-		  // Mass edit mode handling
-		  // Mass edit mode takes precedence
-		  if (massEditActive) {
-			  e.preventDefault();
-
-			  // If a relation key was pressed first (key -> click), apply immediately on this click (w2)
-			  if (massPendingKind && massAnchorId) {
-				const w1 = massAnchorId;
-				const w2 = id;
-				performTwoStepAction(massPendingKind, w1, w2);
-				massPendingKind = null;         // clear kind, keep anchor
-				massAwaitKey    = false;
-				massPendingW2   = null;
-				selectedTokenId = w1;           // keep w1 highlighted
-				renderPosGrid();
-				$('#status').text(`Mass edit: applied ${massEditKindLabel ? massEditKindLabel(massPendingKind) : 'relation'} ${w1} -> ${w2}. Press b/c/p/t/x again or click a new w1.`);
-				return;
-			  }
-
-			  // If we already have an anchor (w1) and no kind yet, this click sets/updates w2 and waits for a key
-			  if (massAnchorId && !massPendingKind) {
-				massPendingW2 = id;
-				massAwaitKey  = true;
-				selectedTokenId = massAnchorId; // keep w1 highlighted
-				renderPosGrid();
-				$('#status').text(`Mass edit: target w2=${id} selected. Press b/c/p/t/x to set relation from w1=${massAnchorId} to w2=${id}.`);
-				return;
-			  }
-
-			  // Otherwise set/replace the anchor (w1)
-			  massAnchorId    = id;
-			  selectedTokenId = id;
-			  massAwaitKey    = false;
-			  massPendingW2   = null;
-			  renderPosGrid();
-			  $('#status').text(`Mass edit: w1=${id} selected. Either press b/c/p/t/x then click w2, OR click w2 now and press a key.`);
-			  return;
-			}
-
-		  // Non-mass mode: existing behaviors
-		  if (pendingMerge) {
-			applyMergeWith(id);
-			return;
-		  }
-		  if (pendingTwoStep && anchorTokenId) {
-			const B = id;
-			const kind = pendingTwoStep;
-			pendingTwoStep = null;
-			selectedTokenId = anchorTokenId;
-			performTwoStepAction(kind, anchorTokenId, B);
-			renderPosGrid();
-			$('#status').text(`Applied '${kind}' from ${anchorTokenId} to ${B}`);
-			return;
-		  }
-
-		  // Normal selection
-		  selectedTokenId = id;
-		  anchorTokenId   = id;
-		  renderPosGrid();
-		  $('#status').text(`Selected token ${id}`);
-	  });
-      // Status hint if nothing was parsed
-      if (tokens.length === 0) {
-        $('#status').text(`Tree ${currentIndex + 1} of ${trees.length} — no visualisable tokens (check separators are tabs or 2+ spaces)`);
+      // Guided Edit (batch) branch
+      if (guidedBatchActive) {
+        e.preventDefault();
+        if (!guidedOp) {
+          $('#status').text('Guided: press b/c/p/t/x to choose relation, then click target(s).');
+          return;
+        }
+        const w1Id = currentGuidedW1Id();
+        if (!w1Id) {
+          $('#status').text('Guided: no current w1. Press b/c/p/t/x to (re)start.');
+          return;
+        }
+        performTwoStepAction(guidedOp, w1Id, id);
+        if (guidedOp === 'b') {
+          guidedCandidateId = null;
+          advanceGuidedToNextW1();
+        } else {
+          $('#status').text(`Guided: linked ${id} to ${w1Id} as '${guidedOp}'. Click more or press Esc when done.`);
+        }
+        renderPosGrid();
+        if (typeof renderDependencySummary === 'function') renderDependencySummary();
+        return;
       }
-	  
-	  renderDependencySummary();
-    }
+
+      // Mass edit
+      if (massEditActive) {
+        e.preventDefault();
+        if (massPendingKind && massAnchorId) {
+          performTwoStepAction(massPendingKind, massAnchorId, id);
+          massPendingKind = null;
+          selectedTokenId = massAnchorId;
+          renderPosGrid();
+          $('#status').text(`Mass edit: applied ${massPendingKind || ''} ${massAnchorId} -> ${id}.`);
+          return;
+        }
+        massAnchorId    = id;
+        selectedTokenId = id;
+        renderPosGrid();
+        $('#status').text(`Mass edit: w1=${id} selected. Press b/c/p/t/x, then click w2.`);
+        return;
+      }
+
+      // Pending merge
+      if (pendingMerge) { applyMergeWith(id); return; }
+
+      // Two-step (non-mass)
+      if (pendingTwoStep && anchorTokenId) {
+        const kind = pendingTwoStep;
+        pendingTwoStep = null;
+        selectedTokenId = anchorTokenId;
+        performTwoStepAction(kind, anchorTokenId, id);
+        renderPosGrid();
+        $('#status').text(`Applied '${kind}' from ${anchorTokenId} to ${id}`);
+        return;
+      }
+
+      // Normal selection
+      selectedTokenId = id;
+      anchorTokenId   = id;
+      renderPosGrid();
+      $('#status').text(`Selected token ${id}`);
+    });
+
+  // Refresh summary if you use it
+  if (typeof renderDependencySummary === 'function') renderDependencySummary();
+}
 
     // Render the current tree into the textarea and grid
     function renderCurrentTree() {
@@ -1301,150 +1280,425 @@
 	
 	// Keyboard shortcuts: navigation, export, single-token edits, and two-step actions.
 	// Disabled while typing.
-	$(document).on('keydown', function(e) {
-	  if (isTypingTarget(e.target) || splitInputActive) return;
-	  if (currentIndex < 0) return;
+	// COMPLETE keydown handler (drop-in). Covers:
+// - Guided Edit (batch) mode: g to start; b/c/p/t/x choose relation; Enter confirm proposal; Esc advance; Shift+6 (^) terminate
+// - Guided Edit (panel) mode: g while a token is selected (if you use the panel variant)
+// - Mass Edit mode: m to start; b/c/p/t/x then click; Esc clear/exit
+// - Navigation < >, export Shift+S, single-token edits r/v/n/a/p, split '-', merge '+'
+// Shortcuts disabled while typing or split input is active.
+$(document).on('keydown', function(e) {
+  if (isTypingTarget(e.target) || splitInputActive) return;
+  if (currentIndex < 0) return;
 
-	  const key = e.key;
-	  const code = e.code;
-	  
-	  
-	  // Toggle mass edit with 'm'
-	  // Mass edit toggles and actions get priority
-		if (key.toLowerCase() === 'm') {
-		  e.preventDefault();
-		  if (!massEditActive) enterMassEdit();
-		  else clearMassEditPending();  // reset anchor/pending but remain in mass edit
-		  return;
-		}
-		if (key === 'Escape' && massEditActive) {
-		  e.preventDefault();
-		  if (massPendingKind || massAnchorId || massAwaitKey) {
-			// First Escape clears pending state but stays in mass edit
-			massPendingKind = null;
-			massAwaitKey    = false;
-			massPendingW2   = null;
-			// Do not clear massAnchorId here to allow quickly changing targets; clear it to fully idle:
-			// massAnchorId = null;
-			$('#status').text('Mass edit: cleared pending. Anchor kept. Click new w2 or press a key.');
-		  } else {
-			exitMassEdit();
-		  }
-		  return;
-		}
+  const key  = e.key;
+  const code = e.code;
 
-		// If mass edit is active and we have both w1 and w2 chosen, accept a relation key now (click->click->key)
-		if (massEditActive && massAwaitKey && massAnchorId && massPendingW2 && ['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
-		  e.preventDefault();
-		  const k = key.toLowerCase();
-		  performTwoStepAction(k, massAnchorId, massPendingW2);
-		  // Keep anchor; clear awaiting state
-		  massAwaitKey    = false;
-		  massPendingW2   = null;
-		  massPendingKind = null;
-		  selectedTokenId = massAnchorId;
-		  renderPosGrid();
-		  $('#status').text(`Mass edit: applied '${k}' ${massAnchorId} -> ${selectedTokenId ? massAnchorId : ''}. Click another w2 or press a key.`);
-		  return;
-		}
+  // =========================
+  // Guided Edit (batch) MODE
+  // =========================
 
-		// If mass edit is active and user presses a key before choosing w2 (key->click workflow)
-		if (massEditActive && ['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
-		  e.preventDefault();
-		  if (!massAnchorId) {
-			$('#status').text('Mass edit: click w1 first, then press b/c/p/t/x or click w2 and press a key.');
-			return;
-		  }
-		  massPendingKind = key.toLowerCase();
-		  massAwaitKey    = false;  // using key->click, not click->key
-		  massPendingW2   = null;
-		  $('#status').text(`Mass edit: '${massPendingKind}' pending from w1=${massAnchorId}. Click w2.`);
-		  return;
-		}
+  // Terminate Guided Edit (batch) with Shift+6 (^)
+  if ((key === '^') || (code === 'Digit6' && e.shiftKey)) {
+    if (guidedBatchActive) {
+      e.preventDefault();
+      guidedBatchActive = false;
+      guidedOp = null;
+      guidedW1List = [];
+      guidedW1Idx = -1;
+      guidedCandidateId = null;
+      guidedMultiSelect = false;
+      $('#status').text('Guided (batch): terminated.');
+      renderPosGrid();
+    }
+    return;
+  }
 
-		// If mass edit is active, ignore other shortcuts
-		if (massEditActive) return;
+  // Start Guided Edit (batch) with 'g' (no preselection required)
+  if (key.toLowerCase() === 'g' && !guidedEditActive) {
+    e.preventDefault();
+    guidedBatchActive = true;
+    guidedOp = null;               // wait for b/c/p/t/x
+    guidedW1List = buildGuidedW1List();
+    guidedW1Idx = -1;
+    guidedCandidateId = null;
+    guidedMultiSelect = false;
+    if (!guidedW1List.length) {
+      $('#status').text('Guided (batch): no eligible w1 (root/xcomp/ccomp/parataxis) in this tree.');
+    } else {
+      $('#status').text('Guided (batch): active. Press b/c/p/t/x to choose relation.');
+    }
+    renderPosGrid();
+    return;
+  }
 
-	  // And then other non-mass edit shortcuts
+  // If Guided Edit (batch) is active, it takes priority over other shortcuts
+  if (guidedBatchActive) {
+    // Choose relation type: b/c/p/t/x
+    if (['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
+      e.preventDefault();
+      startGuidedOp(key.toLowerCase());  // sets guidedOp and calls advanceGuidedToNextW1()
+      return;
+    }
 
-	  // Prev: '<' (Shift + Comma)
-	  if (key === '<' || (code === 'Comma' && e.shiftKey)) {
-		e.preventDefault();
-		$('#prevBtn').click();
-		return;
-	  }
+    // Confirm proposed dependent for current w1 (Enter)
+    if (key === 'Enter') {
+      e.preventDefault();
+      const w1Id = currentGuidedW1Id && currentGuidedW1Id();
+      if (!w1Id || !guidedOp) return;
 
-	  // Next: '>' (Shift + Period)
-	  if (key === '>' || (code === 'Period' && e.shiftKey)) {
-		e.preventDefault();
-		$('#nextBtn').click();
-		return;
-	  }
+      if (guidedCandidateId) {
+        performTwoStepAction(guidedOp, w1Id, guidedCandidateId);
+        renderPosGrid();
+        if (typeof renderDependencySummary === 'function') renderDependencySummary();
 
-	  // Export: Shift+S
-	  if (e.shiftKey && (key === 'S' || key === 's')) {
-		e.preventDefault();
-		exportAllTrees();
-		return;
-	  }
+        if (guidedOp === 'b') {
+          guidedCandidateId = null;
+          advanceGuidedToNextW1();
+        } else {
+          guidedCandidateId = null;
+          $('#status').text('Guided (batch): confirmed one. Click other applicable words or press Esc when done.');
+        }
+      } else {
+        $('#status').text('Guided (batch): no proposed dependent to confirm. Click a word or press Esc.');
+      }
+      return;
+    }
 
-	  // Single-token edits (including reroot 'r')
-	  if (['r','R','v','V','n','N','a','A','p','P'].includes(key)) {
-		e.preventDefault();
-		if (key.toLowerCase() === 'r') {
-		  // Use the new re-root behavior
-		  if (!selectedTokenId) {
-			$('#status').text('Select a token to re-root.');
-			return;
-		  }
-		  rerootTree(selectedTokenId, 'sth');
-		} else {
-		  handleEditKey(key);
-		}
-		return;
-	  }
+    // Finish current w1 (no more targets) and move to next (Escape)
+    if (key === 'Escape') {
+      e.preventDefault();
+      if (!guidedOp) {
+        // No op chosen yet: exit guided mode
+        guidedBatchActive = false;
+        $('#status').text('Guided (batch): exited.');
+        renderPosGrid();
+        return;
+      }
+      guidedCandidateId = null;
+      advanceGuidedToNextW1();  // auto-advances tree when done
+      return;
+    }
 
-	  // Hyphen: split selected token into user-provided words
-	  if (key === '-' || code === 'Minus') {
-		e.preventDefault();
-		if (!selectedTokenId) {
-		  $('#status').text('Select a token first, then press - to split.');
-		  return;
-		}
-		// Optional: prefill with the selected token’s FORM
-		const toks = parseTreeToTokens(trees[currentIndex]);
-		const selTok = toks.find(t => t.id === selectedTokenId);
-		const prefill = selTok ? selTok.form : '';
-		showSplitUI(prefill); // shows input and “Apply split” button
-		return;
-	  }
+    // While guided mode is active, suppress other shortcuts
+    return;
+  }
 
-	  // Plus: start merge (requires clicking an adjacent token B)
-	  if (key === '+' || code === 'Equal') { // On many keyboards '+' is Shift+'='; also catch '+'
-		e.preventDefault();
-		if (!selectedTokenId) {
-		  $('#status').text('Select token A first, then press + and click adjacent token B.');
-		  return;
-		}
-		startMerge(); // sets pendingMerge and status
-		return;
-	  }
-	  // Start two-step actions: b, c, p, t, x
-	  if (['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
-		if (!selectedTokenId) {
-		  $('#status').text('Select token A first, then press b/c/p/t/x.');
-		  return;
-		}
-		e.preventDefault();
-		pendingTwoStep = key.toLowerCase();
-		anchorTokenId = selectedTokenId;
-		$('#status').text(`Pending '${pendingTwoStep}' from A=${anchorTokenId}. Now click token B.`);
-		return;
-	  }
-	  
-	}); // END keydown handler
+  // ==============================
+  // Guided Edit (panel) VARIANT
+  // ==============================
+  // If you use the interactive panel mode (guidedEditActive), keep its keys separate.
+  if (guidedEditActive) {
+    if (key === 'Escape') {
+      e.preventDefault();
+      if (guidedPendingKind || guidedAwaitKey) {
+        guidedPendingKind = null;
+        guidedAwaitKey    = false;
+        guidedPendingW2   = null;
+        updateGuidedHint && updateGuidedHint();
+        renderPosGrid();
+      } else {
+        exitGuided();
+      }
+      return;
+    }
+    if (['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
+      e.preventDefault();
+      if (!guidedAnchorId) {
+        $('#status').text('Guided Edit: click an anchor word first.');
+        return;
+      }
+      guidedPendingKind = key.toLowerCase();
+      guidedAwaitKey    = false;
+      guidedPendingW2   = null;
+      updateGuidedHint && updateGuidedHint();
+      applyGuidedSuggestions && applyGuidedSuggestions(parseTreeToTokens(trees[currentIndex] || ''));
+      return;
+    }
+    // Suppress other shortcuts while panel-guided mode is active
+    return;
+  }
+
+  // =====================
+  // Navigation / Export
+  // =====================
+  if (key === '<' || (code === 'Comma' && e.shiftKey)) {
+    e.preventDefault();
+    $('#prevBtn').click();
+    return;
+  }
+  if (key === '>' || (code === 'Period' && e.shiftKey)) {
+    e.preventDefault();
+    $('#nextBtn').click();
+    return;
+  }
+  if (e.shiftKey && (key === 'S' || key === 's')) {
+    e.preventDefault();
+    exportAllTrees();
+    return;
+  }
+
+  // ==============
+  // Mass Edit mode
+  // ==============
+  if (key.toLowerCase() === 'm') {
+    e.preventDefault();
+    if (!massEditActive) enterMassEdit();
+    else clearMassEditPending();
+    return;
+  }
+  if (massEditActive) {
+    if (key === 'Escape') {
+      e.preventDefault();
+      if (massPendingKind || massAnchorId) clearMassEditPending();
+      else exitMassEdit();
+      return;
+    }
+    if (['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
+      e.preventDefault();
+      if (!massAnchorId) {
+        $('#status').text('Mass edit: click w1 first, then press b/c/p/t/x.');
+        return;
+      }
+      massPendingKind = key.toLowerCase();
+      $('#status').text(`Mass edit: '${massPendingKind}' pending from w1=${massAnchorId}. Click w2.`);
+      return;
+    }
+    // While mass edit is active, skip other shortcuts
+    return;
+  }
+
+  // ==================
+  // Split / Merge ops
+  // ==================
+  if (key === '-' || code === 'Minus') {
+    e.preventDefault();
+    if (!selectedTokenId) {
+      $('#status').text('Select a token first, then press - to split.');
+      return;
+    }
+    const toks = parseTreeToTokens(trees[currentIndex]);
+    const selTok = toks.find(t => t.id === selectedTokenId);
+    showSplitUI(selTok ? selTok.form : '');
+    return;
+  }
+  if (key === '+' || code === 'Equal') {
+    e.preventDefault();
+    if (!selectedTokenId) {
+      $('#status').text('Select token A first, then press + and click adjacent token B.');
+      return;
+    }
+    startMerge();
+    return;
+  }
+
+  // ============================
+  // Single-token edit shortcuts
+  // ============================
+  if (['r','R','v','V','n','N','a','A','p','P'].includes(key)) {
+    e.preventDefault();
+    pendingTwoStep = null; anchorTokenId = null; pendingMerge = null;
+    if (!selectedTokenId) { $('#status').text('Select a token first.'); return; }
+    if (key.toLowerCase() === 'r') rerootTree(selectedTokenId, 'sth');
+    else handleEditKey(key);
+    return;
+  }
+
+  // =====================
+  // Two-step (non-mass)
+  // =====================
+  if (['b','B','c','C','p','P','t','T','x','X'].includes(key)) {
+    if (!selectedTokenId) { $('#status').text('Select token A first, then press b/c/p/t/x.'); return; }
+    e.preventDefault();
+    pendingTwoStep = key.toLowerCase();
+    anchorTokenId  = selectedTokenId;
+    $('#status').text(`Pending '${pendingTwoStep}' from A=${anchorTokenId}. Now click B.`);
+    return;
+  }
+}); // END keydown handler
 	}); // END of $(function(){ ... })
 	
+	// Guided Edit mode
+	// Collect tokens that are dependents of root/xcomp/ccomp/parataxis
+	// Guided batch: collect all w1 candidates in the current tree:
+	// - any VERB
+	// - any token with deprel=root
+	// - any token that HEADS at least one child with deprel in {ccomp, xcomp, parataxis}
+	function buildGuidedW1List() {
+	  const tokens = parseTreeToTokens(trees[currentIndex] || '');
+	  const { children } = buildChildrenIndex(tokens);
+
+	  const isVerb = (t) => (t.upos || '').toUpperCase() === 'VERB';
+	  const isRoot = (t) => (t.deprel || '').toLowerCase() === 'root';
+	  const headsClause = (t) => {
+		const kids = children.get(t.id) || [];
+		return kids.some(k => /^(ccomp|xcomp|parataxis|advcl|acl(:relcl)?)$/i.test(k.deprel || ''));
+	  };
+
+	  // Collect IDs, de-duplicate, sort numerically by token position
+	  const ids = new Set();
+	  tokens.forEach(t => {
+		if (isVerb(t) || isRoot(t) || headsClause(t)) ids.add(t.id);
+	  });
+
+	  return Array.from(ids)
+		.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+	}
+
+	// Children index helpers
+	function buildChildrenIndex(tokens) {
+	  const byId = new Map(tokens.map(t => [t.id, t]));
+	  const children = new Map();
+	  for (const t of tokens) {
+		if (!children.has(t.head)) children.set(t.head, []);
+		children.get(t.head).push(t);
+	  }
+	  return { byId, children };
+	}
+	function findFirstChild(children, headId, depRegexes) {
+	  const kids = children.get(headId) || [];
+	  return kids.find(k => depRegexes.some(re => re.test(k.deprel || ''))) || null;
+	}
+	function findAllChildren(children, headId, depRegexes) {
+	  const kids = children.get(headId) || [];
+	  return kids.filter(k => depRegexes.some(re => re.test(k.deprel || '')));
+	}
+
+	// Proposed existing dependent (per guidedOp)
+	function proposeExistingDependent(w1, guidedOp) {
+	  const tokens = parseTreeToTokens(trees[currentIndex] || '');
+	  const { children } = buildChildrenIndex(tokens);
+
+	  if (guidedOp === 'b') {
+		// subject: prefer csubj then nsubj (or vice-versa; pick first found)
+		return findFirstChild(children, w1, [/^csubj$/i, /^nsubj$/i]) ||
+			   findFirstChild(children, w1, [/^nsubj$/i, /^csubj$/i]);
+	  }
+	  if (guidedOp === 'c') {
+		// complements: obj/dobj, xcomp, ccomp/CCOMP
+		return findFirstChild(children, w1, [/^(obj|dobj)$/i, /^xcomp$/i, /^ccomp$/i, /^CCOMP$/i]);
+	  }
+	  if (guidedOp === 'p') {
+		return findFirstChild(children, w1, [/^discourse$/i, /^DISCOURSE$/i]);
+	  }
+	  if (guidedOp === 't') {
+		return findFirstChild(children, w1, [/^dislocated$/i, /^topic$/i]);
+	  }
+	  if (guidedOp === 'x') {
+		return findFirstChild(children, w1, [/^parataxis$/i]);
+	  }
+	  return null;
+	}
+
+	// Status prompt helpers
+	function promptForW1(w1Id) {
+	  const toks = parseTreeToTokens(trees[currentIndex] || '');
+	  const t = toks.find(z => z.id === w1Id);
+	  const headStr = t ? `${t.form} [${t.id}]` : `ID ${w1Id}`;
+	  const roleMap = { b: 'subject', c: 'complements', p: 'DISCOURSE particles', t: 'topic/dislocated', x: 'parataxis' };
+	  if (guidedOp === 'b') {
+		if (guidedCandidateId) {
+		  const cand = toks.find(z => z.id === guidedCandidateId);
+		  const cstr = cand ? `${cand.form} [${cand.id}]` : `ID ${guidedCandidateId}`;
+		  $('#status').text(`Guided (subject): w1=${headStr}. Is “${cstr}” the subject? Enter=Yes, click another word to set; Esc=NIL`);
+		} else {
+		  $('#status').text(`Guided (subject): w1=${headStr}. Click the subject (or Esc for NIL).`);
+		}
+	  } else {
+		const role = roleMap[guidedOp] || guidedOp;
+		if (guidedCandidateId) {
+		  const cand = toks.find(z => z.id === guidedCandidateId);
+		  const cstr = cand ? `${cand.form} [${cand.id}]` : `ID ${guidedCandidateId}`;
+		  $('#status').text(`Guided (${role}): w1=${headStr}. Confirm “${cstr}” (Enter) or click correct one(s). Esc=done for this w1.`);
+		} else {
+		  $('#status').text(`Guided (${role}): w1=${headStr}. Click all applicable word(s). Esc=done for this w1.`);
+		}
+	  }
+	}
+
+	// Start guided batch on a relation letter
+	function startGuidedOp(opLetter) {
+	  if (currentIndex < 0) return;
+	  guidedBatchActive = true;
+	  guidedOp = opLetter.toLowerCase();
+	  guidedW1List = buildGuidedW1List();
+	  guidedW1Idx = -1;
+	  guidedCandidateId = null;
+	  guidedMultiSelect = (guidedOp !== 'b'); // only 'b' is single; others allow multiple
+	  if (!guidedW1List.length) {
+		$('#status').text('Guided: no eligible w1 (root/xcomp/ccomp/parataxis) in this tree.');
+		return;
+	  }
+	  advanceGuidedToNextW1();
+	}
+
+	// Utility: current w1 id (or null)
+	function currentGuidedW1Id() {
+	  return (guidedW1Idx >= 0 && guidedW1Idx < guidedW1List.length) ? guidedW1List[guidedW1Idx] : null;
+	}
+
+	// Move to the next w1 for guided batch editing.
+	// If finished in this tree, auto-advance to the next tree and continue the same operation.
+	function advanceGuidedToNextW1() {
+	  if (!guidedBatchActive || !guidedOp) {
+		$('#status').text('Guided: not active.');
+		return;
+	  }
+	  if (currentIndex < 0 || currentIndex >= trees.length) {
+		$('#status').text('Guided: no tree loaded.');
+		return;
+	  }
+
+	  // Advance index
+	  guidedW1Idx += 1;
+
+	  // If done with this sentence, auto-advance to the next tree
+	  if (guidedW1Idx >= guidedW1List.length) {
+		// Try to move to next tree
+		if (currentIndex < trees.length - 1) {
+		  // Save edits and go next
+		  saveCurrentEdits && saveCurrentEdits();
+		  $('#nextBtn').click();
+
+		  // Recompute candidates for the new sentence
+		  guidedW1List = buildGuidedW1List();
+		  guidedW1Idx = -1;
+
+		  if (!guidedW1List.length) {
+			// No eligible w1 in this new sentence; recursively move further
+			advanceGuidedToNextW1();
+			return;
+		  }
+		  // Continue in the new sentence
+		  advanceGuidedToNextW1();
+		  return;
+		} else {
+		  // No more trees
+		  $('#status').text('Guided: completed all sentences.');
+		  guidedBatchActive = false;
+		  guidedOp = null;
+		  guidedCandidateId = null;
+		  renderPosGrid && renderPosGrid();
+		  return;
+		}
+	  }
+
+	  // Set current w1 and propose a candidate dependent for this op
+	  const w1Id = guidedW1List[guidedW1Idx];
+	  guidedCandidateId = null;                 // reset candidate
+	  guidedMultiSelect = (guidedOp !== 'b');   // only subject is single
+
+	  // Propose an existing dependent (if any) for the prompt
+	  const proposed = proposeExistingDependent(w1Id, guidedOp);
+	  if (proposed) guidedCandidateId = proposed.id;
+
+	  // Highlight w1 and update prompt
+	  // If your grid highlights selectedTokenId, reuse it here:
+	  if (typeof selectedTokenId !== 'undefined') selectedTokenId = w1Id;
+
+	  // Render + prompt
+	  renderPosGrid && renderPosGrid();
+	  promptForW1(w1Id);
+	}
   </script>
 </body>
 </html>
