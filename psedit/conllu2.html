@@ -179,10 +179,19 @@
         <li>Press x: w2 is in a parataxis deprel with w1 (e.g. w2 is actually the main verb of a second sentence)</li>
       </ul>
     </li>
+	<li>Guided Edit mode: Suppose we have a set of trees, and we want to just focus on fixing up a certain DEPREL (e.g. subjects). This mode will automatically bring you through all existing tokens of that DEPREL; you can confirm or make changes to the dependent.
+		<ul>
+			<li>Press g: Enter Guided Edit mode.</li>
+			<li>Press b/c/p/t/x (the DEPREL to focus on). Suppose you press "b" - subject. The webpage will automatically highlight one head (e.g. the root word), and mention what word is its subject. Press enter to confirm, or if the current word is wrong, click on the word that is actually the subject.</li>
+			<li>Once you press enter or click on another word, the webpage will highlight that next word that should have a subject, e.g. another verb in the same sentence.
+			<li>If there are no more words with that need subjects in the sentence, the webpage will automatically progress to the next sentence and repeat the process, until there are no more sentences.</li>
+			<li>
+	</li>
     <li>Mass Edit mode: Suppose we have a word w1. Mass Edit lets us identify the words that take w1 as their head and the corresponding DEPRELs.
       <ul>
         <li>Press m: Enter Mass Edit (status shows “active”).</li>
-        <li>Click w1 - this is now the head word. Press one of b/c/p/t/x (the DEPREL), then click w2 to apply. Now w2 is in this DEPREL relation with w1. Repeat with new letters to link w1 to w3, w4, etc.</li>
+        <li>Click w1 - this is now the head word. Press one of b/c/p/t/x (the DEPREL), then click w2 to apply. Now w2 is in this DEPREL relation with w1. Let's say you click on one word w1, and then press b (subject). Click on the word that is w1's subject. Then you press c (complement) and click on the word that is w1's object. Then you press p (particle) and click on the particle that are linked to w1. Press p again to link another particle to w1.</li>
+		<li>Repeat with new letters to link w1 to w3, w4, etc.</li>
         <li>Esc (once): Clear pending actions but stay in Mass Edit. Click a new w1 to continue.</li>
         <li>Esc (again while idle): Exit Mass Edit.</li>
       </ul>
