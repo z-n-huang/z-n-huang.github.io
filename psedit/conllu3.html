@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CoNLL-U UD Tree Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    margin: 0;
+    padding: 0;
+    background: #f7f7f7;
+    color: #222;
+  }
+
+  header {
+    background: #083d77;
+    color: #fff;
+    padding: 12px 16px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  main {
+    padding: 0px;
+    /*max-width: 1200px;*/
+    margin: 0 auto;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .controls input[type="file"] {
+    padding: 4px;
+  }
+
+  .controls button {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  .controls button:hover {
+    background: #f0f0f0;
+  }
+
+  .statusbar {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: #e9f2ff;
+    border: 1px solid #cfe0ff;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #003a7a;
+  }
+
+  .textarea-container {
+    margin-top: 12px;
+  }
+
+  .textarea-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .tree-text {
+    width: 100%;
+    min-height: 220px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 16px;
+    line-height: 1.3;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 10px;
+    resize: vertical;
+    background: #fff;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .help {
+    margin-top: 12px;
+    background: #fffef5;
+    border: 1px solid #f2e9c9;
+    border-radius: 6px;
+    padding: 10px;
+    color: #5c4d00;
+  }
+
+  .help h2 {
+    margin-top: 0;
+    font-size: 16px;
+  }
+
+  .grid-table {
+    margin-top: 13px;
+    /*width: 100%;*/
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .grid-table td {
+    border: 1px solid #eee;
+    padding: 6px;
+    text-align: center;
+    font-size: 16px;
+  }
+
+  .pos-red { color: #cc0000; }      /* verbs */
+  .pos-blue { color: #1a5fb4; }     /* nouns, pronouns */
+  .pos-orange { color: #d97706; }   /* INTJ */
+  .pos-black { color: #000000; }    /* ADV, AUX, copulas */
+  .pos-grey { color: #666666; }     /* everything else greyed */
+
+  .insights {
+    margin-top: 16px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .insights ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .insights li {
+    margin-bottom: 6px;
+  }
+
+  .footer {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <div class="controls">
+    <input id="fileInput" type="file" accept=".conllu,.txt" />
+    <button id="prevBtn" title="Previous (Shift + <)">&laquo; Prev</button>
+    <button id="nextBtn" title="Next (Shift + >)">Next &raquo;</button>
+    <button id="toggleHelpBtn">Help</button>
+    <button id="toggleTextBtn">Hide Textbox</button>
+    <button id="exportBtn" title="Export (Shift + X)">Export</button>
+    <span id="indexInfo"></span>
+  </div>
+
+  <div class="statusbar" id="statusBar">Status: Ready</div>
+
+  <div class="textarea-container">
+    <div class="textarea-toolbar">
+      <span>Editable UD tree (CoNLL-U) for current sentence:</span>
+    </div>
+    <textarea id="treeText" class="tree-text" spellcheck="false"></textarea>
+  </div>
+
+  <div id="helpTab" class="help hidden">
+    <h2>Help & Shortcuts</h2>
+    <ul>
+      <li>Upload a .conllu file using the file picker at the top.</li>
+      <li>Edit the current tree directly in the textbox. Navigating to Prev/Next saves your edits back to the array.</li>
+      <li>Prev: click “Prev” or press Shift + &lt;</li>
+      <li>Next: click “Next” or press Shift + &gt;</li>
+      <li>Export all trees (reflecting your edits): click “Export” or press Shift + X</li>
+      <li>Toggle Help: click “Help”</li>
+      <li>Show/Hide Textbox: click “Hide Textbox” / “Show Textbox”</li>
+      <li>The table and clause insights update automatically as you edit the textbox.</li>
+    </ul>
+  </div>
+
+  <table id="gridTable" class="grid-table">
+    <tbody>
+      <!-- Three rows rendered: ID row, FORM row, UPOS row with color -->
+    </tbody>
+  </table>
+
+  <div id="insights" class="insights">
+    <strong>Clause insights:</strong>
+    <ul id="insightsList">
+      <!-- Bullet points inserted here -->
+    </ul>
+  </div>
+
+  <div class="footer">
+    Tip: The status bar shows the last key/action and any parse errors. Large files may take a moment to load.
+  </div>
+</main>
+
+<script>
+(function($) {
+  // Global state
+  let trees = [];          // Array of objects: { raw: string, tokens: [], comments: [], error: string|null }
+  let currentIndex = 0;    // Index of the currently displayed tree
+  let dirty = false;       // Whether textarea has unsaved changes
+
+
+
+  // Set of clausal relations for insights
+  const CLAUSAL_RELATIONS = new Set([
+    'acl', 'acl:relcl', 'advcl', 'csubj', 'csubj:pass',
+    'parataxis', 'ccomp', 'xcomp', 'rcmod'
+  ]);
+
+  // Utility: parse a single CoNLL-U block into tokens + comments
+  function parseConlluBlock(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    const tokens = [];
+    const comments = [];
+    for (const line of lines) {
+      if (line.startsWith('#')) {
+        comments.push(line);
+        continue;
+      }
+      const cols = line.split('\t');
+      if (cols.length !== 10) {
+        return { tokens: [], comments, error: 'Expected 10 columns on token lines.' };
+      }
+      tokens.push({
+        ID: cols[0],
+        FORM: cols[1],
+        LEMMA: cols[2],
+        UPOS: cols[3],
+        XPOS: cols[4],
+        FEATS: cols[5],
+        HEAD: cols[6],
+        DEPREL: cols[7],
+        DEPS: cols[8],
+        MISC: cols[9],
+        isMultiWord: /-/.test(cols[0])
+      });
+    }
+    return { tokens, comments, error: null };
+  }
+
+  // Utility: serialize tokens + comments back to CoNLL-U block
+  function serializeConlluBlock(tokens, comments) {
+    const lines = [];
+    for (const c of comments) lines.push(c);
+    for (const t of tokens) {
+      const cols = [
+        t.ID ?? '_', t.FORM ?? '_', t.LEMMA ?? '_', t.UPOS ?? '_', t.XPOS ?? '_',
+        t.FEATS ?? '_', t.HEAD ?? '_', t.DEPREL ?? '_', t.DEPS ?? '_', t.MISC ?? '_'
+      ];
+      lines.push(cols.join('\t'));
+    }
+    return lines.join('\n');
+  }
+
+  // Parse whole file content into blocks
+  function parseConlluFileContent(content) {
+    const rawBlocks = content
+      .split(/\n{2,}/)
+      .map(b => b.trim())
+      .filter(b => b.length > 0);
+    const result = [];
+    for (const raw of rawBlocks) {
+      const { tokens, comments, error } = parseConlluBlock(raw);
+      result.push({ raw, tokens, comments, error });
+    }
+    return result;
+  }
+
+  // Utility: escape HTML for plain text insertion
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Utility: escape cell content
+  function escapeHtmlCell(str) {
+    return escapeHtml(str);
+  }
+
+  // Status bar updates
+  function setStatus(msg) {
+    $('#statusBar').text(`Status: ${msg}`);
+  }
+
+  // Update index info
+  function refreshIndexInfo() {
+    $('#indexInfo').text(
+      trees.length > 0 ? `Sentence ${currentIndex + 1} of ${trees.length}` : ''
+    );
+  }
+
+  // Determine color class based on UPOS and copula relation
+  function posColorClass(t) {
+    const up = (t.UPOS || '').toUpperCase();
+    const deprel = (t.DEPREL || '').toLowerCase();
+    if (up === 'VERB') return 'pos-red';
+    if (up === 'NOUN' || up === 'PRON' || up === 'PROPN') return 'pos-blue';
+    if (up === 'INTJ') return 'pos-orange';
+    if (up === 'ADV' || up === 'AUX' || deprel === 'cop') return 'pos-black';
+    return 'pos-grey';
+  }
+
+  // Render three-row table: IDs, FORMs, UPOS with color
+  function renderTable(tokens) {
+    const tbody = $('#gridTable tbody');
+    tbody.empty();
+
+    const ids = tokens.map(t => t.ID ?? '');
+    const forms = tokens.map(t => t.FORM ?? '');
+    const posCells = tokens.map(t => {
+      const cls = posColorClass(t);
+      const uposDisp = escapeHtml(t.UPOS || '');
+      return `<span class="${cls}">${uposDisp}</span>`;
+    });
+
+    const makeRow = (cells) =>
+      `<tr>${cells.map(c => `<td>${escapeHtmlCell(c)}</td>`).join('')}</tr>`;
+
+    tbody.append(makeRow(ids));
+    tbody.append(makeRow(forms));
+    tbody.append(`<tr>${posCells.map(c => `<td>${c}</td>`).join('')}</tr>`);
+  }
+
+  // Render clause insights:
+  // 1) Root (ID + token), token italicized
+  // 2) All words in a clausal relation with the root (dependents of root with DEPREL in CLAUSAL_RELATIONS)
+  // 3) All words that head a clause (heads of tokens whose DEPREL is clausal)
+  function renderInsights(tokens) {
+    const ul = $('#insightsList');
+    ul.empty();
+    if (!tokens || tokens.length === 0) return;
+
+    const byId = {};
+    for (const t of tokens) {
+      byId[t.ID] = t;
+    }
+
+    const roots = tokens.filter(t => (t.DEPREL || '').toLowerCase() === 'root');
+
+    // 1) Root(s)
+    if (roots.length > 0) {
+      if (roots.length === 1) {
+        const r = roots[0];
+        ul.append(`<li>Root: ${escapeHtml(r.ID)} + <i>${escapeHtml(r.FORM || '')}</i></li>`);
+      } else {
+        const items = roots.map(r => `${escapeHtml(r.ID)} + <i>${escapeHtml(r.FORM || '')}</i>`);
+        ul.append(`<li>Roots: ${items.join(', ')}</li>`);
+      }
+    } else {
+      ul.append(`<li>No explicit root found.</li>`);
+    }
+
+    const rootIds = new Set(roots.map(r => r.ID));
+
+    // 2) Clausal dependents of root
+    const clausalWithRoot = tokens.filter(t => {
+      const head = (t.HEAD || '').trim();
+      const deprel = (t.DEPREL || '').toLowerCase();
+      return rootIds.has(head) && CLAUSAL_RELATIONS.has(deprel);
+    });
+    if (clausalWithRoot.length > 0) {
+      const items = clausalWithRoot.map(t => `${escapeHtml(t.ID)} + <i>${escapeHtml(t.FORM || '')}</i>`);
+      ul.append(`<li>Clausal dependents of root: ${items.join(', ')}</li>`);
+    } else {
+      ul.append(`<li>Clausal dependents of root: (none)</li>`);
+    }
+
+    // 3) Heads of clauses
+    const clauseHeadIds = new Set();
+    for (const t of tokens) {
+      const deprel = (t.DEPREL || '').toLowerCase();
+      if (CLAUSAL_RELATIONS.has(deprel)) {
+        const headId = (t.HEAD || '').trim();
+        if (headId && byId[headId]) {
+          clauseHeadIds.add(headId);
+        }
+      }
+    }
+    if (clauseHeadIds.size > 0) {
+      const heads = Array.from(clauseHeadIds).map(id => byId[id]).filter(Boolean);
+      const items = heads.map(h => `${escapeHtml(h.ID)} + <i>${escapeHtml(h.FORM || '')}</i>`);
+      ul.append(`<li>Heads of clauses: ${items.join(', ')}</li>`);
+    } else {
+      ul.append(`<li>Heads of clauses: (none)</li>`);
+    }
+  }
+
+// Helpers to read/commit the current textarea content as a parsed tree.
+// Paste these inside your existing IIFE, after parseConlluBlock/serializeConlluBlock/renderTable/renderInsights,
+// and with trees/currentIndex/setStatus/dirty available.
+
+// Return the parsed representation of whatever is currently in the textarea.
+function getParsedCurrent() {
+  const raw = $('#treeText').val() || '';
+  return parseConlluBlock(raw);
+}
+
+// Commit a parsed tree (tokens, comments) back to the textarea and UI,
+// and store it into trees[currentIndex]. Marks as dirty (unsaved to disk/export) but consistent in memory.
+function setParsedCurrent(tokens, comments) {
+  const safeTokens = Array.isArray(tokens) ? tokens : [];
+  const safeComments = Array.isArray(comments) ? comments : [];
+  const raw = serializeConlluBlock(safeTokens, safeComments);
+
+  // Update textarea
+  $('#treeText').val(raw);
+
+  // Re-render table and insights
+  renderTable(safeTokens);
+  renderInsights(safeTokens);
+
+  // Persist to in-memory model
+  if (trees && trees.length > 0 && trees[currentIndex]) {
+    trees[currentIndex].raw = raw;
+    trees[currentIndex].tokens = safeTokens;
+    trees[currentIndex].comments = safeComments;
+    trees[currentIndex].error = null;
+  }
+
+  // Mark edits in-session
+  dirty = true;
+
+  // Optional: brief status update (comment out if too chatty)
+  setStatus('Applied edits to current sentence.');
+}
+
+  // Display current tree in textarea and update table/insights
+  function displayCurrentTree() {
+    if (trees.length === 0) {
+      $('#treeText').val('');
+      $('#gridTable tbody').empty();
+      $('#insightsList').empty();
+      refreshIndexInfo();
+      return;
+    }
+    const tree = trees[currentIndex];
+    const rawBlock = tree.raw ?? serializeConlluBlock(tree.tokens || [], tree.comments || []);
+    $('#treeText').val(rawBlock);
+    dirty = false;
+
+    const { tokens, error } = parseConlluBlock(rawBlock);
+    renderTable(tokens);
+    renderInsights(tokens);
+    if (error) {
+      setStatus(`Parse warning: ${error}`);
+    } else {
+      setStatus('Displayed current sentence.');
+    }
+    refreshIndexInfo();
+  }
+
+  // Update table and insights when user edits textarea
+  function updateFromTextarea() {
+    const raw = $('#treeText').val();
+    const parsed = parseConlluBlock(raw);
+    renderTable(parsed.tokens || []);
+    renderInsights(parsed.tokens || []);
+    if (parsed.error) {
+      setStatus(`Parse warning: ${parsed.error}`);
+    } else {
+      setStatus('Live update from textbox.');
+    }
+    dirty = true;
+  }
+
+  // Save current textarea edits back into trees[currentIndex]
+  function saveCurrentEdits() {
+    if (trees.length === 0) return;
+    const raw = $('#treeText').val();
+    const parsed = parseConlluBlock(raw);
+
+    trees[currentIndex].raw = raw;
+    trees[currentIndex].comments = parsed.comments || [];
+    trees[currentIndex].tokens = parsed.tokens || [];
+    trees[currentIndex].error = parsed.error || null;
+
+    dirty = false;
+    if (parsed.error) {
+      setStatus(`Saved raw with parse warning: ${parsed.error}`);
+    } else {
+      setStatus('Saved current sentence.');
+    }
+  }
+
+  // Navigate to previous/next sentence (direction: -1 or +1)
+  function navigateTo(direction) {
+    if (trees.length === 0) return;
+    saveCurrentEdits();
+
+    const newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= trees.length) {
+      setStatus('Reached boundary; no more sentences.');
+      return;
+    }
+    currentIndex = newIndex;
+    displayCurrentTree();
+  }
+
+  // Export all trees to a single .conllu file
+  function exportAll() {
+    if (trees.length === 0) {
+      setStatus('Nothing to export.');
+      return;
+    }
+    saveCurrentEdits();
+
+    const blocks = trees.map(t => {
+      const raw = t.raw && t.raw.trim().length ? t.raw : serializeConlluBlock(t.tokens || [], t.comments || []);
+      return raw.trim();
+    });
+    const content = blocks.join('\n\n');
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.download = 'edited.conllu';
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setStatus('Exported edited.conllu');
+  }
+
+  // Event bindings
+
+  // Load file handler
+  $('#fileInput').on('change', function(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const content = evt.target.result || '';
+      trees = parseConlluFileContent(content);
+      currentIndex = 0;
+      setStatus(`Loaded ${trees.length} sentence(s).`);
+      displayCurrentTree();
+    };
+    reader.onerror = function() {
+      setStatus('Error reading file.');
+    };
+    reader.readAsText(file, 'UTF-8');
+  });
+
+  // Prev/Next buttons
+  $('#prevBtn').on('click', function() { navigateTo(-1); });
+  $('#nextBtn').on('click', function() { navigateTo(1); });
+
+  // Toggle Help tab
+  $('#toggleHelpBtn').on('click', function() {
+    $('#helpTab').toggleClass('hidden');
+    const isHidden = $('#helpTab').hasClass('hidden');
+    setStatus(isHidden ? 'Help hidden.' : 'Help shown.');
+  });
+
+  // Show/Hide Textbox
+  $('#toggleTextBtn').on('click', function() {
+    const $textareaContainer = $('.textarea-container');
+    const isHidden = $textareaContainer.hasClass('hidden');
+    if (isHidden) {
+      $textareaContainer.removeClass('hidden');
+      $('#toggleTextBtn').text('Hide Textbox');
+      setStatus('Textbox shown.');
+    } else {
+      $textareaContainer.addClass('hidden');
+      $('#toggleTextBtn').text('Show Textbox');
+      setStatus('Textbox hidden.');
+    }
+  });
+
+  // Textarea live updates
+  $('#treeText').on('input', function() {
+    updateFromTextarea();
+  });
+
+  // Export button
+  $('#exportBtn').on('click', function() { exportAll(); });
+
+  // Keyboard shortcuts:
+  // Shift + < (or Shift + ,) => Prev
+  // Shift + > (or Shift + .) => Next
+  // Shift + X => Export
+  $(document).on('keydown', function(e) {
+    const keyName = e.key || '';
+    const keyInfo = `Key pressed: ${keyName}${e.shiftKey ? ' (Shift)' : ''}${e.ctrlKey ? ' (Ctrl)' : ''}${e.altKey ? ' (Alt)' : ''}`;
+    setStatus(keyInfo);
+
+    if (e.shiftKey && (keyName === '<' || keyName === ',')) {
+      e.preventDefault();
+      navigateTo(-1);
+      return;
+    }
+    if (e.shiftKey && (keyName === '>' || keyName === '.')) {
+      e.preventDefault();
+      navigateTo(1);
+      return;
+    }
+    if (e.shiftKey && keyName.toLowerCase && keyName.toLowerCase() === 'x') {
+      e.preventDefault();
+      exportAll();
+      return;
+    }
+  });
+
+  // Initial UI state
+  displayCurrentTree();
+  refreshIndexInfo();
+  
+  // Start Word Edit mode
+  /***** WORD EDIT MODE: paste inside your existing (function($){ ... })(jQuery); *****/
+
+// State
+let wordEditMode = false;
+let tokenIdBuffer = '';
+let selectedTokenId = null;
+
+// Ensure a highlight style for selected cells exists
+(function ensureSelectedCellStyle(){
+  const styleId = 'selected-cell-style';
+  if (!document.getElementById(styleId)) {
+    const st = document.createElement('style');
+    st.id = styleId;
+    st.textContent = `
+      #gridTable td.selected-cell { background: #fff6cc; }
+    `;
+    document.head.appendChild(st);
+  }
+})();
+
+// Utilities tied to existing helpers
+function highlightSelectedInTable(id) {
+  $('#gridTable td').removeClass('selected-cell');
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const idx = parsed.tokens.findIndex(t => t.ID === id);
+  if (idx >= 0) {
+    $('#gridTable td[data-col="'+idx+'"]').addClass('selected-cell');
+  }
+}
+
+function selectTokenById(id) {
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tok = parsed.tokens.find(t => t.ID === id);
+  if (tok) {
+    selectedTokenId = tok.ID;
+    highlightSelectedInTable(selectedTokenId);
+    setStatus(`Word ${tok.ID} ${tok.FORM} selected`);
+  } else {
+    setStatus(`No token with ID ${id}`);
+  }
+}
+
+
+function handleDigitInWordMode(digit) {
+  tokenIdBuffer += digit;
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tok = parsed.tokens.find(t => t.ID === tokenIdBuffer);
+  if (tok) {
+    selectedTokenId = tok.ID;
+    highlightSelectedInTable(selectedTokenId);
+    setStatus(`Word ${tok.ID} ${tok.FORM} selected`);
+  } else {
+    setStatus(`Typing token ID: ${tokenIdBuffer}`);
+  }
+}
+
+
+function updateSelectedPOS(newUPOS) {
+  if (!selectedTokenId) return;
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tokens = parsed.tokens.slice();
+  const t = tokens.find(x => x.ID === selectedTokenId);
+  if (!t) return;
+
+  t.UPOS = newUPOS;
+  setParsedCurrent(tokens, parsed.comments || []);
+
+  // Reset numeric buffer so the next digit starts a fresh selection
+  tokenIdBuffer = '';
+
+  setStatus(`Set POS of ${t.ID} ${t.FORM} to ${newUPOS}. Type another ID or click another token.`);
+  highlightSelectedInTable(selectedTokenId);
+}
+
+function splitSelectedToken() {
+  if (!selectedTokenId) return;
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const { tokens, comments } = parsed;
+  const idx = tokens.findIndex(x => x.ID === selectedTokenId);
+  if (idx < 0) return;
+  const original = tokens[idx];
+
+  const input = prompt('Enter new word parts separated by spaces (e.g., part1 part2 ...):', original.FORM);
+  if (!input) return;
+  const parts = input.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) {
+    setStatus('Split cancelled or only one part provided.');
+    return;
+  }
+
+  // Build new tokens (first keeps deps; others compound to first)
+  const newTokens = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (i === idx) {
+      newTokens.push({
+        ID: 'TEMP',
+        FORM: parts[0],
+        LEMMA: original.LEMMA,
+        UPOS: original.UPOS,
+        XPOS: original.XPOS,
+        FEATS: original.FEATS,
+        HEAD: original.HEAD,
+        DEPREL: original.DEPREL,
+        DEPS: original.DEPS,
+        MISC: original.MISC,
+        _oldId: original.ID,
+        _oldHead: original.HEAD
+      });
+      for (let k = 1; k < parts.length; k++) {
+        newTokens.push({
+          ID: 'TEMP',
+          FORM: parts[k],
+          LEMMA: original.LEMMA,
+          UPOS: original.UPOS,
+          XPOS: original.XPOS,
+          FEATS: original.FEATS,
+          HEAD: original.ID,
+          DEPREL: 'compound',
+          DEPS: '_',
+          MISC: original.MISC,
+          _oldId: null,
+          _oldHead: original.ID
+        });
+      }
+    } else {
+      const t = tokens[i];
+      newTokens.push({
+        ...t,
+        _oldId: t.ID,
+        _oldHead: t.HEAD
+      });
+    }
+  }
+
+  // Renumber and remap heads
+  const mapOldToNew = {};
+  let firstPartNewId = null;
+  for (let i = 0; i < newTokens.length; i++) {
+    const nt = newTokens[i];
+    const newId = String(i + 1);
+    if (nt._oldId) mapOldToNew[nt._oldId] = newId;
+    nt.ID = newId;
+    if (!firstPartNewId && nt._oldId === original.ID) firstPartNewId = newId;
+  }
+  if (!firstPartNewId) firstPartNewId = String(idx + 1);
+
+  for (const nt of newTokens) {
+    const oldHead = (nt._oldHead || '').trim();
+    if (oldHead === '0' || oldHead === '') {
+      nt.HEAD = oldHead || '0';
+    } else if (mapOldToNew[oldHead]) {
+      nt.HEAD = mapOldToNew[oldHead];
+    } else if (oldHead === original.ID) {
+      nt.HEAD = firstPartNewId;
+    }
+    delete nt._oldId;
+    delete nt._oldHead;
+  }
+
+  setParsedCurrent(newTokens, comments || []);
+  selectedTokenId = firstPartNewId;
+  highlightSelectedInTable(selectedTokenId);
+
+  // Reset numeric buffer
+  tokenIdBuffer = '';
+
+  setStatus(`Split ${original.FORM} into ${parts.length} parts. Type another ID or click another token.`);
+}
+
+function joinWithAdjacent(direction) {
+  if (!selectedTokenId) return;
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const { tokens, comments } = parsed;
+  const idx = tokens.findIndex(x => x.ID === selectedTokenId);
+  if (idx < 0) return;
+
+  const neighborIdx = idx + direction;
+  if (neighborIdx < 0 || neighborIdx >= tokens.length) {
+    setStatus('No adjacent token to join.');
+    return;
+  }
+
+  const survivorIdx = Math.min(idx, neighborIdx);
+  const removeIdx = Math.max(idx, neighborIdx);
+  const survivor = tokens[survivorIdx];
+  const removed = tokens[removeIdx];
+
+  const defaultMergedForm = (survivorIdx === idx)
+    ? `${survivor.FORM}${removed.FORM}`
+    : `${removed.FORM}${survivor.FORM}`;
+
+  const mergedForm = prompt('Merged FORM for joined token:', defaultMergedForm);
+  if (mergedForm === null) {
+    setStatus('Join cancelled.');
+    return;
+  }
+
+  const newTokens = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (i === survivorIdx) {
+      const keep = tokens[idx];
+      const merged = {
+        ID: 'TEMP',
+        FORM: mergedForm,
+        LEMMA: `${survivor.LEMMA || survivor.FORM}+${removed.LEMMA || removed.FORM}`,
+        UPOS: keep.UPOS,
+        XPOS: keep.XPOS,
+        FEATS: keep.FEATS,
+        HEAD: keep.HEAD,
+        DEPREL: keep.DEPREL,
+        DEPS: '_',
+        MISC: (survivor.MISC && removed.MISC) ? `${survivor.MISC}|${removed.MISC}` : (survivor.MISC || removed.MISC || '_'),
+        _oldId: survivor.ID,
+        _oldHead: keep.HEAD
+      };
+      newTokens.push(merged);
+    } else if (i === removeIdx) {
+      // skip
+    } else {
+      const t = tokens[i];
+      newTokens.push({
+        ...t,
+        _oldId: t.ID,
+        _oldHead: t.HEAD
+      });
+    }
+  }
+
+  const removedOldId = removed.ID;
+  const survivorOldId = survivor.ID;
+  for (const nt of newTokens) {
+    if (nt._oldHead === removedOldId) {
+      nt._oldHead = survivorOldId;
+    }
+  }
+
+  const mapOldToNew = {};
+  let survivorNewId = null;
+  for (let i = 0; i < newTokens.length; i++) {
+    const nt = newTokens[i];
+    const newId = String(i + 1);
+    if (nt._oldId) mapOldToNew[nt._oldId] = newId;
+    nt.ID = newId;
+    if (nt._oldId === survivorOldId) survivorNewId = newId;
+  }
+  if (!survivorNewId) {
+    const adjustedIdx = survivorIdx < removeIdx ? survivorIdx : survivorIdx - 1;
+    survivorNewId = String(adjustedIdx + 1);
+  }
+
+  for (const nt of newTokens) {
+    const oldHead = (nt._oldHead || '').trim();
+    if (oldHead === '0' || oldHead === '') {
+      nt.HEAD = oldHead || '0';
+    } else if (mapOldToNew[oldHead]) {
+      nt.HEAD = mapOldToNew[oldHead];
+    } else if (oldHead === removedOldId) {
+      nt.HEAD = survivorNewId;
+    }
+    delete nt._oldId;
+    delete nt._oldHead;
+  }
+
+  setParsedCurrent(newTokens, comments || []);
+  selectedTokenId = survivorNewId;
+  highlightSelectedInTable(selectedTokenId);
+
+  // Reset numeric buffer
+  tokenIdBuffer = '';
+
+  setStatus(`Joined tokens into ${mergedForm}. Type another ID or click another token.`);
+}
+
+// Enter/Exit Word Edit mode
+function enterWordEditMode() {
+  wordEditMode = true;
+  tokenIdBuffer = '';
+  selectedTokenId = null;
+  $('#gridTable td').removeClass('selected-cell');
+  setStatus('Word Edit mode');
+}
+function exitWordEditMode() {
+  wordEditMode = false;
+  tokenIdBuffer = '';
+  selectedTokenId = null;
+  $('#gridTable td').removeClass('selected-cell');
+  setStatus('Exited Word Edit mode');
+}
+
+// Click selection only when in Word Edit mode
+$('#gridTable').off('click.wordmode').on('click.wordmode', function(e) {
+  if (!wordEditMode) {
+    setStatus('Click ignored. Press w to enter Word Edit mode, then click a token or type its ID.');
+    return;
+  }
+
+  // Find the nearest TD even if the click was on a child (e.g., a span)
+  const $td = $(e.target).closest('td');
+  if ($td.length === 0) return;
+
+  // Preferred: use data-col set by renderTable
+  let col = $td.data('col');
+
+  // Fallback: compute column index if data-col is not set
+  if (col === undefined) {
+    col = $td.index();
+  }
+
+  if (col === undefined) return;
+
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens || !parsed.tokens[col]) return;
+
+  tokenIdBuffer = '';
+  selectTokenById(parsed.tokens[col].ID);
+});
+
+// Key handling for word mode and shortcuts
+$(document).off('keydown.wordmode').on('keydown.wordmode', function(e) {
+  const key = e.key;
+
+  // Enter Word Edit mode
+  if (!wordEditMode && key.toLowerCase() === 'w' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    enterWordEditMode();
+    return;
+  }
+
+  if (wordEditMode) {
+    // Exit
+    if (key === 'Escape') {
+      e.preventDefault();
+      exitWordEditMode();
+      return;
+    }
+
+    // Sentence navigation within word mode
+    if (key === '<') {
+      e.preventDefault();
+      navigateTo(-1);
+      return;
+    }
+    if (key === '>') {
+      e.preventDefault();
+      navigateTo(1);
+      return;
+    }
+
+    // Backspace edits the token id buffer
+    if (key === 'Backspace') {
+      e.preventDefault();
+      if (tokenIdBuffer.length > 0) {
+        tokenIdBuffer = tokenIdBuffer.slice(0, -1);
+        if (tokenIdBuffer.length === 0) {
+          setStatus('Word Edit mode');
+          selectedTokenId = null;
+          $('#gridTable td').removeClass('selected-cell');
+        } else {
+          setStatus(`Typing token ID: ${tokenIdBuffer}`);
+        }
+      }
+      return;
+    }
+
+    // Digits select token id
+    if (/^\d$/.test(key)) {
+      e.preventDefault();
+      handleDigitInWordMode(key);
+      return;
+    }
+
+    // If a token is selected, allow edits
+    if (selectedTokenId) {
+      const low = key.toLowerCase();
+
+      // POS changes
+      if (low === 'n') {
+        e.preventDefault();
+        updateSelectedPOS('NOUN');
+        return;
+      }
+      if (low === 'v') {
+        e.preventDefault();
+        updateSelectedPOS('VERB');
+        return;
+      }
+      if (low === 'p') {
+        e.preventDefault();
+        updateSelectedPOS('INTJ');
+        return;
+      }
+      if (low === 'a') {
+        e.preventDefault();
+        updateSelectedPOS('ADV');
+        return;
+      }
+
+      // Split
+      if (key === '/') {
+        e.preventDefault();
+        splitSelectedToken();
+        return;
+      }
+
+      // Join with adjacent: f (following) or '+' ; d (preceding) or '-'
+      if (low === 'f' || key === '+') {
+        e.preventDefault();
+        joinWithAdjacent(1);
+        return;
+      }
+      if (low === 'd' || key === '-') {
+        e.preventDefault();
+        joinWithAdjacent(-1);
+        return;
+      }
+    }
+
+    // Unhandled key in word mode
+    setStatus(`Word Edit mode (unhandled key: ${key})`);
+    return;
+  }
+
+  // Outside word mode, we don't intercept here (keep your existing global shortcuts)
+});
+/***** END WORD EDIT MODE *****/
+  // End Word Edit mode
+
+})(jQuery);
+</script>
