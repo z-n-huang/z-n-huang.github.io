@@ -155,6 +155,21 @@
     font-size: 12px;
     color: #666;
   }
+  .hidden { display: none; }
+  .relation-list { margin-top: 12px; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 10px; }
+.relation-list > li { margin-bottom: 10px; }
+.rel-head { font-weight: 600; cursor: pointer; }
+.rel-item { margin-left: 18px; margin-top: 4px; }
+.rel-deprel { color: #333; font-weight: 600; cursor: pointer; }
+.rel-token { font-weight: 600; cursor: pointer; }
+.rel-template { color: #666; font-style: italic; cursor: pointer; }
+.rel-controls { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+.rel-controls.hidden { display: none; }
+.rel-hint { font-size: 12px; color: #666; }
+
+/* Table highlight */
+td.hl-dep, td.hl-head { background: #fff6a5 !important; }
+td.hl-muted { color: #999 !important; }
 </style>
 </head>
 <body>
@@ -165,14 +180,14 @@
     <button id="prevBtn" title="Previous (Shift + <)">&laquo; Prev</button>
     <button id="nextBtn" title="Next (Shift + >)">Next &raquo;</button>
     <button id="toggleHelpBtn">Help</button>
-    <button id="toggleTextBtn">Hide Textbox</button>
+    <button id="toggleTextBtn">Show Textbox</button>
     <button id="exportBtn" title="Export (Shift + X)">Export</button>
     <span id="indexInfo"></span>
   </div>
 
   <div class="statusbar" id="statusBar">Status: Ready</div>
 
-  <div class="textarea-container">
+  <div class="textarea-container hidden">
     <div class="textarea-toolbar">
       <span>Editable UD tree (CoNLL-U) for current sentence:</span>
     </div>
@@ -199,12 +214,19 @@
     </tbody>
   </table>
 
-  <div id="insights" class="insights">
+<!-- Relation Bullet List -->
+<div id="relationListControls" class="rel-controls hidden">
+  <button id="relClearBtn" title="Prefix del_ to current deprel">Clear DEPREL</button>
+  <span class="rel-hint">Shortcuts: b/o/d/i/q/c/x/w/l/m, “-” = Clear DEPREL</span>
+</div>
+<ul id="relationList" class="relation-list"></ul>
+
+
+  <!--div id="insights" class="insights">
     <strong>Clause insights:</strong>
     <ul id="insightsList">
-      <!-- Bullet points inserted here -->
     </ul>
-  </div>
+  </div-->
 
   <div class="footer">
     Tip: The status bar shows the last key/action and any parse errors. Large files may take a moment to load.
@@ -326,25 +348,35 @@
 
   // Render three-row table: IDs, FORMs, UPOS with color
   function renderTable(tokens) {
-    const tbody = $('#gridTable tbody');
-    tbody.empty();
+  const tbody = $('#gridTable tbody');
+  tbody.empty();
 
-    const ids = tokens.map(t => t.ID ?? '');
-    const forms = tokens.map(t => t.FORM ?? '');
-    const posCells = tokens.map(t => {
-      const cls = posColorClass(t);
-      const uposDisp = escapeHtml(t.UPOS || '');
-      return `<span class="${cls}">${uposDisp}</span>`;
-    });
+  const ids = tokens.map(t => t.ID ?? '');
+  const forms = tokens.map(t => t.FORM ?? '');
+  const posCells = tokens.map(t => {
+    const up = (t.UPOS || '');
+    const cls = (function(){
+      const U = up.toUpperCase();
+      const dr = (t.DEPREL || '').toLowerCase();
+      if (U === 'VERB') return 'pos-red';
+      if (U === 'NOUN' || U === 'PRON' || U === 'PROPN') return 'pos-blue';
+      if (U === 'INTJ') return 'pos-orange';
+      if (U === 'ADV' || U === 'AUX' || dr === 'cop') return 'pos-black';
+      return 'pos-grey';
+    })();
+    return `<span class="${cls}">${escapeHtml(up)}</span>`;
+  });
 
-    const makeRow = (cells) =>
-      `<tr>${cells.map(c => `<td>${escapeHtmlCell(c)}</td>`).join('')}</tr>`;
+  const makeRow = (cells, rowType) => {
+    const tds = cells.map((c, i) => `<td data-col="${i}" data-rowtype="${rowType}">${escapeHtml(c)}</td>`).join('');
+    return `<tr>${tds}</tr>`;
+  };
 
-    tbody.append(makeRow(ids));
-    tbody.append(makeRow(forms));
-    tbody.append(`<tr>${posCells.map(c => `<td>${c}</td>`).join('')}</tr>`);
-  }
-
+  tbody.append(makeRow(ids, 'id'));
+  tbody.append(makeRow(forms, 'form'));
+  const posRow = posCells.map((c, i) => `<td data-col="${i}" data-rowtype="upos">${c}</td>`).join('');
+  tbody.append(`<tr>${posRow}</tr>`);
+}
   // Render clause insights:
   // 1) Root (ID + token), token italicized
   // 2) All words in a clausal relation with the root (dependents of root with DEPREL in CLAUSAL_RELATIONS)
@@ -432,6 +464,7 @@ function setParsedCurrent(tokens, comments) {
   // Re-render table and insights
   renderTable(safeTokens);
   renderInsights(safeTokens);
+  renderRelationList(safeTokens);
 
   // Persist to in-memory model
   if (trees && trees.length > 0 && trees[currentIndex]) {
@@ -446,6 +479,35 @@ function setParsedCurrent(tokens, comments) {
 
   // Optional: brief status update (comment out if too chatty)
   setStatus('Applied edits to current sentence.');
+}
+
+function buildLevel1Heads(tokens) {
+  const CLAUSAL_LEVEL1_BASES = new Set(['ccomp','xcomp','advcl','acl','parataxis']);
+  const map = new Map();
+
+  for (const t of tokens) {
+    const rel = (t.DEPREL || '').toLowerCase();
+    const base = baseRel(rel);
+    if (rel === 'root') {
+      map.set(t.ID, t);
+    } else if (base === 'conj') {
+      map.set(t.ID, t);
+    } else if (CLAUSAL_LEVEL1_BASES.has(base)) {
+      map.set(t.ID, t);
+    }
+  }
+
+  let heads = Array.from(map.values());
+  if (heads.length > 0) {
+    heads.sort((a, b) => Number(a.ID) - Number(b.ID));
+    return heads;
+  }
+  const rootish = tokens.find(t => (t.HEAD || '').trim() === '0');
+  if (rootish) return [rootish];
+  const firstVerb = tokens.find(t => (t.UPOS || '').toUpperCase() === 'VERB');
+  if (firstVerb) return [firstVerb];
+  if (tokens.length > 0) return [tokens[0]];
+  return [];
 }
 
   // Display current tree in textarea and update table/insights
@@ -465,6 +527,7 @@ function setParsedCurrent(tokens, comments) {
     const { tokens, error } = parseConlluBlock(rawBlock);
     renderTable(tokens);
     renderInsights(tokens);
+	renderRelationList(tokens);
     if (error) {
       setStatus(`Parse warning: ${error}`);
     } else {
@@ -479,6 +542,7 @@ function setParsedCurrent(tokens, comments) {
     const parsed = parseConlluBlock(raw);
     renderTable(parsed.tokens || []);
     renderInsights(parsed.tokens || []);
+	renderRelationList(parsed.tokens || []);
     if (parsed.error) {
       setStatus(`Parse warning: ${parsed.error}`);
     } else {
@@ -1053,6 +1117,15 @@ $(document).off('keydown.wordmode').on('keydown.wordmode', function(e) {
         joinWithAdjacent(-1);
         return;
       }
+		  // Root shortcut in Word Edit mode: press 'r' after selecting a token (by click or typing its ID)
+	if (low === 'r') {
+	  e.preventDefault();
+	  setTokenAsRoot(selectedTokenId);
+	  // Reset numeric buffer so the next digit starts a fresh selection
+	  tokenIdBuffer = '';
+	  highlightSelectedInTable(selectedTokenId);
+	  return;
+	}
     }
 
     // Unhandled key in word mode
@@ -1065,160 +1138,34 @@ $(document).off('keydown.wordmode').on('keydown.wordmode', function(e) {
 /***** END WORD EDIT MODE *****/
   // End Word Edit mode
 
-/***** CHUNK B — DEPENDENT-FIRST MODE (paste inside your IIFE after core helpers; does NOT require Chunk A) *****
-Flow:
-- Press 'd' to enter; Escape to exit; '<'/'>' to navigate sentences.
-- Step 1: type dependent ID (multi-digit) OR click a token; buffer is not finalized until you press a relation key.
-- Step 2: press relation key:
-    b → nsubj (if dependent is NOUN/PRON/PROPN), else csubj
-    o → obj
-    d → dislocated
-    p → discourse
-    i → iobj
-    q → parataxis
-    c → ccomp
-    x → xcomp
-    a → acl
-    m → advmod
-- Step 3: choose head:
-    - Type head ID (multi-digit) and press Enter to apply
-    - Or click a token to apply immediately
-- After applying: keeps the same relation so you can attach more dependents; press another relation key to change it.
-*********************************************************************************/
-
-let dependentFirstMode = false;
-let dfDepBuffer = '';      // buffer for dependent ID (multi-digit)
-let dfHeadBuffer = '';     // buffer for head ID (multi-digit)
-let dfDependentId = null;  // confirmed dependent ID (from click or dep buffer + relation key)
-let dfRelKey = null;       // relation key chosen
-
-// Set the given token as root: chosen HEAD='0', DEPREL='root'.
-// Any other token currently bearing DEPREL 'root' becomes a dependent of the chosen root with DEPREL 'tbc_root'.
-function setTokenAsRoot(chosenId) {
-  const parsed = getParsedCurrent();
-  if (!parsed || !parsed.tokens) {
-    setStatus('No tokens found.');
-    return;
-  }
-  const tokens = parsed.tokens.slice();
-  const chosen = tokens.find(t => t.ID === String(chosenId));
-  if (!chosen) {
-    setStatus('Selected token not found.');
-    return;
-  }
-
-  // Assign root to chosen token
-  chosen.HEAD = '0';
-  chosen.DEPREL = 'root';
-
-  // Demote and reattach any other roots
-  for (const t of tokens) {
-    if (t.ID === String(chosenId)) continue;
-    const dr = (t.DEPREL || '').toLowerCase();
-    if (dr === 'root') {
-      t.HEAD = String(chosenId);
-      t.DEPREL = 'tbc_root';
-    }
-  }
-
-  setParsedCurrent(tokens, parsed.comments || []);
-  // Clear DF buffers and selection to keep the status bar clean for next action
-  if (typeof dependentFirstMode !== 'undefined' && dependentFirstMode) {
-    dfDepBuffer = '';
-    dfHeadBuffer = '';
-    // Keep dfRelKey so user can continue attaching dependents if desired,
-    // or clear it if you prefer a fresh start:
-    // dfRelKey = null;
-    dfDependentId = null;
-    if (typeof updateDfStatus === 'function') updateDfStatus();
-  }
-  setStatus(`Set ${chosen.ID}/${chosen.FORM} as root. Demoted previous root(s) to tbc_root.`);
+/***** Relation Bullet List — Word Edit–only version *****/
+// Return the base part of a deprel (before any subtype), e.g., 'nsubj:pass' -> 'nsubj'
+function baseRel(rel) {
+  return (rel || '').toLowerCase().split(':')[0];
 }
 
-// Human-friendly label for the relation key (shown in status bar)
-function relLabelFromKey(k) {
-  const key = (k || '').toLowerCase();
-  switch (key) {
-    case 'b': return 'subject';
-    case 'o': return 'object';
-    case 'd': return 'dislocated (topic)';
-    case 'i': return 'indirect object';
-    case 'q': return 'paratactic clause';
-    case 'c': return 'ccomp';
-    case 'x': return 'xcomp';
-    case 'w': return 'advcl';
-    case 'l': return 'acl';
-    case 'm': return 'advmod';
-    default: return '';
-  }
+// Tracked base relations (no subtypes needed here)
+const TRACKED_BASE_RELS = new Set([
+  'nsubj','csubj','obj','iobj','dislocated','parataxis','ccomp','xcomp','advcl','acl','advmod','conj','discourse'
+]);
+
+// Is this deprel one we care about (including any subtypes)?
+function isTrackedRel(rel) {
+  return TRACKED_BASE_RELS.has(baseRel(rel));
 }
 
-// Clean, progressive status for Dependent-First Mode (uses labels above)
-function updateDfStatus() {
-  const parsed = getParsedCurrent();
-  const tokens = parsed && parsed.tokens ? parsed.tokens : [];
-  const labelById = (id) => {
-    if (!id) return null;
-    const t = tokens.find(x => x.ID === String(id));
-    return t ? `${t.ID}/${t.FORM}` : `${id}/?`;
-  };
+// Tracked deprels (same set as your intended subset)
+const TRACKED_DEP_RELS = new Set([
+  'nsubj','csubj','obj','iobj','dislocated','parataxis',
+  'ccomp','xcomp','advcl','acl','advmod',
+  'conj','discourse' // added
+]);
 
-  if (!dependentFirstMode) {
-    return; // leave existing status alone outside the mode
-  }
+// Heads to show at Level 1: root, conj predicates, and heads of clause-like dependents
+const GROUPING_RELS_FOR_HEADS = new Set(['ccomp','xcomp','advcl','acl','parataxis']);
 
-  const depLabel = labelById(dfDependentId);
-  const relLabel = relLabelFromKey(dfRelKey);
-
-  // Typing dependent
-  if (!dfDependentId && dfDepBuffer) {
-    setStatus(`${dfDepBuffer}`);
-    return;
-  }
-  // Only dependent chosen
-  if (dfDependentId && !dfRelKey) {
-    setStatus(`${depLabel || ''}`);
-    return;
-  }
-  // Dependent + relation chosen (no head yet)
-  if (dfDependentId && dfRelKey && !dfHeadBuffer) {
-    setStatus(`${depLabel} is the ${relLabel} of...`);
-    return;
-  }
-  // Typing head buffer
-  if (dfDependentId && dfRelKey && dfHeadBuffer) {
-    setStatus(`${depLabel} is the ${relLabel} of... ${dfHeadBuffer}`);
-    return;
-  }
-
-  setStatus('');
-}
-
-// Enter/Exit mode
-function enterDependentFirstMode() {
-  // Optionally make modes mutually exclusive:
-  if (typeof headFirstMode !== 'undefined' && headFirstMode && typeof exitHeadFirstMode === 'function') exitHeadFirstMode();
-  if (typeof wordEditMode !== 'undefined' && wordEditMode && typeof exitWordEditMode === 'function') exitWordEditMode();
-
-  dependentFirstMode = true;
-  dfDepBuffer = '';
-  dfHeadBuffer = '';
-  dfDependentId = null;
-  dfRelKey = null;
-  updateDfStatus();
-}
-
-function exitDependentFirstMode() {
-  dependentFirstMode = false;
-  dfDepBuffer = '';
-  dfHeadBuffer = '';
-  dfDependentId = null;
-  dfRelKey = null;
-  updateDfStatus();
-}
-
-// Resolve relation key to UD deprel (with b’s nsubj/csubj logic; updated shortcuts)
-function resolveDeprelForKeySimple(key, dependentTok) {
+// Map shortcut key to UD deprel (b resolved using dependent UPOS)
+function mapKeyToDeprel(key, dependentTok) {
   const k = (key || '').toLowerCase();
   if (k === 'b') {
     const up = (dependentTok.UPOS || '').toUpperCase();
@@ -1233,263 +1180,423 @@ function resolveDeprelForKeySimple(key, dependentTok) {
   if (k === 'w') return 'advcl';
   if (k === 'l') return 'acl';
   if (k === 'm') return 'advmod';
+  if (k === 'p') return 'discourse'; // added
+  if (k === 'j') return 'conj';      // added
   return null;
 }
 
-// Apply relation directly and update UI
-function applyDependentHeadRelationDirect(dependentId, relKey, headId) {
-  const parsed = getParsedCurrent();
-  if (!parsed || !parsed.tokens) {
-    setStatus('No tokens found.');
-    return;
+// Human-friendly label (optional, used for status)
+function labelForKey(k) {
+  const key = (k || '').toLowerCase();
+  switch (key) {
+    case 'b': return 'subject';
+    case 'o': return 'object';
+    case 'd': return 'dislocated (topic)';
+    case 'i': return 'indirect object';
+    case 'q': return 'paratactic clause';
+    case 'c': return 'ccomp';
+    case 'x': return 'xcomp';
+    case 'w': return 'advcl';
+    case 'l': return 'acl';
+    case 'm': return 'advmod';
+    case 'p': return 'discourse'; // added
+    case 'j': return 'conj';      // added
+    default: return '';
   }
-  const tokens = parsed.tokens.slice();
-  const depTok = tokens.find(t => t.ID === String(dependentId));
-  const headTok = tokens.find(t => t.ID === String(headId));
-
-  if (!depTok || !headTok) {
-    setStatus('Invalid dependent or head selection.');
-    return;
-  }
-
-  const deprel = resolveDeprelForKeySimple(relKey, depTok);
-  if (!deprel) {
-    setStatus('Invalid relation key. Use b/o/d/p/i/q/c/x/a/m.');
-    return;
-  }
-
-  // If setting nsubj/csubj, demote existing subject-like dependents of the head
-  if (deprel === 'nsubj' || deprel === 'csubj') {
-    for (const t of tokens) {
-      if ((t.HEAD || '').trim() === String(headId)) {
-        const dr = (t.DEPREL || '').toLowerCase();
-        if (dr.includes('subj')) {
-          t.DEPREL = `tbc_${dr}`;
-        }
-      }
-    }
-  }
-
-  // Apply relation
-  depTok.HEAD = String(headId);
-  depTok.DEPREL = deprel;
-
-  // Commit and refresh UI
-  setParsedCurrent(tokens, parsed.comments || []);
-
-  // Prepare for next operation: keep relation; clear buffers and dependent
-  dfDepBuffer = '';
-  dfHeadBuffer = '';
-  dfDependentId = null;
-  // Keep dfRelKey to allow attaching multiple dependents with the same relation
-
-  updateDfStatus();
 }
 
-// Helper: lookup token by exact ID
-function findTokenById(tokens, idStr) {
-  return tokens && tokens.find(t => t.ID === idStr) || null;
+// State for list interactions
+let rlActive = false;           // whether list interaction mode is active
+let rlEditing = null;           // { headId, depId } when editing an existing item
+let rlAdding = null;            // { headId, newRelKey, newDepId } when using the template row
+let rlTypingBuffer = '';        // multi-digit dependent ID typing
+
+// Highlight helpers for table
+function clearTableHighlight() {
+  $('#gridTable td').removeClass('hl-dep hl-head hl-muted');
 }
-
-// Click handling
-$('#gridTable').off('click.dependentfirst').on('click.dependentfirst', function(e) {
-  if (!dependentFirstMode) return;
-
+function highlightDepHead(depId, headId) {
+  clearTableHighlight();
   const parsed = getParsedCurrent();
   if (!parsed || !parsed.tokens) return;
+  const depIdx = parsed.tokens.findIndex(t => t.ID === String(depId));
+  const headIdx = parsed.tokens.findIndex(t => t.ID === String(headId));
+  if (depIdx >= 0) $('#gridTable td[data-col="'+depIdx+'"]').addClass('hl-dep');
+  if (headIdx >= 0) $('#gridTable td[data-col="'+headIdx+'"]').addClass('hl-head');
 
-  const $td = $(e.target).closest('td');
-  if ($td.length === 0) return;
+  const colsCount = parsed.tokens.length;
+  for (let i = 0; i < colsCount; i++) {
+    if (i !== depIdx && i !== headIdx) {
+      $('#gridTable td[data-col="'+i+'"]').addClass('hl-muted');
+    }
+  }
+}
 
-  let col = $td.data('col');
-  if (col === undefined) col = $td.index();
-  if (col === undefined) return;
+// Build Level 1 heads: root(s), conj predicates, and heads of clause-like dependents
+// Build Level 1 entries: the predicate tokens themselves
+// - root tokens (DEPREL == 'root')
+// - conj tokens (DEPREL == 'conj')
+// - subordinate clause predicates: tokens whose DEPREL is in CLAUSAL_LEVEL1 (ccomp, xcomp, advcl, acl, parataxis)
+function buildLevel1Heads(tokens) {
+  const CLAUSAL_LEVEL1_BASES = new Set(['ccomp','xcomp','advcl','acl','parataxis']);
+  const map = new Map();
 
-  const tok = parsed.tokens[col];
-  if (!tok) return;
+  for (const t of tokens) {
+    const rel = (t.DEPREL || '').toLowerCase();
+    const base = baseRel(rel);
+    if (rel === 'root') {
+      map.set(t.ID, t);
+    } else if (base === 'conj') {
+      map.set(t.ID, t);
+    } else if (CLAUSAL_LEVEL1_BASES.has(base)) {
+      map.set(t.ID, t);
+    }
+  }
 
-  if (!dfDependentId && !dfRelKey) {
-    // Clicking sets the dependent (no relation chosen yet)
-    dfDependentId = tok.ID;
-    dfDepBuffer = '';
-    updateDfStatus();
+  let heads = Array.from(map.values());
+  if (heads.length > 0) {
+    heads.sort((a, b) => Number(a.ID) - Number(b.ID));
+    return heads;
+  }
+  const rootish = tokens.find(t => (t.HEAD || '').trim() === '0');
+  if (rootish) return [rootish];
+  const firstVerb = tokens.find(t => (t.UPOS || '').toUpperCase() === 'VERB');
+  if (firstVerb) return [firstVerb];
+  if (tokens.length > 0) return [tokens[0]];
+  return [];
+}
+// Render the bullet list
+function renderRelationList(tokens) {
+  const $list = $('#relationList');
+  if ($list.length === 0) return;
+  $list.empty();
+
+  const heads = buildLevel1Heads(tokens).sort((a, b) => Number(a.ID) - Number(b.ID));
+  if (heads.length === 0) {
+    $list.append('<li>No tracked relations found for this sentence.</li>');
     return;
   }
 
-  if (dfDependentId && dfRelKey) {
-    // Clicking selects head and applies
-    applyDependentHeadRelationDirect(dfDependentId, dfRelKey, tok.ID);
-    updateDfStatus();
-    return;
-  }
+  heads.forEach(head => {
+    const headLabel = `${head.ID}/${head.FORM}`;
+    const $liHead = $(`<li><span class="rel-head" data-head="${head.ID}">${headLabel}</span></li>`);
+    const $ulItems = $('<ul></ul>');
 
-  // If relation not yet chosen, clicking again just updates dependent
-  if (!dfRelKey) {
-    dfDependentId = tok.ID;
-    dfDepBuffer = '';
-    updateDfStatus();
-    return;
-  }
+    // Existing tracked dependents under this head
+    tokens.forEach(dep => {
+      const rel = (dep.DEPREL || '').toLowerCase();
+      const headId = (dep.HEAD || '').trim();
+      if (headId === String(head.ID) && isTrackedRel(rel)) {
+        const depLabel = `${dep.ID}/${dep.FORM}`;
+        const $item = $(`
+          <li class="rel-item">
+            <span class="rel-deprel" data-head="${head.ID}" data-dep="${dep.ID}" data-rel="${rel}" title="Click, then use keys b/o/d/i/q/c/x/w/l/m or '-'">
+              ${rel}
+            </span>
+            <span> is </span>
+            <span class="rel-token" data-head="${head.ID}" data-dep="${dep.ID}" title="Click to change dependent by typing ID+Enter or clicking in the table">
+              ${depLabel}
+            </span>
+          </li>
+        `);
+
+        // Hover highlight
+        $item.on('mouseenter', () => highlightDepHead(dep.ID, head.ID));
+        $item.on('mouseleave', () => clearTableHighlight());
+
+        // Click deprel: select for editing (keyboard shortcuts apply)
+        $item.find('.rel-deprel').on('click', function() {
+          rlActive = true;
+          rlEditing = { headId: head.ID, depId: dep.ID };
+          rlAdding = null;
+          rlTypingBuffer = '';
+          $('#relationListControls').removeClass('hidden');
+          highlightDepHead(dep.ID, head.ID);
+          setStatus(`Editing deprel: ${dep.ID}/${dep.FORM} … ${head.ID}/${head.FORM}`);
+        });
+
+        // Click dependent token: select to change by typing ID+Enter or clicking table
+        $item.find('.rel-token').on('click', function() {
+          rlActive = true;
+          rlEditing = { headId: head.ID, depId: dep.ID };
+          rlAdding = null;
+          rlTypingBuffer = '';
+          $('#relationListControls').removeClass('hidden');
+          highlightDepHead(dep.ID, head.ID);
+          setStatus(`Editing dependent: ${dep.ID}/${dep.FORM} … ${head.ID}/${head.FORM} — type new ID + Enter or click in table`);
+        });
+
+        $ulItems.append($item);
+      }
+    });
+
+    // Template row: "$DEPREL is $WORD" to add new dependents under this head
+    const $template = $(`
+      <li class="rel-item rel-template">
+        <span class="rel-deprel" data-head="${head.ID}" data-dep="$NEW" title="Click, then use keys b/o/d/i/q/c/x/w/l/m/p/j">
+          $DEPREL
+        </span>
+        <span> is </span>
+        <span class="rel-token" data-head="${head.ID}" data-dep="$NEW" title="Click, then type ID+Enter or click in table">
+          $WORD
+        </span>
+      </li>
+    `);
+    $template.on('mouseenter', () => highlightDepHead('$NEW', head.ID));
+    $template.on('mouseleave', () => clearTableHighlight());
+
+    $template.find('.rel-deprel').on('click', function() {
+      rlActive = true;
+      rlEditing = null;
+      rlAdding = { headId: head.ID, newRelKey: null, newDepId: null };
+      rlTypingBuffer = '';
+      $('#relationListControls').removeClass('hidden');
+      setStatus(`Adding under ${headLabel}: choose deprel (b/o/d/i/q/c/x/w/l/m), then select word ID`);
+    });
+
+    $template.find('.rel-token').on('click', function() {
+      rlActive = true;
+      rlEditing = null;
+      rlAdding = { headId: head.ID, newRelKey: null, newDepId: null };
+      rlTypingBuffer = '';
+      $('#relationListControls').removeClass('hidden');
+      setStatus(`Adding under ${headLabel}: type dependent ID + Enter or click a token`);
+    });
+
+    // Click head: activate section (optional)
+    $liHead.find('.rel-head').on('mouseenter', () => highlightDepHead('$NONE', head.ID));
+    $liHead.find('.rel-head').on('mouseleave', () => clearTableHighlight());
+    $liHead.find('.rel-head').on('click', () => {
+      rlActive = true;
+      rlEditing = null;
+      rlAdding = { headId: head.ID, newRelKey: null, newDepId: null };
+      rlTypingBuffer = '';
+      $('#relationListControls').removeClass('hidden');
+      setStatus(`Head ${headLabel} active. Choose deprel (b/o/d/i/q/c/x/w/l/m), then select/add dependent.`);
+    });
+
+    // Assemble
+    $liHead.append($ulItems);
+    $ulItems.append($template);
+    $list.append($liHead);
+  });
+}
+
+// Apply helpers (edit, clear, move, add)
+function applyChangeDeprel(headId, depId, newKey) {
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tokens = parsed.tokens.slice();
+  const depTok = tokens.find(t => t.ID === String(depId));
+  const headTok = tokens.find(t => t.ID === String(headId));
+  if (!depTok || !headTok) return;
+
+  const newRel = mapKeyToDeprel(newKey, depTok);
+  if (!newRel) return;
+
+  depTok.DEPREL = newRel;
+  depTok.HEAD = String(headId);
+
+  setParsedCurrent(tokens, parsed.comments || []);
+  setStatus(`Set ${depTok.ID}/${depTok.FORM} is ${newRel} of ${headTok.ID}/${headTok.FORM}`);
+  renderRelationList(tokens);
+}
+
+function clearCurrentDeprel(headId, depId) {
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tokens = parsed.tokens.slice();
+  const depTok = tokens.find(t => t.ID === String(depId));
+  const headTok = tokens.find(t => t.ID === String(headId));
+  if (!depTok || !headTok) return;
+  const rel = (depTok.DEPREL || '').toLowerCase();
+  if (!rel) return;
+
+  depTok.DEPREL = `del_${rel}`;
+
+  setParsedCurrent(tokens, parsed.comments || []);
+  setStatus(`Cleared relation: ${depTok.ID}/${depTok.FORM} del_${rel} ${headTok.ID}/${headTok.FORM}`);
+  renderRelationList(tokens);
+}
+
+function changeDependent(headId, oldDepId, newDepId) {
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tokens = parsed.tokens.slice();
+
+  const oldDep = tokens.find(t => t.ID === String(oldDepId));
+  const headTok = tokens.find(t => t.ID === String(headId));
+  const newDep = tokens.find(t => t.ID === String(newDepId));
+  if (!oldDep || !headTok || !newDep) return;
+
+  const rel = (oldDep.DEPREL || '').toLowerCase();
+  if (!rel) return;
+
+  // Move relation: mark old as tbc_rel, attach newDep under head with same rel
+  oldDep.DEPREL = `tbc_${rel}`;
+  newDep.HEAD = String(headId);
+  newDep.DEPREL = rel;
+
+  setParsedCurrent(tokens, parsed.comments || []);
+  setStatus(`Moved relation ${rel}: now ${newDep.ID}/${newDep.FORM} is ${rel} of ${headTok.ID}/${headTok.FORM} (old ${oldDep.ID} → tbc_${rel})`);
+  renderRelationList(tokens);
+}
+
+function addNewRelation(headId, relKey, depId) {
+  const parsed = getParsedCurrent();
+  if (!parsed || !parsed.tokens) return;
+  const tokens = parsed.tokens.slice();
+
+  const headTok = tokens.find(t => t.ID === String(headId));
+  const depTok = tokens.find(t => t.ID === String(depId));
+  if (!headTok || !depTok) return;
+
+  const rel = mapKeyToDeprel(relKey, depTok);
+  if (!rel) return;
+
+  depTok.HEAD = String(headId);
+  depTok.DEPREL = rel;
+
+  setParsedCurrent(tokens, parsed.comments || []);
+  setStatus(`Added relation: ${depTok.ID}/${depTok.FORM} is ${rel} of ${headTok.ID}/${headTok.FORM}`);
+  renderRelationList(tokens);
+}
+
+// Clear DEPREL button
+$('#relClearBtn').off('click').on('click', function() {
+  if (!rlActive || !rlEditing) return;
+  clearCurrentDeprel(rlEditing.headId, rlEditing.depId);
+  rlTypingBuffer = '';
 });
 
-// Keyboard handling
-$(document).off('keydown.dependentfirst').on('keydown.dependentfirst', function(e) {
-  const key = e.key;
+  // Keyboard shortcuts for list interactions
+  $(document).off('keydown.relationlist').on('keydown.relationlist', function(e) {
+    if (!rlActive) return;
 
-  // Enter mode
-  if (!dependentFirstMode && key.toLowerCase && key.toLowerCase() === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-    e.preventDefault();
-    enterDependentFirstMode();
-    return;
-  }
+    const key = e.key;
+    const low = key.toLowerCase ? key.toLowerCase() : key;
 
-  if (!dependentFirstMode) return;
+    // Escape exits this interaction mode
+    if (key === 'Escape') {
+      rlActive = false;
+      rlEditing = null;
+      rlAdding = null;
+      rlTypingBuffer = '';
+      $('#relationListControls').addClass('hidden');
+      clearTableHighlight();
+      return;
+    }
 
-  // Exit mode
-  if (key === 'Escape') {
-    e.preventDefault();
-    exitDependentFirstMode();
-    return;
-  }
+    // Digits build buffer for dependent selection (for editing or adding)
+    if (/^\d$/.test(key)) {
+      e.preventDefault();
+      rlTypingBuffer += key;
+      const parsed = getParsedCurrent();
+      const tokens = parsed && parsed.tokens ? parsed.tokens : [];
+      const candidate = tokens.find(t => t.ID === rlTypingBuffer);
+      if (candidate) {
+        setStatus(`Selected ${candidate.ID}/${candidate.FORM} — press Enter to confirm`);
+        highlightDepHead(candidate.ID, rlEditing ? rlEditing.headId : (rlAdding ? rlAdding.headId : ''));
+      } else {
+        setStatus(`Typing ID: ${rlTypingBuffer}`);
+      }
+      return;
+    }
 
-  // Navigate sentences
-  if (key === '<') {
-    e.preventDefault();
-    navigateTo(-1);
-    return;
-  }
-  if (key === '>') {
-    e.preventDefault();
-    navigateTo(1);
-    return;
-  }
-
-  // Backspace: edit current buffer (prefer head buffer if relation chosen)
-  if (key === 'Backspace') {
-    e.preventDefault();
-    if (dfRelKey) {
-      if (dfHeadBuffer.length > 0) {
-        dfHeadBuffer = dfHeadBuffer.slice(0, -1);
-        updateDfStatus();
+    // Enter confirms dependent change or addition
+    if (key === 'Enter') {
+      e.preventDefault();
+      const parsed = getParsedCurrent();
+      const tokens = parsed && parsed.tokens ? parsed.tokens : [];
+      const candidate = tokens.find(t => t.ID === rlTypingBuffer);
+      if (!candidate) {
+        setStatus('Invalid ID.');
         return;
       }
-      // If head buffer empty, allow clearing relation
-      dfRelKey = null;
-      updateDfStatus();
+
+      if (rlEditing) {
+        changeDependent(rlEditing.headId, rlEditing.depId, candidate.ID);
+      } else if (rlAdding && rlAdding.newRelKey) {
+        addNewRelation(rlAdding.headId, rlAdding.newRelKey, candidate.ID);
+        // Reset adding state but keep template at bottom so user can continue
+        rlAdding = { headId: rlAdding.headId, newRelKey: null, newDepId: null };
+      } else if (rlAdding && !rlAdding.newRelKey) {
+        setStatus('Choose deprel (b/o/d/i/q/c/x/w/l/m) first.');
+      }
+      rlTypingBuffer = '';
+      clearTableHighlight();
       return;
-    } else {
-      if (dfDepBuffer.length > 0) {
-        dfDepBuffer = dfDepBuffer.slice(0, -1);
-        updateDfStatus();
+    }
+
+    // '-' or Clear button: prefix del_ to current deprel (only when editing an existing relation)
+    if (low === '-') {
+      e.preventDefault();
+      if (rlEditing) {
+        clearCurrentDeprel(rlEditing.headId, rlEditing.depId);
+        rlTypingBuffer = '';
+        clearTableHighlight();
+      }
+      return;
+    }
+
+    // Relation keys for editing existing item or choosing rel for template add
+    if ('bodiqcxwlm'.includes(low)) {
+      e.preventDefault();
+      const parsed = getParsedCurrent();
+      const tokens = parsed && parsed.tokens ? parsed.tokens : [];
+
+      if (rlEditing) {
+        const depTok = tokens.find(t => t.ID === String(rlEditing.depId));
+        if (!depTok) return;
+        applyChangeDeprel(rlEditing.headId, rlEditing.depId, low);
+        clearTableHighlight();
         return;
       }
-      // If dep buffer empty, clear selected dependent
-      dfDependentId = null;
-      updateDfStatus();
-      return;
-    }
-  }
 
-  // Digits: build dependent buffer until relation chosen; then build head buffer
-  if (/^\d$/.test(key)) {
-    e.preventDefault();
-    if (!dfRelKey) {
-      dfDepBuffer += key;
-      updateDfStatus();
-      return;
-    } else {
-      dfHeadBuffer += key;
-      updateDfStatus();
-      return;
+      if (rlAdding) {
+        rlAdding.newRelKey = low;
+        setStatus(`Selected deprel: ${labelForKey(low)}. Now type ID + Enter or click a token.`);
+        return;
+      }
     }
-  }
 
-  // Press Enter to apply when head buffer is present
-  if (key === 'Enter') {
-    e.preventDefault();
-    if (!dfRelKey) {
-      // No relation yet; ignore
-      return;
-    }
+    // Ignore other keys to keep UX clean
+  });
+
+  // Clicking table cells can also set the dependent for editing/adding
+  $('#gridTable').off('click.relationlist').on('click.relationlist', function(e) {
+    if (!rlActive) return;
+
     const parsed = getParsedCurrent();
     if (!parsed || !parsed.tokens) return;
 
-    // Confirm dependent from buffer if not set by click
-    if (!dfDependentId) {
-      const depTok = findTokenById(parsed.tokens, dfDepBuffer);
-      if (!depTok) {
-        // Invalid dependent; keep status as-is
+    const $td = $(e.target).closest('td');
+    if ($td.length === 0) return;
+
+    let col = $td.data('col');
+    if (col === undefined) col = $td.index();
+    if (col === undefined) return;
+
+    const tok = parsed.tokens[col];
+    if (!tok) return;
+
+    if (rlEditing) {
+      changeDependent(rlEditing.headId, rlEditing.depId, tok.ID);
+      clearTableHighlight();
+      return;
+    }
+    if (rlAdding) {
+      if (!rlAdding.newRelKey) {
+        setStatus('Choose deprel (b/o/d/i/q/c/x/w/l/m) first.');
         return;
       }
-      dfDependentId = depTok.ID;
-      dfDepBuffer = '';
-    }
-
-    // Require valid head buffer
-    const headTok = findTokenById(parsed.tokens, dfHeadBuffer);
-    if (!headTok) {
-      // Invalid head; keep status as-is
+      addNewRelation(rlAdding.headId, rlAdding.newRelKey, tok.ID);
+      // Reset adding state
+      rlAdding = { headId: rlAdding.headId, newRelKey: null, newDepId: null };
+      clearTableHighlight();
       return;
     }
-
-    // Apply
-    applyDependentHeadRelationDirect(dfDependentId, dfRelKey, headTok.ID);
-    updateDfStatus();
-    return;
-  }
-
-  // Relation shortlist: b, o, d, i, q, c, x, w (advcl), l (acl), m (advmod)
-	const low = key.toLowerCase ? key.toLowerCase() : key;
-	if ('bodiqcxwlm'.includes(low)) {
-	  e.preventDefault();
-	  const parsed = getParsedCurrent();
-	  if (!parsed || !parsed.tokens) return;
-
-	  // Confirm dependent from buffer if not already set by click
-	  if (!dfDependentId) {
-		const depTok = parsed.tokens.find(t => t.ID === dfDepBuffer);
-		if (!depTok) {
-		  // Invalid dependent; keep status as-is
-		  return;
-		}
-		dfDependentId = depTok.ID;
-		dfDepBuffer = '';
-	  }
-
-	  dfRelKey = low;
-	  updateDfStatus();
-	  return;
-	}
-
-  // Optional: 'r' sets current dependent as root if you have setTokenAsRoot()
-  if (low === 'r') {
-  e.preventDefault();
-  const parsed = getParsedCurrent();
-  if (!parsed || !parsed.tokens) return;
-
-  // If user typed the dependent but hasn't pressed a relation key yet,
-  // confirm the dependent from the buffer.
-  let targetId = dfDependentId;
-  if (!targetId && dfDepBuffer) {
-    const depTok = parsed.tokens.find(t => t.ID === dfDepBuffer);
-    if (!depTok) {
-      // Invalid buffer; ignore
-      return;
-    }
-    targetId = depTok.ID;
-    dfDependentId = targetId;
-    dfDepBuffer = '';
-  }
-  if (!targetId) {
-    // No selected dependent to reroot
-    return;
-  }
-
-  setTokenAsRoot(targetId);
-  return;
-}
-  // Unhandled: ignore to keep status clean
-});
+  });
 
 
 })(jQuery);
