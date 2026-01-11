@@ -194,19 +194,72 @@ td.hl-muted { color: #999 !important; }
     <textarea id="treeText" class="tree-text" spellcheck="false"></textarea>
   </div>
 
-  <div id="helpTab" class="help hidden">
-    <h2>Help & Shortcuts</h2>
-    <ul>
-      <li>Upload a .conllu file using the file picker at the top.</li>
-      <li>Edit the current tree directly in the textbox. Navigating to Prev/Next saves your edits back to the array.</li>
-      <li>Prev: click “Prev” or press Shift + &lt;</li>
-      <li>Next: click “Next” or press Shift + &gt;</li>
-      <li>Export all trees (reflecting your edits): click “Export” or press Shift + X</li>
-      <li>Toggle Help: click “Help”</li>
-      <li>Show/Hide Textbox: click “Hide Textbox” / “Show Textbox”</li>
-      <li>The table and clause insights update automatically as you edit the textbox.</li>
-    </ul>
-  </div>
+  <div class="help hidden" id="helpTab">
+  <h2>Editor Help (Concise)</h2>
+
+  <h3>Basics</h3>
+  <ul>
+    <li>Load: pick a .conllu file.</li>
+    <li>Navigate: Prev “&lt;”, Next “&gt;” (buttons or keys). Edits auto-save on navigation.</li>
+    <li>Export: Shift+X → download edited.conllu.</li>
+    <li>Textbox: starts hidden; use “Show/Hide Textbox” to toggle.</li>
+    <li>Status bar shows last action and parse notes.</li>
+  </ul>
+
+  <h3>Table & Insights</h3>
+  <ul>
+    <li>Table rows: ID, FORM, UPOS (colors: VERB red; NOUN/PRON/PROPN blue; INTJ orange; ADV/AUX/cop black; others grey).</li>
+    <li>Edits update table and insights automatically.</li>
+  </ul>
+
+  <h3>Word Edit Mode</h3>
+  <ul>
+    <li>Enter/Exit: w / Escape.</li>
+    <li>Select token: type multi-digit ID (buffered) or click in table.</li>
+    <li>POS: n→NOUN, v→VERB, p→INTJ, a→ADV.</li>
+    <li>Split: “/” → enter parts (first keeps deps; others compound to first).</li>
+    <li>Join: f or “+” (join next), d or “-” (join previous) → choose merged FORM (deps reattach).</li>
+    <li>Reroot: r → set selected token as root; previous root becomes tbc_root under new root.</li>
+    <li>Navigate while in mode: “&lt;”, “&gt;”.</li>
+  </ul>
+
+  <h3>Relation Bullet List</h3>
+  <ul>
+    <li>Top-level shows clause predicates: root, conj, and tokens with ccomp/xcomp/advcl/acl/parataxis (subtypes included).</li>
+    <li>Under each: “[deprel] is [id]/[token]” for tracked dependents (subject nsubj/csubj incl. nsubj:pass; obj; iobj; dislocated; parataxis; ccomp; xcomp; advcl; acl; advmod; conj; discourse).</li>
+    <li>Add new: template “$DEPREL is $WORD” → pick deprel, then dependent.</li>
+    <li>Interaction:
+      <ul>
+        <li>Click [deprel] → change via keys.</li>
+        <li>Click [id]/[token] → change dependent by typing ID+Enter or clicking table.</li>
+        <li>Hover/click → highlights dependent and head columns; greys others.</li>
+      </ul>
+    </li>
+    <li>Shortcuts (when a list item/template is active): 
+	  <ul>
+	  <li>b: su<b>b</b>ject</li>
+	  <li>c: <b>c</b>comp (<i>I think it's <u>late</u></i>)</li>
+	  <li>d: <b>d</b>islocated (topic) (<i><u>Singapore</u> everything very expensive</i>, <i>Everything they also know</i>)</li>
+	  <li>i: <b>i</b>ndirect object (<i>They gave <u>me</u> a present</i>)</li>
+	  <li>j: con<b>j</b>unction (could be clause, noun, ...)</li>
+	  <li>l: acl -- clause modifying a noun (<i>I heard a rumour that you are <u>sick</u></i>)</li>
+	  <li>m: adv<b>m</b>od (<i>They go home <u>already</u></i>)</li>
+	  <li>o: <b>o</b>bject</li>
+	  <li>p: <b>p</b>article  (<i>You try to leave <u>lah</u></i>)</li>
+	  <li>q: parataxis</li>
+	  <li>w: advcl (<i>Go home if you are <u>sick</u></i>)</li>
+	  <li>x: <b>x</b>comp (<i>I tried to <u>leave</u></i>, <i>they told us to <u>go</u></i>)</li>
+	  <li>- (hyphen): Clears existing dependency relation</li>
+	  </ul>
+  </ul>
+
+  <h3>Tips</h3>
+  <ul>
+    <li>Ensure table cells have data-col for accurate highlighting.</li>
+    <li>If the list is empty, a fallback (rootish/first VERB) may appear.</li>
+    <li>Digits build an ID buffer; Backspace deletes last digit; buffer resets after actions.</li>
+  </ul>
+</div>
 
   <table id="gridTable" class="grid-table">
     <tbody>
