@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -261,7 +262,12 @@
 	let guidedW1Idx = -1;            // index into guidedW1List for current w1
 	let guidedCandidateId = null;    // proposed existing dependent for current w1 (nullable)
 	let guidedMultiSelect = false;   // true for c/p/t/x (click many, finish with Escape); false for b
-	
+
+	// Predicate Edit mode state
+	let predicateEditActive = false;   // p to enter, Esc to exit
+	let predW2Id = null;               // clicked predicate token id (w2)
+	let predPendingRel = null;         // relation key: r,v,a,b,c,x,l
+	let predSeqBuffer = '';            // numeric command buffer, e.g. "10r25;5b6;2r;"
 	// Guided (interactive panel) optional state (used by panel buttons)
 	let guidedEditActive  = false;
 	//let guidedAnchorId    = null;
@@ -558,8 +564,8 @@
     else if (!guidedBatchActive && selectedTokenId && tok.id === selectedTokenId) classes.push('selected');
 
     $indexRow.append($('<td/>', { class: 'index-cell', text: String(i + 1) }));
-    $tokensRow.append($('<td/>', { 'data-token-id': tok.id, class: classes.join(' '), text: tok.form || '' }));
-    $uposRow.append($('<td/>', { 'data-token-id': tok.id, class: classes.join(' '), text: (tok.upos || '').toUpperCase() }));
+    $tokensRow.append($('<td/>', { 'data-token-id': tok.id, class: uposClass(tok), text: tok.form || '' }));
+    $uposRow.append($('<td/>', { 'data-token-id': tok.id, class: uposClass(tok), text: (tok.upos || '').toUpperCase() }));
   }
 
   table.append($indexRow, $tokensRow, $uposRow);
@@ -708,6 +714,76 @@
     }
 	
 	
+	function getTokenById(id) {
+  const toks = parseTreeToTokens(trees[currentIndex] || '');
+  return toks.find(t => t.id === String(id)) || null;
+}
+
+// Apply relation for w2 (and head w1 where needed).
+function applyPredicateRelation(relKey, w2Id, w1Id = null) {
+  const rel = String(relKey).toLowerCase();
+  if (!w2Id) return;
+
+  if (rel === 'r') {
+    // w2 becomes root; old root -> "sth" under w2
+    rerootTree(String(w2Id), 'sth');
+    return;
+  }
+
+  if (!w1Id) {
+    $('#status').text('Predicate Edit: this relation needs a head (click w1).');
+    return;
+  }
+
+  let deprel = '';
+  if (rel === 'v') {
+    const w1 = getTokenById(w1Id);
+    const headUPOS = (w1?.upos || '').toUpperCase();
+    deprel = (headUPOS === 'VERB') ? 'advcl:relcl'
+            : (headUPOS === 'NOUN' || headUPOS === 'PROPN') ? 'acl:relcl'
+            : 'acl:relcl';
+  } else if (rel === 'a') deprel = 'advcl';
+  else if (rel === 'b') deprel = 'csubj';
+  else if (rel === 'c') deprel = 'ccomp';
+  else if (rel === 'x') deprel = 'xcomp';
+  else if (rel === 'l') deprel = 'acl';
+  else {
+    $('#status').text(`Predicate Edit: unknown relation '${relKey}'.`);
+    return;
+  }
+
+  updateTokenById(String(w2Id), cols => {
+    cols[6] = String(w1Id);  // HEAD
+    cols[7] = deprel;        // DEPREL
+  });
+}
+
+// Numeric mini-language: "w2 REL w1;" or "w2 r;" → apply and clear buffer.
+// REL is one letter from r,v,a,b,c,x,l
+function tryApplyPredicateSequenceBuffer() {
+  const s = predSeqBuffer.trim();
+  const m = s.match(/^(\d+)\s*([rvabclxRVABCLX])\s*(\d*)\s*;$/);
+  if (!m) {
+    $('#status').text('Predicate Edit: invalid command. Use "10r25;" or "2r;".');
+    return false;
+  }
+  const w2 = m[1];
+  const rel = m[2].toLowerCase();
+  const w1 = m[3] || null;
+
+  if (rel === 'r') {
+    applyPredicateRelation(rel, w2, null);
+  } else {
+    if (!w1) {
+      $('#status').text('Predicate Edit: this relation needs a head id before ";".');
+      return false;
+    }
+    applyPredicateRelation(rel, w2, w1);
+  }
+  predSeqBuffer = '';
+  $('#status').text('Predicate Edit: applied.');
+  return true;
+}
 	// Batch-edit the current tree by visiting each token row (10 columns).
 	// updater(cols) may mutate cols in place; return true if changed for that row.
 	function batchUpdateTree(updater) {
@@ -1286,6 +1362,39 @@
 	  const kids = childrenMap.get(headId) || [];
 	  return kids.some(k => depPatterns.some(re => re.test(k.deprel || '')));
 	}
+	// Predicate Edit Start
+	// Predicate Edit click workflow: w2 → key → w1
+if (predicateEditActive) {
+  e.preventDefault();
+  const id = $(this).attr('data-token-id');
+  if (!id) return;
+
+  if (!predW2Id) {
+    // Step 1: choose predicate (w2)
+    predW2Id = id;
+    predPendingRel = null;
+    selectedTokenId = predW2Id; // optional highlight
+    renderPosGrid();
+    $('#status').text(`Predicate Edit: w2=${predW2Id}. Press relation (r/v/a/b/c/x/l), then click head w1.`);
+    return;
+  }
+
+  if (!predPendingRel) {
+    $('#status').text('Predicate Edit: press a relation key (r/v/a/b/c/x/l), then click head w1.');
+    return;
+  }
+
+  // Step 3: click head (w1)
+  applyPredicateRelation(predPendingRel, predW2Id, id);
+  // reset for next operation
+  predPendingRel = null;
+  predW2Id = null;
+  selectedTokenId = null;
+  renderPosGrid();
+  $('#status').text('Predicate Edit: relation applied. Click another predicate or press Esc to exit.');
+  return;
+}
+	// Predicate Edit End
 	
 	// Keyboard shortcuts: navigation, export, single-token edits, and two-step actions.
 	// Disabled while typing.
@@ -1301,6 +1410,89 @@ $(document).on('keydown', function(e) {
 
   const key  = e.key;
   const code = e.code;
+
+// Enter Predicate Edit mode
+if (key.toLowerCase() === 'p') {
+  e.preventDefault();
+  predicateEditActive = true;
+  predW2Id = null;
+  predPendingRel = null;
+  predSeqBuffer = '';
+  $('#status').text('Predicate Edit: active. Click w2 (predicate), press relation (r/v/a/b/c/x/l), then click head w1. Or type "10r25;".');
+  return;
+}
+
+// While in Predicate Edit mode, handle keys first
+if (predicateEditActive) {
+  // Exit mode
+  if (key === 'Escape') {
+    e.preventDefault();
+    predicateEditActive = false;
+    predW2Id = null;
+    predPendingRel = null;
+    predSeqBuffer = '';
+    $('#status').text('Predicate Edit: exited.');
+    renderPosGrid();
+    return;
+  }
+
+  // Save and move to next tree
+  if (key === 'Enter') {
+    e.preventDefault();
+    saveCurrentEdits && saveCurrentEdits();
+    if (currentIndex < trees.length - 1) {
+      $('#nextBtn').click();
+      $('#status').text('Predicate Edit: saved, moved to next tree.');
+    } else {
+      $('#status').text('Predicate Edit: saved. Last tree reached.');
+    }
+    return;
+  }
+
+  // Relation keys (require w2 clicked already)
+  if (['r','R','v','V','a','A','b','B','c','C','x','X','l','L'].includes(key)) {
+    e.preventDefault();
+    if (!predW2Id) {
+      $('#status').text('Predicate Edit: click w2 (predicate) first.');
+      return;
+    }
+    predPendingRel = key.toLowerCase();
+    $('#status').text(`Predicate Edit: relation '${predPendingRel}' chosen. Click head w1.`);
+    return;
+  }
+
+  // Numeric mini-language input: digits, backspace, semicolon, relation letter (once)
+  if (/^\d$/.test(key)) {
+    e.preventDefault();
+    predSeqBuffer += key;
+    $('#status').text(`Predicate Edit: ${predSeqBuffer}`);
+    return;
+  }
+  if (key === 'Backspace') {
+    e.preventDefault();
+    predSeqBuffer = predSeqBuffer.slice(0, -1);
+    $('#status').text(`Predicate Edit: ${predSeqBuffer}`);
+    return;
+  }
+  if (key === ';') {
+    e.preventDefault();
+    predSeqBuffer += ';';
+    const ok = tryApplyPredicateSequenceBuffer();
+    if (!ok && predSeqBuffer.endsWith(';')) predSeqBuffer = predSeqBuffer.slice(0, -1);
+    return;
+  }
+  if (/^[rvabclx]$/i.test(key)) {
+    e.preventDefault();
+    if (!/[rvabclx]/i.test(predSeqBuffer)) {
+      predSeqBuffer += key.toLowerCase();
+      $('#status').text(`Predicate Edit: ${predSeqBuffer}`);
+    }
+    return;
+  }
+
+  // Suppress other shortcuts while Predicate Edit is active
+  return;
+}
 
   // =========================
   // Guided Edit (batch) MODE

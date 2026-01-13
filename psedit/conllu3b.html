@@ -1331,9 +1331,17 @@ function renderRelationList(tokens) {
   }
 
   heads.forEach(head => {
-    const headLabel = `${head.ID}/${head.FORM}`;
-    const $liHead = $(`<li><span class="rel-head" data-head="${head.ID}">${headLabel}</span></li>`);
-    const $ulItems = $('<ul></ul>');
+    // Root-aware head label
+	  const isRoot = ((head.DEPREL || '').toLowerCase() === 'root') ||
+					 ((head.HEAD || '').trim() === '0');
+	  const headLabel = isRoot
+		? `Root: ${head.ID}/${head.FORM}`
+		: `${head.ID}/${head.FORM}`;
+
+	  const $liHead = $(
+		`<li><span class="rel-head" data-head="${head.ID}">${headLabel}</span></li>`
+	  );
+	  const $ulItems = $('<ul></ul>');
 
     // Existing tracked dependents under this head
     tokens.forEach(dep => {
