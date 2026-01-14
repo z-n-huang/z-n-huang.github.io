@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CoNLL-U Tree Browser/Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; margin: 16px; }
+  header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  button { padding: 6px 10px; cursor: pointer; }
+  #fileInput { display: inline-block; }
+  #controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #indexInfo { margin-left: 8px; font-weight: bold; }
+  #helpTab { border: 1px solid #ccc; padding: 10px; margin-top: 8px; display: none; background: #f9f9f9; }
+  #editorWrap { margin-top: 12px; }
+  #toggleEditor { margin-bottom: 6px; }
+  #treeText { width: 100%; height: 220px; font-family: Consolas, "Courier New", monospace; }
+  .hidden { display: none; }
+  #statusBar { margin-top: 8px; padding: 6px 8px; border: 1px solid #ddd; background: #fafafa; color: #333; min-height: 22px; }
+  /* Table */
+  #infoTableWrap { margin-top: 12px; overflow-x: auto; z-index: 2; }
+  table { border-collapse: collapse;  table-layout: fixed; }
+  th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; word-break: break-word; }
+  tr:nth-child(even) { background: #fbfbfb; }
+  .upos-VERB { color: #cc0000; font-weight: 600; } /* verbs = red */
+  .upos-NOUN, .upos-PROPN, .upos-PRON { color: #1d4ed8; font-weight: 600; } /* nouns+pronouns = blue */
+  .upos-INTJ { color: #e67e22; font-weight: 600; } /* INTJ = orange */
+  .upos-ADV, .upos-AUX, .upos-COP { color: #000000; font-weight: 600; } /* adverbs, auxiliary, copulas = black */
+  .upos-other { color: #888888; } /* others greyed but legible */
+  #analysis { margin-top: 12px; }
+  #analysis ul { margin-top: 4px; }
+  #analysis li { margin-bottom: 2px; }
+  #analysis i { font-style: italic; }
+  /* Footer area */
+  footer { margin-top: 24px; color: #666; font-size: 12px; }
+  
+/* Dependencies area below the table */
+#depBelowWrap { margin-top: 12px; }
+#depCanvas {
+  position: relative;
+  margin-top: -20px; /* pull up under the table */
+  z-index: 1; /* under the table wrapper */
+  width: 100%;
+  max-height: 160px; /* a bit more room for labels directly under dependents */
+  /*border: 1px solid #eee; */
+  /*background: #fcfcfc; */
+}
+#depSvg { width: 100%; height: 100%; }
+
+/* Palette (editable) */
+:root {
+  --edge-muted: #cfcfcf;
+  --edge-text-muted: #9a9a9a;
+
+  --edge-subj: #1d4ed8;      /* blue */
+  --edge-obj: #cc0000;       /* red */
+  --edge-clausal: #e8b10a;   /* golden */
+  --edge-discourse: #7e57c2; /* purple */
+  --edge-advmod: #0f766e;    /* teal */
+
+  --edge-width-muted: 1.25px;
+  --edge-width-strong: 2.5px;
+
+  --label-bg: #fff7c5;
+  --label-bg-muted: #f3f3f3;
+  --label-text: #333;
+  --label-text-muted: #666;
+  --label-border: rgba(0,0,0,0.12);
+  --label-shadow: rgba(0,0,0,0.12);
+}
+
+/* Edge strokes */
+.edge-path { fill: none; }
+.edge-muted { stroke: var(--edge-muted); stroke-width: var(--edge-width-muted); opacity: 0.6; }
+.edge-subj { stroke: var(--edge-subj); stroke-width: var(--edge-width-strong); opacity: 0.95; }
+.edge-obj { stroke: var(--edge-obj); stroke-width: var(--edge-width-strong); opacity: 0.95; }
+.edge-clausal { stroke: var(--edge-clausal); stroke-width: var(--edge-width-strong); opacity: 0.95; }
+.edge-discourse { stroke: var(--edge-discourse); stroke-width: var(--edge-width-strong); opacity: 0.95; }
+.edge-advmod { stroke: var(--edge-advmod); stroke-width: var(--edge-width-strong); opacity: 0.95; }
+
+.edge-path:hover { filter: brightness(1.06); }
+
+/* Label pill */
+.edge-label-group { cursor: pointer; }
+.edge-label-bg-muted { fill: var(--label-bg-muted); stroke: var(--label-border); stroke-width: 1; rx: 8; ry: 8; }
+.edge-label-bg-strong { fill: var(--label-bg); stroke: var(--label-border); stroke-width: 1; rx: 8; ry: 8; filter: drop-shadow(0 1px 2px var(--label-shadow)); }
+.edge-label-text-muted { fill: var(--label-text-muted); font-size: 12px; font-weight: 600; }
+.edge-label-text-strong { fill: var(--label-text); font-size: 12px; font-weight: 600; }
+
+/* Popover */
+.popover {
+  position: absolute;
+  z-index: 20;
+  width: 280px;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border-radius: 8px;
+  padding: 0;
+}
+.popover-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  font-weight: 700;
+}
+.popover-body { padding: 8px 10px; }
+.popover .field { display: grid; grid-template-columns: 1fr; gap: 4px; margin-bottom: 8px; }
+.popover input, .popover select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+.popover-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+.popover-error { margin-top: 6px; color: #b00020; font-size: 12px; }
+.popover-hint { margin-top: 6px; color: #666; font-size: 12px; }
+
+/* Highlight selected token cell in the FORM row */
+.token-selected {
+  outline: 2px solid #1d4ed8;
+  outline-offset: -2px;
+  background: #eef4ff;
+}
+</style>
+</head>
+<body>
+  <header>
+    <input id="fileInput" type="file" accept=".conllu,.txt" />
+    <div id="controls">
+      <button id="prevBtn" disabled>Prev (<)</button>
+      <button id="nextBtn" disabled>Next (>)</button>
+      <button id="helpBtn">Help (?)</button>
+      <span id="indexInfo">No file loaded</span>
+    </div>
+	<!-- Jump-to-tree roller -->
+<div id="jumpWrap" style="display:flex;align-items:center;gap:8px;">
+  <label for="jumpInput">Go to:</label>
+  <input id="jumpInput" type="number" min="1" value="1" style="width:80px;" />
+  <input id="jumpSlider" type="range" min="1" value="1" />
+</div>
+  </header>
+
+  <div id="helpTab">
+    <strong>Instructions</strong>
+    <ul>
+      <li>Use the file picker to load a CoNLL-U file (multiple sentences/trees are supported).</li>
+      <li>Use Prev/Next buttons or press &lt; and &gt; keys to navigate sentences.</li>
+      <li>Edits in the textbox are automatically saved to the current tree when you navigate.</li>
+      <li>Use the “Hide/Show Editor” toggle to show or hide the editable tree textbox.</li>
+      <li>The table and analysis update automatically based on the current textbox content.</li>
+      <li>Press Shift+X to export your current trees as a .conllu file.</li>
+    </ul>
+    <strong>Keyboard Shortcuts</strong>
+    <ul>
+	<strong>Navigation</strong>
+      <li>&lt; : Previous sentence</li>
+      <li>&gt; : Next sentence</li>
+      <li>Ctrl+Shift+X : Export all trees to a .conllu file</li>
+      <li>H : Toggle Help</li>
+    </ul>
+	<ul>
+	<strong>Changing part of speech</strong>
+		<li>Click on a word.</li>
+		<li>Press n (noun), v (verb), j (adjective), m (adverb), p (particle).</li>
+    </ul>
+	<ul>
+	<strong>Changing root of a sentence</strong>
+		<li>Click on a word.</li>
+		<li>Press r.</li>
+	    </ul>
+	<ul>
+	<strong>Changing a visible dependency's head or deprel</strong>
+		<li>Click on the DEPREL label (the "pill").</li>
+		<li>1. Enter the values in the popup box, press "enter"/"Apply" to confirm; "escape"/"Cancel" to escape. OR</li>
+		<li>1a. Press Shift+left/right arrow to change its head.</li>
+		<li>1b. Press b (nsubj), o (obj), i (iobj), m (advmod), d (discourse), t (topic / "dislocated"), p (parataxis), c (ccomp), x (xcomp), a (advcl), l (acl:relcl), k (acl).</li>
+	</ul><ul>
+	<strong>Adding a (visible) dependency (= changing a invisible dependency's head or deprel)</strong>
+	<li>Toggle "Show only highlighted relation" to show all relations.</li>
+	<li>Change head/deprel.</li>
+	</ul>
+  </div>
+
+  <div id="editorWrap">
+    <button id="toggleEditor">Show editor</button>
+    <textarea id="treeText" placeholder="Load a CoNLL-U file to begin..." class = "hidden"></textarea>
+  </div>
+
+  <div id="statusBar">Status: Ready.</div>
+
+  <div id="infoTableWrap">
+    <table id="infoTable">
+      <!-- Populated dynamically -->
+    </table>
+  </div>
+<!-- Paste right after #infoTableWrap -->
+<div id="depBelowWrap">
+  
+  <!-- SVG for dependencies drawn below the table -->
+  <div id="depCanvas">
+    <svg id="depSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <!-- Popover for editing a dependency -->
+  <div id="edgePopover" class="popover" style="display:none;">
+    <div class="popover-header">Edit Dependency</div>
+    <div class="popover-body">
+      <div class="field">
+        <label>Dependent (ID):</label>
+        <input id="popDependent" type="number" min="1" />
+      </div>
+      <div class="field">
+        <label>Head (ID):</label>
+        <input id="popHead" type="number" min="0" />
+      </div>
+      <div class="field">
+        <label>Relation:</label>
+        <input id="popRel" list="udRelList" placeholder="e.g., nsubj, obj, ccomp, acl:relcl" />
+        <datalist id="udRelList">
+          <option value="root"></option>
+          <option value="nsubj"></option>
+          <option value="nsubj:pass"></option>
+          <option value="csubj"></option>
+          <option value="obj"></option>
+          <option value="iobj"></option>
+          <option value="ccomp"></option>
+          <option value="xcomp"></option>
+          <option value="parataxis"></option>
+          <option value="acl"></option>
+          <option value="acl:relcl"></option>
+          <option value="advmod"></option>
+          <option value="discourse"></option>
+          <option value="dislocated"></option>
+        </datalist>
+      </div>
+      <div class="popover-actions">
+        <button id="popApply">Apply</button>
+        <button id="popCancel">Cancel</button>
+      </div>
+      <div id="popError" class="popover-error" style="display:none;"></div>
+      <div class="popover-hint">Tip: Click a token in the FORM row to set dependent or head.</div>
+    </div>
+  </div>
+	</div>
+	
+	<div id="depControls" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+    <label style="display:inline-flex;align-items:center;gap:6px;">
+      <input id="toggleHighlights" type="checkbox" checked />
+      Show only highlighted relations
+    </label>
+    <span id="depHint" style="color:#666;font-size:12px;">
+      Shortcuts: Various keys set deprel • Shift+←/→ change head • Enter confirm what is in popup • Esc cancel
+    </span>
+    </div>
+
+
+  <!--div id="analysis">
+    <strong>Analysis</strong>
+    <ul id="analysisList">
+      
+    </ul>
+  </div>
+
+  <footer>
+    Tip: This runs entirely in your browser. No data leaves your machine.
+  </footer -->
+  
+
+<script>
+(function($){
+  // Data model: array of { raw: string }
+  let trees = [];
+  let currentIndex = -1;
+  let editorVisible = true;
+  // Currently selected edge (null or {depId, headId, deprel})
+  let selectedEdge = null;
+
+  // Mark selection visually by adding a wrapping group with class, or toggling a class on label group + matching path
+  function setSelectedEdge(depId, headId, deprel){
+    selectedEdge = { depId: String(depId), headId: String(headId), deprel };
+    // Clear previous selection classes
+    document.querySelectorAll('#depSvg .edge-selected').forEach(el => el.classList.remove('edge-selected'));
+
+    // Find the label group and path for this edge
+    const label = document.querySelector(`#depSvg .edge-label-group[data-dep="${selectedEdge.depId}"][data-head="${selectedEdge.headId}"]`);
+    const path = document.querySelector(`#depSvg path.edge-path[data-dep="${selectedEdge.depId}"][data-head="${selectedEdge.headId}"]`);
+    if(label){
+      label.classList.add('edge-selected');
+    }
+    if(path){
+      // Wrap both under a temporary group for styling or just add a class via label parent
+      // Here we add selected class to the label's parent and rely on CSS to brighten the path via direct selection
+      path.classList.add('edge-selected');
+    }
+    setStatus(`Selected: ${selectedEdge.depId} —${selectedEdge.deprel}→ ${selectedEdge.headId}`);
+  }
+
+  function clearSelectedEdge(){
+    selectedEdge = null;
+    document.querySelectorAll('#depSvg .edge-selected').forEach(el => el.classList.remove('edge-selected'));
+    setStatus('Selection cleared.');
+  }
+  const CLAUSAL_PREFIXES = [
+    'csubj', 'csubj:pass',
+    'ccomp', 'xcomp',
+    'acl', 'acl:relcl',
+    'advcl',
+    'parataxis'
+  ];
+  // Helper to test clausal relation (including subtypes)
+  function isClausalRel(rel){
+    if(!rel) return false;
+    return CLAUSAL_PREFIXES.some(prefix => rel === prefix || rel.startsWith(prefix + ':'));
+  }
+
+  // Highlight configuration
+  const HIGHLIGHT_DEPRELS = new Set([
+    'nsubj', 'csubj', 'nsubj:pass',
+    'obj', 'iobj',
+    'ccomp', 'xcomp', 'parataxis',
+    'acl', 'acl:relcl', 'advcl',
+    'discourse', 'dislocated',
+    'advmod' // advmod highlighted only for certain lemmas (see ADV_LEMMAS)
+  ]);
+  const ADV_LEMMAS = new Set(['already', 'also']); // lemma-based highlight
+
+  let showOnlyHighlights = true; // toggled by checkbox
+
+  function deprelCategory(deprel, token) {
+    const base = (deprel || '').split(':')[0];
+    if(base === 'nsubj' || base === 'csubj') return 'subj';
+    if(base === 'obj' || base === 'iobj') return 'obj';
+    if(base === 'ccomp' || base === 'xcomp' || base === 'parataxis' || base === 'acl') return 'clausal';
+    if(base === 'discourse' || base === 'dislocated') return 'discourse';
+    if(base === 'advmod') {
+      const lemma = (token && token.lemma || '').toLowerCase();
+      return ADV_LEMMAS.has(lemma) ? 'advmod' : 'other';
+    }
+    return HIGHLIGHT_DEPRELS.has(base) ? 'clausal' : 'other';
+  }
+  function categoryToClass(cat){
+    switch(cat){
+      case 'subj': return 'edge-subj';
+      case 'obj': return 'edge-obj';
+      case 'clausal': return 'edge-clausal';
+      case 'discourse': return 'edge-discourse';
+      case 'advmod': return 'edge-advmod';
+      default: return 'edge-muted';
+    }
+  }
+  function labelClasses(cat){
+    const strong = (cat !== 'other');
+    return {
+      bgClass: strong ? 'edge-label-bg-strong' : 'edge-label-bg-muted',
+      textClass: strong ? 'edge-label-text-strong' : 'edge-label-text-muted',
+      strong
+    };
+  }
+  function esc(str){
+    return String(str || '').replace(/[&<>"'`=]/g, s => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;', '`':'&#96;', '=':'&#61;'
+    })[s] || s);
+  }
+
+  // Geometry referenced to the table columns, arcs drawn in depCanvas
+  function getBelowGeometry(){
+    const table = document.getElementById('infoTable');
+    const depCanvas = document.getElementById('depCanvas');
+    const svg = document.getElementById('depSvg');
+    if(!table || !depCanvas || !svg) return null;
+
+    const canvasRect = depCanvas.getBoundingClientRect();
+
+    // Use FORM row for token centers
+    const rows = table.querySelectorAll('tr');
+    if(rows.length < 2) return null;
+    const formRow = rows[1];
+    const cells = Array.from(formRow.querySelectorAll('td'));
+    if(cells.length === 0) return null;
+
+    const centers = cells.map(cell => {
+      const r = cell.getBoundingClientRect();
+      const cx = (r.left + r.right)/2 - canvasRect.left; // relative to depCanvas
+      return { cx, rect: r };
+    });
+
+    // Arc band near top of depCanvas, labels under dependent use its cx
+    const bandY = 30; // baseline for arc endpoints within depCanvas
+    const width = depCanvas.clientWidth;
+    const height = depCanvas.clientHeight;
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+
+    return { centers, bandY, width, height };
+  }
+
+  // Curved arc path (below the table)
+  function makeArcPath(xHead, xDep, bandY){
+    const y = bandY;
+    const midX = (xHead + xDep)/2;
+    const distance = Math.abs(xDep - xHead);
+    const arch = Math.max(32, Math.min(140, distance * 0.6)); // arch height scales with token distance
+    const c1x = (xHead + midX)/2, c2x = (xDep + midX)/2;
+    const c1y = y + arch; // curves downward inside depCanvas
+    const c2y = y + arch;
+    return `M ${xHead} ${y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${xDep} ${y}`;
+  }
+  
+    // Currently selected token ID (integer) for token-level edits
+  let selectedTokenId = null;
+
+  // Click on FORM row cell to select token
+  $('#infoTable').on('click', 'tr:nth-child(2) td', function(){
+    const cellIndex = $(this).index() - 1; // skip the row header TH
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const tok = toks[cellIndex];
+    if(!tok) return;
+
+    selectedTokenId = tok.id;
+
+    // Visual highlight: remove old, add new
+    $('#infoTable tr:nth-child(2) td').removeClass('token-selected');
+    $(this).addClass('token-selected');
+
+    setStatus(`Selected token ${tok.id}: ${tok.form} (${tok.upos || ''})`);
+  });
+  
+  
+  // File handling
+  $('#fileInput').on('change', function(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      const content = evt.target.result || '';
+      trees = splitConlluIntoTrees(content);
+      if(trees.length === 0){
+        setStatus('Loaded file but found 0 trees. Ensure sentences are separated by blank lines.');
+        currentIndex = -1;
+        updateUIState();
+        return;
+      }
+      currentIndex = 0;
+      setStatus(`Loaded ${trees.length} trees.`);
+      updateUIState();
+      renderCurrentTree();
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+
+  // Split a full CoNLL-U file into sentence blocks separated by blank lines
+  function splitConlluIntoTrees(text){
+    // Normalize line endings
+    const norm = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Split on blank lines (two or more newlines)
+    const blocks = norm.split(/\n\s*\n/);
+    const arr = [];
+    for(const blk of blocks){
+      const trimmed = blk.trim();
+      if(trimmed.length > 0){
+        arr.push({ raw: trimmed + '\n' }); // keep trailing newline
+      }
+    }
+    return arr;
+  }
+
+  // Serialize all trees back into a single file
+  function serializeAllTrees(){
+    return trees.map(t => t.raw.replace(/\s+$/,'') + '\n\n').join('').replace(/\n\n$/,'\n');
+  }
+
+  // Update main UI enable/disable states
+  function updateUIState(){
+    const hasData = trees.length > 0 && currentIndex >= 0;
+    $('#prevBtn').prop('disabled', !hasData);
+    $('#nextBtn').prop('disabled', !hasData);
+    $('#toggleEditor').prop('disabled', !hasData);
+    $('#treeText').prop('disabled', !hasData);
+    if(hasData){
+      $('#indexInfo').text(`Tree ${currentIndex+1} of ${trees.length}`);
+      $('#toggleEditor').text(editorVisible ? 'Hide Editor' : 'Show Editor');
+      $('#treeText').toggle(editorVisible);
+    } else {
+      $('#indexInfo').text('No file loaded');
+      $('#treeText').val('');
+      $('#infoTable').empty();
+      $('#analysisList').empty();
+    }
+  }
+
+  // Save current textarea into trees[currentIndex]
+  function saveCurrentEdits(){
+    if(currentIndex < 0) return;
+    trees[currentIndex].raw = $('#treeText').val();
+  }
+
+  // Render current tree into textarea and derived views
+  function renderCurrentTree(){
+    if(currentIndex < 0 || currentIndex >= trees.length) return;
+    const raw = trees[currentIndex].raw || '';
+    $('#treeText').val(raw);
+    renderFromTextarea();
+    updateUIState();
+  }
+
+  // Parse the content of the current textarea and update table + analysis
+  function renderFromTextarea(){
+    const text = $('#treeText').val() || '';
+    const parsed = parseSingleConlluSentence(text);
+    buildInfoTable(parsed);
+    buildAnalysis(parsed);
+	drawDependenciesBelow(parsed);
+  }
+
+  // Parse one CoNLL-U sentence block into token objects
+  // Returns: { tokens: [ {id, form, upos, head, deprel, isRange, isEmpty, rawLine} ], comments: [lines] }
+  function parseSingleConlluSentence(text){
+    const lines = (text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const tokens = [];
+    const comments = [];
+    for(const line of lines){
+      const trimmed = line.trim();
+      if(trimmed.length === 0) continue;
+      if(trimmed.startsWith('#')){
+        comments.push(line);
+        continue;
+      }
+      const cols = line.split('\t');
+      if(cols.length < 10){
+        // tolerate malformed lines by skipping
+        continue;
+      }
+      const idStr = cols[0];
+      let isRange = false, isEmpty = false;
+      if(/^\d+-\d+$/.test(idStr)) isRange = true; // multiword token
+      if(/^\d+\.\d+$/.test(idStr)) isEmpty = true; // empty node
+      let idNum = null;
+      if(!isRange && !isEmpty && /^\d+$/.test(idStr)) idNum = parseInt(idStr, 10);
+      tokens.push({
+        idStr,
+        id: idNum, // integer id or null
+        form: cols[1],
+        lemma: cols[2],
+        upos: cols[3],
+        xpos: cols[4],
+        feats: cols[5],
+        head: cols[6],
+        deprel: cols[7],
+        deps: cols[8],
+        misc: cols[9],
+        isRange, isEmpty,
+        rawLine: line
+      });
+    }
+    return { tokens, comments };
+  }
+
+    // Serialize parsed sentence back to CoNLL-U text
+  function serializeParsedSentence(parsed){
+    const lines = [];
+    for(const c of (parsed.comments || [])) lines.push(c);
+    for(const t of parsed.tokens){
+      // Expect 10 columns
+      const cols = [
+        t.idStr != null ? t.idStr : (t.id != null ? String(t.id) : '_'),
+        t.form ?? '_',
+        t.lemma ?? '_',
+        t.upos ?? '_',
+        t.xpos ?? '_',
+        t.feats ?? '_',
+        t.head ?? '_',
+        t.deprel ?? '_',
+        t.deps ?? '_',
+        t.misc ?? '_'
+      ];
+      lines.push(cols.join('\t'));
+    }
+    return lines.join('\n') + '\n';
+  }
+
+  // Recompute integer IDs sequentially and update heads accordingly
+  // Returns a new parsed object (deep-ish copy for integer tokens)
+  function renumberIntegerTokens(parsed){
+    // Build list of integer tokens in order
+    const ints = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const idMap = new Map(); // oldIdStr -> newIdStr
+    let newId = 1;
+    for(const t of ints){
+      idMap.set(String(t.id), String(newId));
+      t.id = newId;
+      t.idStr = String(newId);
+      newId++;
+    }
+    // Update heads (only for tokens with integer head)
+    for(const t of parsed.tokens){
+      if(t.head != null && /^\d+$/.test(String(t.head))){
+        const mapped = idMap.get(String(t.head));
+        if(mapped) t.head = mapped;
+      }
+    }
+    return parsed;
+  }
+
+  // Replace textarea content with parsed sentence and trigger UI redraw
+  function commitParsed(parsed, statusMsg){
+    const text = serializeParsedSentence(parsed);
+    $('#treeText').val(text);
+    renderFromTextarea(); // should call buildInfoTable + drawDependenciesBelow via your hook
+    if(statusMsg) setStatus(statusMsg);
+  }
+
+  // Clone a token object (shallow, columns only)
+  function cloneToken(t){
+    return {
+      idStr: t.idStr, id: t.id,
+      form: t.form, lemma: t.lemma, upos: t.upos, xpos: t.xpos, feats: t.feats,
+      head: t.head, deprel: t.deprel, deps: t.deps, misc: t.misc,
+      isRange: t.isRange, isEmpty: t.isEmpty, rawLine: t.rawLine
+    };
+  }
+  // Build the 3-row table (ID, FORM, UPOS with colors)
+  function buildInfoTable(parsed){
+    const $table = $('#infoTable').empty();
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    // Build three rows
+    const $rowID = $('<tr/>');
+    const $rowFORM = $('<tr/>');
+    const $rowUPOS = $('<tr/>');
+
+    // headers
+    $rowID.append('<th>ID</th>');
+    $rowFORM.append('<th>FORM</th>');
+    $rowUPOS.append('<th>UPOS</th>');
+
+    for(const t of toks){
+      $rowID.append($('<td/>').text(String(t.id)));
+      $rowFORM.append($('<td/>').text(t.form));
+      const uposClass = uposToClass(t.upos);
+      const $uposCell = $('<td/>').addClass(uposClass).text(t.upos || '');
+      $rowUPOS.append($uposCell);
+    }
+
+    $table.append($rowID, $rowFORM, $rowUPOS);
+  }
+
+  // Draw dependencies in the below section (labels directly under dependents)
+  function drawDependenciesBelow(parsed){
+    const svg = document.getElementById('depSvg');
+    if(!svg) return;
+
+    // Clear previous
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const geom = getBelowGeometry();
+    if(!geom || geom.centers.length === 0) return;
+    const { centers, bandY } = geom;
+
+    // Map token IDs to column indices based on FORM row
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const idToCol = new Map();
+    toks.forEach((t, idx) => idToCol.set(String(t.id), idx));
+
+    // Build edges (dependent -> head)
+    const edges = [];
+    for(const dep of toks){
+      const headId = dep.head;
+      const deprel = dep.deprel;
+      if(!deprel || headId === '_' || headId === null || headId === undefined) continue;
+
+      const depCol = idToCol.get(String(dep.id));
+      const headCol = idToCol.get(String(headId));
+      if(depCol === undefined || headCol === undefined) continue;
+
+      const xHead = centers[headCol].cx;
+      const xDep  = centers[depCol].cx;
+
+      const cat = deprelCategory(deprel, dep);
+      if(showOnlyHighlights && cat === 'other') continue;
+
+      edges.push({
+        dep, headId, deprel,
+        depCol, headCol,
+        xHead, xDep,
+        cat,
+        edgeClass: categoryToClass(cat),
+        labelCls: labelClasses(cat)
+      });
+    }
+
+    edges.forEach(e => {
+      // Arc path (from head to dependent)
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', makeArcPath(e.xHead, e.xDep, bandY));
+      path.setAttribute('class', `edge-path ${e.edgeClass}`);
+      path.setAttribute('data-dep', String(e.dep.id));
+      path.setAttribute('data-head', String(e.headId));
+      path.setAttribute('data-rel', e.deprel);
+      svg.appendChild(path);
+
+      // Label positioned directly under the dependent
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', 'edge-label-group');
+      g.setAttribute('data-dep', String(e.dep.id));
+      g.setAttribute('data-head', String(e.headId));
+      g.setAttribute('data-rel', e.deprel);
+
+      const labelX = e.xDep;
+      const labelY = bandY + 18; // slightly below the arc baseline
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', labelX);
+      text.setAttribute('y', labelY);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('class', e.labelCls.textClass);
+      text.textContent = e.deprel;
+
+      // Append text temporarily to measure
+      svg.appendChild(g);
+      g.appendChild(text);
+      const bbox = text.getBBox();
+
+      const padX = 8, padY = 4;
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', (bbox.x - padX).toString());
+      rect.setAttribute('y', (bbox.y - padY).toString());
+      rect.setAttribute('width', (bbox.width + 2*padX).toString());
+      rect.setAttribute('height', (bbox.height + 2*padY).toString());
+      rect.setAttribute('class', e.labelCls.bgClass);
+
+      // Place rect behind text
+      g.insertBefore(rect, text);
+
+      // Hover status message
+      g.addEventListener('mouseenter', () => {
+        setStatus(`Edge: ${e.dep.id} —${e.deprel}→ ${e.headId} (${esc(e.dep.form)} → head ${e.headId})`);
+      });
+
+      // Click to open popover for editing (handled in Chunk 3)
+      g.addEventListener('click', (evt) => {
+        openEdgePopover(evt, { depId: e.dep.id, headId: e.headId, deprel: e.deprel });
+      });
+
+      // Drag-to-reassign head (snap to nearest token center)
+      let dragging = false;
+      let dragStartX = 0;
+      let originalLabelX = labelX;
+      g.addEventListener('mousedown', (evt) => {
+        // Only start drag if clicked near the label (text or rect)
+        dragging = true;
+        dragStartX = evt.clientX;
+        originalLabelX = parseFloat(text.getAttribute('x'));
+        g.classList.add('dragging');
+        evt.preventDefault();
+      });
+      window.addEventListener('mousemove', (evt) => {
+        if(!dragging) return;
+        const dx = evt.clientX - dragStartX;
+        const newX = originalLabelX + dx;
+        // Move label horizontally with mouse
+        text.setAttribute('x', newX);
+        const newBBox = text.getBBox();
+        rect.setAttribute('x', (newBBox.x - padX).toString());
+      });
+      window.addEventListener('mouseup', (evt) => {
+        if(!dragging) return;
+        dragging = false;
+        g.classList.remove('dragging');
+
+        // Snap label to nearest token center to pick new head
+        const geom2 = getBelowGeometry();
+        if(!geom2) return;
+        const centersX = geom2.centers.map(c => c.cx);
+        let nearestIdx = 0;
+        let bestDist = Infinity;
+        const currentX = parseFloat(text.getAttribute('x'));
+        centersX.forEach((cx, idx) => {
+          const d = Math.abs(cx - currentX);
+          if(d < bestDist){ bestDist = d; nearestIdx = idx; }
+        });
+
+        const newHeadId = toks[nearestIdx]?.id;
+        // Prevent self as head or invalid
+        if(newHeadId === undefined || String(newHeadId) === String(e.dep.id)) {
+          setStatus('Invalid head selection (self or missing). Edit cancelled.');
+          // Reset label position to under the dependent
+          text.setAttribute('x', e.xDep);
+          const resetBBox = text.getBBox();
+          rect.setAttribute('x', (resetBBox.x - padX).toString());
+          return;
+        }
+
+        // Open popover prefilled with new head; apply logic and validation handled in Chunk 3
+        openEdgePopover(evt, { depId: e.dep.id, headId: newHeadId, deprel: e.deprel });
+      });
+
+      svg.appendChild(g);
+    });
+  }
+  // Hook 1: tie redraw to table parsing/render
+  // Add this call at the end of renderFromTextarea():
+  // drawDependenciesBelow(parsed);
+
+// Hook 2: redraw on window resize
+  window.addEventListener('resize', function(){
+    if(currentIndex < 0) return;
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    drawDependenciesBelow(parsed);
+  });
+
+  // Hook 3: checkbox to toggle "Show only highlighted relations"
+  $('#toggleHighlights').on('change', function(){
+    showOnlyHighlights = $(this).is(':checked');
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    drawDependenciesBelow(parsed);
+    setStatus(showOnlyHighlights ? 'Showing only highlighted relations.' : 'Showing all relations.');
+  });
+  
+    // Map number keys to common UD relations
+  const KEY_REL_MAP = {
+    'b': 'nsubj',
+    'o': 'obj',
+    'c': 'ccomp',
+    'x': 'xcomp',
+    'p': 'parataxis',
+    'k': 'acl',
+    'l': 'acl:relcl',
+    'd': 'discourse',
+    'm': 'advmod',
+	'a': 'advcl',
+	't': 'dislocated'
+  };
+
+  // Helper: update dependency in textarea by depId (changes head and/or deprel)
+  function applyDependencyEdit(depId, newHeadId, newRel){
+    const text = $('#treeText').val() || '';
+    const lines = text.replace(/\r\n/g, '\n').split('\n');
+    let changed = false;
+
+    // Basic validation: block self-head
+    if(newHeadId != null && String(newHeadId) === String(depId)){
+      setStatus('Invalid: head cannot be the dependent itself.');
+      return false;
+    }
+
+    // Build token index to check for cycles and allowed heads
+    const parsed = parseSingleConlluSentence(text);
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const byId = new Map();
+    toks.forEach(t => byId.set(String(t.id), t));
+
+    // If newHeadId specified, ensure it exists and is not range/empty
+    if(newHeadId != null){
+      const headTok = byId.get(String(newHeadId));
+      if(!headTok){
+        setStatus(`Invalid head: token ${newHeadId} not found.`);
+        return false;
+      }
+    }
+
+    // Cycle check: if changing head, ensure no cycles arise
+    function createsCycle(depIdStr, headIdStr){
+      if(!headIdStr) return false;
+      const visited = new Set();
+      let cur = headIdStr;
+      // walk up heads until root or missing
+      for(let i=0; i<1000; i++){
+        if(cur === depIdStr) return true;
+        const t = byId.get(cur);
+        if(!t) break;
+        if(visited.has(cur)) break;
+        visited.add(cur);
+        cur = String(t.head);
+      }
+      return false;
+    }
+    if(newHeadId != null && createsCycle(String(depId), String(newHeadId))){
+      setStatus('Invalid: changing head would create a cycle.');
+      return false;
+    }
+
+    // Edit the line for depId: columns are ID, FORM, LEMMA, UPOS, XPOS, FEATS, HEAD, DEPREL, DEPS, MISC
+    for(let i=0;i<lines.length;i++){
+      const line = lines[i];
+      if(!line || line.startsWith('#')) continue;
+      const cols = line.split('\t');
+      if(cols.length < 10) continue;
+      if(cols[0] === String(depId)){
+        if(newHeadId != null) cols[6] = String(newHeadId);
+        if(newRel != null) cols[7] = String(newRel);
+        lines[i] = cols.join('\t');
+        changed = true;
+        break;
+      }
+    }
+
+    if(!changed){
+      setStatus(`No editable line found for dependent ${depId}.`);
+      return false;
+    }
+
+    // Write back, re-render table and SVG
+    const newText = lines.join('\n');
+    $('#treeText').val(newText);
+    renderFromTextarea(); // your existing function: rebuild table + analysis (if any) + drawDependenciesBelow via hook
+    setStatus(`Applied: ${depId} head=${newHeadId != null ? newHeadId : '(unchanged)'} deprel=${newRel != null ? newRel : '(unchanged)'}`);
+    return true;
+  }
+  
+    // Find the next valid head in a given direction, skipping illegal targets
+  // direction: 'left' | 'right'
+  function findNextValidHead(direction, depId){
+    const text = $('#treeText').val() || '';
+    const parsed = parseSingleConlluSentence(text);
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    if(toks.length === 0) return null;
+
+    const ids = toks.map(t => t.id);
+    const depIndex = ids.indexOf(parseInt(depId,10));
+    if(depIndex === -1) return null;
+
+    // Move stepwise in the chosen direction; skip invalid (self)
+    const step = direction === 'left' ? -1 : 1;
+    for(let i = depIndex + step; i >= 0 && i < ids.length; i += step){
+      const candidate = ids[i];
+      if(String(candidate) === String(depId)) continue; // skip self
+      // candidate is an integer id and already filtered out ranges/empties
+      return candidate;
+    }
+    return null; // none found in that direction
+  }
+
+  // Find the next valid dependent in a given direction, skipping out-of-bounds
+  // direction: 'left' | 'right'
+  function findNextValidDependent(direction, currentDepId){
+    const text = $('#treeText').val() || '';
+    const parsed = parseSingleConlluSentence(text);
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    if(toks.length === 0) return null;
+
+    const ids = toks.map(t => t.id);
+    const depIndex = ids.indexOf(parseInt(currentDepId, 10));
+    if(depIndex === -1) return null;
+
+    const step = direction === 'left' ? -1 : 1;
+    for(let i = depIndex + step; i >= 0 && i < ids.length; i += step){
+      // toks already excludes ranges/empties; any integer id here is valid
+      return ids[i];
+    }
+    return null; // none found in that direction
+  }
+  
+    function setTokenUPOS(tokenId, newUPOS){
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    for(const t of parsed.tokens){
+      if(t.id !== null && String(t.id) === String(tokenId)){
+        t.upos = newUPOS;
+        commitParsed(parsed, `Set token ${tokenId} UPOS=${newUPOS}`);
+        return true;
+      }
+    }
+    setStatus(`Token ${tokenId} not found.`);
+    return false;
+  }
+
+    // Find next legal head starting from the current head position, skipping self and out-of-bounds
+  // direction: 'left' | 'right'
+  function findNextLegalHeadFromCurrent(direction, depId, currentHeadId){
+    const text = $('#treeText').val() || '';
+    const parsed = parseSingleConlluSentence(text);
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    if(toks.length === 0) return null;
+
+    const ids = toks.map(t => t.id);
+    const curHeadIdx = ids.indexOf(parseInt(currentHeadId, 10));
+    const depIdx     = ids.indexOf(parseInt(depId, 10));
+
+    // If current head is missing (rare), start from the dependent position
+    const startIdx = (curHeadIdx === -1) ? depIdx : curHeadIdx;
+    if(startIdx === -1) return null;
+
+    const step = direction === 'left' ? -1 : 1;
+    for(let i = startIdx + step; i >= 0 && i < ids.length; i += step){
+      const candidate = ids[i];
+      if(String(candidate) === String(depId)) continue; // skip self
+      return candidate; // first legal target
+    }
+    return null; // none found in that direction
+  }
+  
+  
+    // Config (keep or adjust if not already defined)
+  const ROOT_DEMOTION_REL = 'parataxis';
+
+  // Promote the selected token to root and cascade-reassign old-root's children to the new root
+  function makeSelectedTokenRoot(){
+    if(!selectedTokenId){
+      setStatus('Select a token first (click in the FORM row), then press r.');
+      return;
+    }
+    const text = $('#treeText').val() || '';
+    const parsed = parseSingleConlluSentence(text);
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+
+    const selTok = toks.find(t => String(t.id) === String(selectedTokenId));
+    if(!selTok){
+      setStatus('Selected token not found.');
+      return;
+    }
+
+    // If already root, nothing to do
+    if(String(selTok.head) === '0' && (selTok.deprel || '').split(':')[0] === 'root'){
+      setStatus(`Token ${selTok.id} is already root.`);
+      return;
+    }
+
+    // Identify previous root(s) (usually 1), excluding the selected token
+    const prevRoots = toks.filter(t => (t.deprel || '').split(':')[0] === 'root' && String(t.id) !== String(selTok.id));
+
+    // For each previous root r:
+    // 1) Reattach all of r's direct children to the selected token (new root), preserving their deprel.
+    // 2) Demote r under the new root with ROOT_DEMOTION_REL.
+    let reattachedCount = 0;
+    for(const r of prevRoots){
+      for(const child of toks){
+        if(String(child.head) === String(r.id) && String(child.id) !== String(selTok.id)){
+          child.head = String(selTok.id); // move to new root
+          // keep child.deprel as-is
+          reattachedCount++;
+        }
+      }
+      // Demote the old root under the new root
+      r.head = String(selTok.id);
+      r.deprel = ROOT_DEMOTION_REL;
+    }
+
+    // Finally, promote selected token to the single root
+    selTok.head = '0';
+    selTok.deprel = 'root';
+
+    // Commit and redraw
+    commitParsed(parsed, `Promoted ${selTok.id} to root; reattached ${reattachedCount} dependents from old root(s).`);
+
+    // Keep selection highlight on the new root after commit
+    selectedTokenId = selTok.id;
+    const parsed2 = parseSingleConlluSentence($('#treeText').val() || '');
+    const toks2 = parsed2.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const colIdx = toks2.findIndex(t => String(t.id) === String(selectedTokenId));
+    $('#infoTable tr:nth-child(2) td').removeClass('token-selected');
+    if(colIdx !== -1){
+      const cell = $('#infoTable tr:nth-child(2) td').get(colIdx);
+      if(cell) $(cell).addClass('token-selected');
+    }
+  }
+
+  // Keyboard binding: r makes the selected token the root
+  $(document).on('keydown', function(e){
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(tag === 'textarea' || tag === 'input') return;
+    if(!selectedTokenId) return;
+
+    if(e.key.toLowerCase() === 'r'){
+      e.preventDefault();
+      makeSelectedTokenRoot();
+    }
+  });
+  // Keyboard: n/v/p/a to update POS of selected token
+  $(document).on('keydown', function(e){
+    // Ignore when typing in textarea or inputs
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(tag === 'textarea' || tag === 'input') return;
+
+    if(!selectedTokenId) return;
+
+    const key = e.key.toLowerCase();
+    if(key === 'n'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'NOUN'); return; }
+    if(key === 'v'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'VERB'); return; }
+    if(key === 'd'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'INTJ'); return; }
+	if(key === 'j'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADJ'); return; }
+	
+    if(key === 'a'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADV'); return; }
+  });
+  
+    // Split selected token into multiple words; POS stays same; extra words become compound dependents of the first
+  function splitSelectedToken(){
+    if(!selectedTokenId){ setStatus('Select a token first.'); return; }
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const idx = toks.findIndex(t => String(t.id) === String(selectedTokenId));
+    if(idx === -1){ setStatus('Selected token not found.'); return; }
+
+    const baseTok = toks[idx];
+    const input = prompt('Enter new word(s), separated by spaces (e.g., "very well")', baseTok.form);
+    if(!input) { setStatus('Split cancelled.'); return; }
+
+    // Split by spaces; filter empties
+    const parts = input.split(/\s+/).filter(Boolean);
+    if(parts.length < 2){
+      setStatus('Provide two or more words to split.');
+      return;
+    }
+
+    // Build new tokens to replace baseTok
+    const newTokens = parts.map((w, j) => {
+      const nt = cloneToken(baseTok);
+      nt.form = w;
+      nt.lemma = nt.lemma && nt.lemma !== '_' ? nt.lemma : w.toLowerCase();
+      // First keeps original head/deprel; others attach as compound to the first
+      if(j === 0){
+        // unchanged
+      } else {
+        nt.head = String(baseTok.id); // will be remapped after renumber
+        nt.deprel = 'compound';
+      }
+      return nt;
+    });
+
+    // Replace in the full parsed.tokens array (need the true index in parsed.tokens)
+    const allInts = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const globalIdx = parsed.tokens.findIndex(t => t.id !== null && !t.isRange && !t.isEmpty && String(t.id) === String(selectedTokenId));
+    if(globalIdx === -1){ setStatus('Internal error: index.'); return; }
+
+    // Update dependents of baseTok: they stay pointing to the first new token (same old ID for now)
+    // We will renumber after insertion and then remap heads accordingly.
+    parsed.tokens.splice(globalIdx, 1, ...newTokens);
+
+    // Renumber all integer tokens and fix heads
+    const updated = renumberIntegerTokens(parsed);
+    commitParsed(updated, `Split token ${selectedTokenId} into ${parts.length} tokens.`);
+  }
+
+  // Keyboard binding for '/'
+  $(document).on('keydown', function(e){
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(tag === 'textarea' || tag === 'input') return;
+    if(e.key === '/'){
+      e.preventDefault();
+      splitSelectedToken();
+    }
+  });
+  
+    // Merge (join) the selected token with an adjacent token.
+  // dir: '+' = merge with following token (selected + next)
+  //      '-' = merge with preceding token (prev + selected)
+  function mergeSelectedToken(dir){
+    if(!selectedTokenId){ setStatus('Select a token first.'); return; }
+
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    const ints = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const ids = ints.map(t => t.id);
+    const selIdx = ids.indexOf(parseInt(selectedTokenId, 10));
+    if(selIdx === -1){ setStatus('Selected token not found.'); return; }
+
+    const neighborIdx = (dir === '+') ? selIdx + 1 : selIdx - 1;
+    if(neighborIdx < 0 || neighborIdx >= ids.length){
+      setStatus('No adjacent token to merge.');
+      return;
+    }
+
+    const selTok = ints[selIdx];
+    const nbTok  = ints[neighborIdx];
+
+    // Find their positions in parsed.tokens (global indices)
+    const gSelIdx = parsed.tokens.findIndex(t => t.id !== null && !t.isRange && !t.isEmpty && String(t.id) === String(selTok.id));
+    const gNbIdx  = parsed.tokens.findIndex(t => t.id !== null && !t.isRange && !t.isEmpty && String(t.id) === String(nbTok.id));
+    if(gSelIdx === -1 || gNbIdx === -1){ setStatus('Internal merge error: indices.'); return; }
+
+    // Build the merged token based on the selected token (keeps POS, head, deprel)
+    const merged = cloneToken(selTok);
+    if(dir === '+'){
+      merged.form = `${selTok.form} ${nbTok.form}`;
+      // Optional: derive lemma; here we keep selected lemma if present, else combined lowercase
+      merged.lemma = (selTok.lemma && selTok.lemma !== '_') ? selTok.lemma : `${selTok.form} ${nbTok.form}`.toLowerCase();
+    } else { // 'd'
+      merged.form = `${nbTok.form} ${selTok.form}`;
+      merged.lemma = (selTok.lemma && selTok.lemma !== '_') ? selTok.lemma : `${nbTok.form} ${selTok.form}`.toLowerCase();
+    }
+    // Head/deprel remain those of selected token
+    merged.head = selTok.head;
+    merged.deprel = selTok.deprel;
+
+    // Reattach dependents:
+    // Any token that had head == selTok.id or head == nbTok.id should now point to merged (selTok.id for now).
+    // We will renumber after replacing; then heads remap accordingly.
+    for(const t of parsed.tokens){
+      if(t.id !== null && !t.isRange && !t.isEmpty){
+        const h = String(t.head);
+        if(h === String(selTok.id) || h === String(nbTok.id)){
+          t.head = String(selTok.id); // temporarily set to selected's old ID; renumber will fix
+        }
+      }
+    }
+
+    // Replace the two tokens in parsed.tokens with the single merged token.
+    // Remove the neighbor first to keep indices consistent.
+    // If neighbor is before selected in the array, remove it first, then replace selected.
+    if(gNbIdx < gSelIdx){
+      parsed.tokens.splice(gNbIdx, 1);            // remove neighbor
+      parsed.tokens.splice(gSelIdx - 1, 1, merged); // replace selected at adjusted index
+    } else {
+      parsed.tokens.splice(gNbIdx, 1);            // remove neighbor
+      parsed.tokens.splice(gSelIdx, 1, merged);     // replace selected
+    }
+
+    // Renumber all integer tokens and remap heads accordingly
+    const updated = renumberIntegerTokens(parsed);
+
+    // After renumbering, the merged token has a new ID; reselect it:
+    // Find a token whose FORM matches merged.form near the original position.
+    // A simple way: locate by nearest index to original gSelIdx within integer tokens.
+    const updatedInts = updated.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    // Try matching by form; fallback to nearest index
+    let newMergedId = null;
+    for(const t of updatedInts){
+      if(t.form === merged.form){
+        newMergedId = t.id;
+        break;
+      }
+    }
+    if(newMergedId == null){
+      // fallback: use selIdx position in ints (bounded)
+      const fallback = updatedInts[Math.min(selIdx, updatedInts.length - 1)];
+      newMergedId = fallback ? fallback.id : null;
+    }
+
+    // Commit and update selection
+    commitParsed(updated, `Merged token ${selTok.id} with ${nbTok.id} → "${merged.form}"`);
+    if(newMergedId != null){
+      selectedTokenId = newMergedId;
+      // Apply highlight on the FORM row cell
+      // Recompute to select the new cell visually
+      const parsed2 = parseSingleConlluSentence($('#treeText').val() || '');
+      const toks2 = parsed2.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+      const colIdx = toks2.findIndex(t => String(t.id) === String(newMergedId));
+      $('#infoTable tr:nth-child(2) td').removeClass('token-selected');
+      if(colIdx !== -1){
+        const cell = $('#infoTable tr:nth-child(2) td').get(colIdx);
+        if(cell) $(cell).addClass('token-selected');
+      }
+    }
+  }
+
+  // Keyboard bindings: f (merge with following), d (merge with preceding)
+  $(document).on('keydown', function(e){
+    const tag = (e.target.tagName || '').toLowerCase();
+    if(tag === 'textarea' || tag === 'input') return;
+    if(!selectedTokenId) return;
+
+    const key = e.key.toLowerCase();
+    if(key === '+'){ e.preventDefault(); mergeSelectedToken('+'); return; }
+    if(key === '-'){ e.preventDefault(); mergeSelectedToken('-'); return; }
+  });
+  
+  // Keyboard shortcuts active when an edge is selected
+  $(document).on('keydown', function(e){
+    // If popover is visible, let Enter apply and Esc cancel (handled in popover chunk)
+    const popVisible = $('#edgePopover').is(':visible');
+
+    // Toggle help already handled elsewhere (H). Navigation handled elsewhere (< and >).
+    // Shortcuts here only apply when an edge is selected
+    if(!selectedEdge) return;
+
+    // Prevent interfering with typing in the textarea or inputs
+    const targetTag = (e.target.tagName || '').toLowerCase();
+    if(targetTag === 'textarea' || targetTag === 'input') return;
+
+    // Enter opens the popover for the selected edge
+    if(e.key === 'Enter' && !popVisible){
+      e.preventDefault();
+      openEdgePopover(e, { depId: selectedEdge.depId, headId: selectedEdge.headId, deprel: selectedEdge.deprel });
+      return;
+    }
+
+    // Map number keys 1–9 to quick-set deprel
+    if(KEY_REL_MAP[e.key]){
+      e.preventDefault();
+      const newRel = KEY_REL_MAP[e.key];
+      applyDependencyEdit(selectedEdge.depId, null, newRel);
+      // Update selectedEdge state with new deprel
+      selectedEdge.deprel = newRel;
+      return;
+    }
+
+        // Shift+Left/Right: move head with auto-skip (never self-head)
+    if(e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){
+      // Only act when an edge is selected and we're not typing in inputs/textarea
+      const tag = (e.target.tagName || '').toLowerCase();
+      if(!selectedEdge || tag === 'textarea' || tag === 'input') return;
+
+      e.preventDefault();
+      const direction = (e.key === 'ArrowLeft') ? 'left' : 'right';
+
+      // current selected edge must have a valid head
+      const curHeadId = selectedEdge.headId;
+      const depId     = selectedEdge.depId;
+
+      const nextHead = findNextLegalHeadFromCurrent(direction, depId, curHeadId);
+      if(nextHead == null){
+        setStatus(`No legal head to the ${direction}.`);
+        return;
+      }
+
+      // Apply edit (applyDependencyEdit validates cycles and writes back)
+      const ok = applyDependencyEdit(depId, nextHead, null);
+      if(ok){
+        selectedEdge.headId = String(nextHead);
+        setSelectedEdge(depId, selectedEdge.headId, selectedEdge.deprel);
+        setStatus(`Head → ${nextHead}`);
+      }
+      return;
+    }
+
+        // [ ] : move dependent left/right with auto-skip (Option 1)
+    if(e.key === '[' || e.key === ']'){
+      // Only act when an edge is selected and we're not typing in inputs/textarea
+      const targetTag = (e.target.tagName || '').toLowerCase();
+      if(!selectedEdge || targetTag === 'textarea' || targetTag === 'input') return;
+
+      e.preventDefault();
+      const direction = (e.key === '[') ? 'left' : 'right';
+      const nextDep = findNextValidDependent(direction, selectedEdge.depId);
+      if(nextDep == null){
+        setStatus(`No legal dependent to the ${direction}.`);
+        return;
+      }
+
+      // Transfer the selected edge to the new dependent (same head + deprel)
+      const ok = applyDependencyEdit(nextDep, parseInt(selectedEdge.headId, 10), selectedEdge.deprel);
+      if(ok){
+        setSelectedEdge(String(nextDep), selectedEdge.headId, selectedEdge.deprel);
+        setStatus(`Dependent → ${nextDep}`);
+      }
+      return;
+    }
+
+    // Esc: clear selection (or close popover if open)
+    if(e.key === 'Escape'){
+      e.preventDefault();
+      if(popVisible){
+        closeEdgePopover();
+      } else {
+        clearSelectedEdge();
+      }
+      return;
+    }
+  });
+  
+    // Open the dependency edit popover
+  function openEdgePopover(evt, edge){
+    const $pop = $('#edgePopover');
+    const depId = String(edge.depId);
+    const headId = String(edge.headId);
+    const rel = edge.deprel || '';
+
+    $('#popDependent').val(depId);
+    $('#popHead').val(headId);
+    $('#popRel').val(rel);
+    $('#popError').hide().text('');
+
+    // Position near the mouse, but keep inside depCanvas
+    const canvasRect = document.getElementById('depCanvas').getBoundingClientRect();
+    const x = Math.min(Math.max(evt.clientX - canvasRect.left, 8), canvasRect.width - 300);
+    const y = Math.min(Math.max(evt.clientY - canvasRect.top, 8), canvasRect.height - 180);
+    $pop.css({ left: x + 'px', top: y + 'px' }).show();
+
+    // Set selected state
+    setSelectedEdge(depId, headId, rel);
+  }
+
+  function closeEdgePopover(){
+    $('#edgePopover').hide();
+  }
+
+  // Apply/Cancel buttons
+  $('#popApply').on('click', function(){
+    const depId = $('#popDependent').val();
+    const headId = $('#popHead').val();
+    const rel = $('#popRel').val();
+
+    const ok = applyDependencyEdit(depId, headId, rel);
+    if(ok){
+      setSelectedEdge(depId, headId, rel);
+      closeEdgePopover();
+    } else {
+      $('#popError').show().text('Edit not applied. Check validation message in status bar.');
+    }
+  });
+
+  $('#popCancel').on('click', function(){
+    closeEdgePopover();
+  });
+
+  // Allow clicking FORM row cells to set Dependent or Head while popover is open
+  $('#infoTable').on('click', 'tr:nth-child(2) td', function(){
+    if(!$('#edgePopover').is(':visible')) return;
+    const cellIndex = $(this).index() - 1; // account for first TH cell
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const tok = toks[cellIndex];
+    if(!tok) return;
+
+    // If Dependent input is focused, set Dependent; else set Head
+    const activeId = document.activeElement && document.activeElement.id;
+    if(activeId === 'popDependent'){
+      $('#popDependent').val(tok.id);
+      setStatus(`Popover: set dependent to ${tok.id}`);
+    } else {
+      $('#popHead').val(tok.id);
+      setStatus(`Popover: set head to ${tok.id}`);
+    }
+  });
+
+  // Keyboard in popover: Enter applies, Esc cancels
+  $(document).on('keydown', function(e){
+    if(!$('#edgePopover').is(':visible')) return;
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      $('#popApply').click();
+    } else if(e.key === 'Escape'){
+      e.preventDefault();
+      $('#popCancel').click();
+    }
+  });
+  
+  function uposToClass(upos){
+    if(!upos) return 'upos-other';
+    const U = upos.toUpperCase();
+    if(U === 'VERB') return 'upos-VERB';
+    if(U === 'NOUN' || U === 'PROPN' || U === 'PRON') return 'upos-NOUN';
+    if(U === 'INTJ') return 'upos-INTJ';
+    if(U === 'ADV' || U === 'AUX' || U === 'COP') return 'upos-ADV';
+    return 'upos-other';
+  }
+
+  // Build analysis list: root, clausal dependents of root, and clause heads
+  function buildAnalysis(parsed){
+    const $list = $('#analysisList').empty();
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+
+    // Build an index by id
+    const byId = new Map();
+    for(const t of toks){
+      byId.set(String(t.id), t);
+    }
+    // Children map
+    const children = new Map();
+    for(const t of toks){
+      const h = t.head;
+      if(!children.has(h)) children.set(h, []);
+      children.get(h).push(t);
+    }
+
+    // Root token(s): deprel == 'root'
+        // Root token(s): deprel == 'root'
+    const roots = toks.filter(t => (t.deprel || '').split(':')[0] === 'root');
+    if(roots.length === 0){
+      $list.append($('<li/>').text('No root found.'));
+    } else {
+      for(const r of roots){
+        const $li = $('<li/>');
+        $li.html(`Root: ${r.id} - <i>${escapeHtml(r.form)}</i>`);
+        $list.append($li);
+      }
+    }
+
+    // Clausal dependents of the root(s)
+    const clausalDeps = [];
+    for(const r of roots){
+      const rChildren = children.get(String(r.id)) || [];
+      for(const ch of rChildren){
+        if(isClausalRel(ch.deprel)){
+          clausalDeps.push({ token: ch, rel: ch.deprel });
+        }
+      }
+    }
+    const $clausalLi = $('<li/>');
+    if(clausalDeps.length === 0){
+      $clausalLi.text('Clausal dependents of root: None.');
+    } else {
+      $clausalLi.text('Clausal dependents of root:');
+      const $ul = $('<ul/>');
+      for(const cd of clausalDeps){
+        const $ci = $('<li/>');
+        $ci.html(`${cd.token.id} - <i>${escapeHtml(cd.token.form)}</i> (${cd.rel})`);
+        $ul.append($ci);
+      }
+      $clausalLi.append($ul);
+    }
+    $list.append($clausalLi);
+
+    // Clause heads: tokens that head at least one clausal relation (any subtype)
+    const clauseHeads = [];
+    for(const t of toks){
+      const tChildren = children.get(String(t.id)) || [];
+      if(tChildren.some(child => isClausalRel(child.deprel))){
+        clauseHeads.push(t);
+      }
+    }
+    const $headsLi = $('<li/>');
+    if(clauseHeads.length === 0){
+      $headsLi.text('Clause heads: None.');
+    } else {
+      $headsLi.text('Clause heads:');
+      const $ul2 = $('<ul/>');
+      for(const h of clauseHeads){
+        const $hi = $('<li/>');
+        $hi.html(`${h.id} - <i>${escapeHtml(h.form)}</i> (${h.upos || ''})`);
+        $ul2.append($hi);
+      }
+      $headsLi.append($ul2);
+    }
+    $list.append($headsLi);
+  }
+
+  // Simple HTML escape for inserted text
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"'`=]/g, function(s){
+      return ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;', '`':'&#96;', '=':'&#61;'
+      })[s] || s;
+    });
+  }
+
+  // Status bar helper
+  function setStatus(msg){
+    $('#statusBar').text(`Status: ${msg}`);
+  }
+
+  // Navigation helpers
+  function navigateTo(index){
+    if(index < 0 || index >= trees.length){
+      setStatus('Reached boundary; no more trees in that direction.');
+      return;
+    }
+    currentIndex = index;
+    renderCurrentTree();
+    updateUIState();
+    setStatus(`Viewing tree ${currentIndex+1} of ${trees.length}.`);
+  }
+
+  function prevTree(){
+    if(currentIndex < 0) return;
+    saveCurrentEdits();
+    setStatus(`Saved edits to tree ${currentIndex+1}.`);
+    navigateTo(currentIndex - 1);
+  }
+
+  function nextTree(){
+    if(currentIndex < 0) return;
+    saveCurrentEdits();
+    setStatus(`Saved edits to tree ${currentIndex+1}.`);
+    navigateTo(currentIndex + 1);
+  }
+  
+    // Sync jump controls whenever a file is loaded or index changes
+  function updateJumpControls(){
+    const hasData = trees.length > 0 && currentIndex >= 0;
+    $('#jumpWrap').toggle(hasData);
+    if(!hasData) return;
+
+    // Set slider max and input max
+    $('#jumpInput').attr('max', trees.length).val(currentIndex + 1);
+    $('#jumpSlider').attr('max', trees.length).val(currentIndex + 1);
+  }
+
+  // Call updateJumpControls whenever UI state changes and on file load
+  // Add at the end of updateUIState():
+  // updateJumpControls();
+
+  // Number input: jump on Enter or blur
+  $('#jumpInput').on('change', function(){
+    const n = parseInt($(this).val(), 10);
+    if(Number.isNaN(n)) return;
+    const idx = Math.max(1, Math.min(trees.length, n)) - 1;
+    // Save current edits before jumping
+    saveCurrentEdits();
+    navigateTo(idx);
+    // Keep controls in sync
+    $('#jumpInput').val(idx + 1);
+    $('#jumpSlider').val(idx + 1);
+  });
+
+  // Slider: live jump on input
+  $('#jumpSlider').on('input', function(){
+    const n = parseInt($(this).val(), 10);
+    if(Number.isNaN(n)) return;
+    const idx = n - 1;
+    saveCurrentEdits();
+    navigateTo(idx);
+    $('#jumpInput').val(idx + 1);
+  });
+
+  // After file load (in reader.onload), after setting currentIndex and calling updateUIState/renderCurrentTree, also call:
+  // updateJumpControls();
+  // Event bindings
+  $('#prevBtn').on('click', prevTree);
+  $('#nextBtn').on('click', nextTree);
+
+  $('#helpBtn').on('click', function(){
+    $('#helpTab').toggle();
+    setStatus($('#helpTab').is(':visible') ? 'Help shown.' : 'Help hidden.');
+  });
+
+  $('#toggleEditor').on('click', function(){
+    editorVisible = !editorVisible;
+    $('#treeText').toggle(editorVisible);
+    $('#toggleEditor').text(editorVisible ? 'Hide Editor' : 'Show Editor');
+    setStatus(editorVisible ? 'Editor shown.' : 'Editor hidden.');
+  });
+
+  // Live update table/analysis when editing
+  $('#treeText').on('input', function(){
+    renderFromTextarea();
+  });
+
+  // Keyboard shortcuts
+  $(document).on('keydown', function(e){
+    // Record last key in status
+    let keyName = e.key;
+    if(e.key.length === 1 && e.shiftKey) keyName = 'Shift+' + e.key;
+    setStatus(`Key pressed: ${keyName}`);
+
+    // Toggle help with H/h
+    if(e.key === '?'){
+      $('#helpBtn').click();
+      return;
+    }
+
+    // Prev/Next with '<' and '>'
+    if(e.key === '<'){
+      // The '<' character typically requires Shift on comma, but we honor the literal
+      e.preventDefault();
+      prevTree();
+      return;
+    }
+    if(e.key === '>'){
+      e.preventDefault();
+      nextTree();
+      return;
+    }
+
+    // Export with Shift+X
+    if((e.key === 'X' || e.key === 'x') && e.shiftKey && e.ctrlKey){
+      e.preventDefault();
+      exportConllu();
+      return;
+    }
+  });
+
+  // Export all trees as a single .conllu file
+  function exportConllu(){
+    if(trees.length === 0){
+      setStatus('Nothing to export.');
+      return;
+    }
+    // Save current edits before exporting
+    if(currentIndex >= 0){
+      saveCurrentEdits();
+    }
+    const content = serializeAllTrees();
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'edited.conllu';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('Exported edited.conllu');
+  }
+
+})(jQuery);
+</script>
+</body>
+</html>
