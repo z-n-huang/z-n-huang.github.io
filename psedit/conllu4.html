@@ -152,12 +152,19 @@
       <li>&lt; : Previous sentence</li>
       <li>&gt; : Next sentence</li>
       <li>Ctrl+Shift+X : Export all trees to a .conllu file</li>
-      <li>H : Toggle Help</li>
+      <li>? (shift /) : Toggle Help</li>
+    </ul>
+	<ul>
+	<strong>Joining/splitting words (e.g. split <i>ill</i> to <i>i 'll"</i>)</strong>
+		<li><u>Be careful</u> - these are difficult to undo!</li>
+		<li>Click on word 1, press + (shift =): This joins w1 with the next word w2. The resulting word inherits the properties of w1.</li>
+		<li>Click on word 2, press - (next to +). This joins w2 with the previous word w1. The resulting word inherits the properties of w2.</li>
+		<li>Click on word 1, press /. You will be prompted to enter at least two words. The resulting words inherit the properties of w1.</li>
     </ul>
 	<ul>
 	<strong>Changing part of speech</strong>
 		<li>Click on a word.</li>
-		<li>Press n (noun), v (verb), j (adjective), m (adverb), p (particle).</li>
+		<li>Press n (noun), v (verb), j (adjective), a (adverb), d (discourse particle), x (AUX), p (ADP, i.e. preposition), m (PROPN, i.e. name).</li>
     </ul>
 	<ul>
 	<strong>Changing root of a sentence</strong>
@@ -169,7 +176,7 @@
 		<li>Click on the DEPREL label (the "pill").</li>
 		<li>1. Enter the values in the popup box, press "enter"/"Apply" to confirm; "escape"/"Cancel" to escape. OR</li>
 		<li>1a. Press Shift+left/right arrow to change its head.</li>
-		<li>1b. Press b (nsubj), o (obj), i (iobj), m (advmod), d (discourse), t (topic / "dislocated"), p (parataxis), c (ccomp), x (xcomp), a (advcl), l (acl:relcl), k (acl).</li>
+		<li>1b. Press b (nsubj), o (obj), i (iobj), m (advmod), d (discourse), t (topic / "dislocated"), p (parataxis), c (ccomp), x (xcomp), a (advcl), l (acl:relcl), k (acl), v (vocative).</li>
 	</ul><ul>
 	<strong>Adding a (visible) dependency (= changing a invisible dependency's head or deprel)</strong>
 	<li>Toggle "Show only highlighted relation" to show all relations.</li>
@@ -819,6 +826,7 @@
     'c': 'ccomp',
     'x': 'xcomp',
     'p': 'parataxis',
+	'v': 'vocative',
     'k': 'acl',
     'l': 'acl:relcl',
     'd': 'discourse',
@@ -1073,6 +1081,9 @@
     if(key === 'v'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'VERB'); return; }
     if(key === 'd'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'INTJ'); return; }
 	if(key === 'j'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADJ'); return; }
+	if(key === 'p'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADP'); return; }
+	if(key === 'x'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'AUX'); return; }
+	if(key === 'm'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'PROPN'); return; }
 	
     if(key === 'a'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADV'); return; }
   });
