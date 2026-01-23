@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,6 +118,33 @@
   outline-offset: -2px;
   background: #eef4ff;
 }
+
+/* Selected token highlight in FORM row */
+.token-selected {
+  outline: 2px solid #1d4ed8;
+  outline-offset: -2px;
+  background: #eef4ff;
+}
+
+/* Simple centered modal */
+#uposDialog {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+#uposDialogContent {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  width: 320px; max-width: 95vw;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+#uposHeader { padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: 700; }
+#uposBody   { padding: 12px; display: grid; gap: 8px; }
+#uposBody select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+#uposActions{ padding: 10px 12px; border-top: 1px solid #eee; display: flex; gap: 8px; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -164,7 +192,7 @@
 	<ul>
 	<strong>Changing part of speech</strong>
 		<li>Click on a word.</li>
-		<li>Press n (noun), v (verb), j (adjective), a (adverb), d (discourse particle), x (AUX), p (ADP, i.e. preposition), m (PROPN, i.e. name).</li>
+		<li>Press N (noun), V (verb), J (adjective), A (adverb), D (discourse particle), X (AUX), P (ADP, i.e. preposition), M (PROPN, i.e. name). (all are capitals, i.e. shift n, shift v, shift j, ...</li>
     </ul>
 	<ul>
 	<strong>Changing root of a sentence</strong>
@@ -277,6 +305,8 @@
   let editorVisible = true;
   // Currently selected edge (null or {depId, headId, deprel})
   let selectedEdge = null;
+
+  
 
   // Mark selection visually by adding a wrapping group with class, or toggling a class on label group + matching path
   function setSelectedEdge(depId, headId, deprel){
@@ -412,6 +442,102 @@
     // Currently selected token ID (integer) for token-level edits
   let selectedTokenId = null;
 
+  // Select a token by clicking the FORM row cell (second row)
+  $('#infoTable').on('click', 'tr:nth-child(2) td', function(){
+    const cellIndex = $(this).index() - 1; // skip the first header cell
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+    const tok = toks[cellIndex];
+    if(!tok) return;
+    selectedTokenId = tok.id;
+    $('#infoTable tr:nth-child(2) td').removeClass('token-selected');
+    $(this).addClass('token-selected');
+    setStatus(`Selected token ${tok.id}: ${tok.form} (${tok.upos || ''})`);
+  });
+
+  // Double-click a FORM cell to open the POS dialog immediately
+  $('#infoTable').on('dblclick', 'tr:nth-child(2) td', function(){
+    // Ensure selection is set from the single-click handler; if not, set now
+    if(!selectedTokenId){
+      const cellIndex = $(this).index() - 1;
+      const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+      const toks = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+      const tok = toks[cellIndex];
+      if(tok) selectedTokenId = tok.id;
+    }
+    openUPOSDialog();
+  });
+
+  // Button to open POS dialog
+  $('#posBtn').on('click', function(){
+    openUPOSDialog();
+  });
+
+  // Open/close modal helpers
+  function openUPOSDialog(){
+    if(!selectedTokenId){ setStatus('Select a token (click a word in the FORM row) before opening POS.'); return; }
+    const parsed = parseSingleConlluSentence($('#treeText').val() || '');
+    const tok = parsed.tokens.find(t => t.id !== null && String(t.id) === String(selectedTokenId));
+    if(tok && tok.upos){ $('#uposSelect').val(tok.upos); }
+    $('#uposDialog').css('display','flex');
+    setTimeout(() => $('#uposSelect').trigger('focus'), 0);
+  }
+  function closeUPOSDialog(){ $('#uposDialog').hide(); }
+
+  // Apply chosen UPOS to the selected token and re-render
+  function applyUPOSFromDialog(){
+    if(!selectedTokenId){ setStatus('Select a token first.'); return; }
+    const value = String($('#uposSelect').val() || '').toUpperCase();
+    const UD_UPOS = new Set(['ADJ','ADP','ADV','AUX','CCONJ','DET','INTJ','NOUN','NUM','PART','PRON','PROPN','PUNCT','SCONJ','SYM','VERB','X']);
+    if(!UD_UPOS.has(value)){ setStatus('Invalid UPOS. Choose from the UD list.'); return; }
+
+    const text = $('#treeText').val() || '';
+    const lines = text.replace(/\r\n/g, '\n').split('\n');
+    let changed = false;
+    for(let i=0; i<lines.length; i++){
+      const line = lines[i];
+      if(!line || line.startsWith('#')) continue;
+      const cols = line.split('\t');
+      if(cols.length < 10) continue;
+      if(cols[0] === String(selectedTokenId)){
+        cols[3] = value; // UPOS column
+        lines[i] = cols.join('\t');
+        changed = true;
+        break;
+      }
+    }
+    if(!changed){ setStatus(`No editable line found for token ${selectedTokenId}.`); return; }
+
+    $('#treeText').val(lines.join('\n'));
+    renderFromTextarea();
+    setStatus(`Set token ${selectedTokenId} UPOS=${value}`);
+    closeUPOSDialog();
+  }
+
+  // Bind modal buttons
+  $('#uposApply').on('click', applyUPOSFromDialog);
+  $('#uposCancel').on('click', closeUPOSDialog);
+
+  // Keyboard: P opens POS dialog; Enter/Esc inside dialog
+  $(document).on('keydown', function(e){
+    const tag = (e.target.tagName || '').toLowerCase();
+    // Don't interfere while typing in inputs/textarea except when dialog is open
+    const dialogVisible = $('#uposDialog').is(':visible');
+
+    // Inside dialog: Enter applies, Esc cancels
+    if(dialogVisible){
+      if(e.key === 'Enter'){ e.preventDefault(); applyUPOSFromDialog(); }
+      if(e.key === 'Escape'){ e.preventDefault(); closeUPOSDialog(); }
+      return;
+    }
+
+    // Global P to open POS dialog (when not typing elsewhere)
+    if(tag !== 'textarea' && tag !== 'input' && (e.key === 'q' || e.key === 'Q')){
+      e.preventDefault();
+      openUPOSDialog();
+    }
+  });
+  
   // Click on FORM row cell to select token
   $('#infoTable').on('click', 'tr:nth-child(2) td', function(){
     const cellIndex = $(this).index() - 1; // skip the row header TH
@@ -1076,16 +1202,16 @@
 
     if(!selectedTokenId) return;
 
-    const key = e.key.toLowerCase();
-    if(key === 'n'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'NOUN'); return; }
-    if(key === 'v'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'VERB'); return; }
-    if(key === 'd'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'INTJ'); return; }
-	if(key === 'j'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADJ'); return; }
-	if(key === 'p'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADP'); return; }
-	if(key === 'x'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'AUX'); return; }
-	if(key === 'm'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'PROPN'); return; }
+    const key = e.key;
+    if(key === 'N'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'NOUN'); return; }
+    if(key === 'V'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'VERB'); return; }
+    if(key === 'D'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'INTJ'); return; }
+	if(key === 'J'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADJ'); return; }
+	if(key === 'P'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADP'); return; }
+	if(key === 'X'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'AUX'); return; }
+	if(key === 'M'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'PROPN'); return; }
 	
-    if(key === 'a'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADV'); return; }
+    if(key === 'A'){ e.preventDefault(); setTokenUPOS(selectedTokenId, 'ADV'); return; }
   });
   
     // Split selected token into multiple words; POS stays same; extra words become compound dependents of the first
@@ -1679,5 +1805,38 @@
 
 })(jQuery);
 </script>
+<!-- UD POS modal -->
+<div id="uposDialog" style="display:none;">
+  <div id="uposDialogContent">
+    <div id="uposHeader">Set Part of Speech</div>
+    <div id="uposBody">
+      <label for="uposSelect">UPOS:</label>
+      <select id="uposSelect">
+        <option value="ADJ">ADJ</option>
+        <option value="ADP">ADP</option>
+        <option value="ADV">ADV</option>
+        <option value="AUX">AUX</option>
+        <option value="CCONJ">CCONJ</option>
+        <option value="DET">DET</option>
+        <option value="INTJ">INTJ</option>
+        <option value="NOUN">NOUN</option>
+        <option value="NUM">NUM</option>
+        <option value="PART">PART</option>
+        <option value="PRON">PRON</option>
+        <option value="PROPN">PROPN</option>
+        <option value="PUNCT">PUNCT</option>
+        <option value="SCONJ">SCONJ</option>
+        <option value="SYM">SYM</option>
+        <option value="VERB">VERB</option>
+        <option value="X">X</option>
+      </select>
+    </div>
+    <div id="uposActions">
+      <button id="uposApply">Apply</button>
+      <button id="uposCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
