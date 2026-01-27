@@ -181,9 +181,6 @@
       <li>&gt; : Next sentence</li>
       <li>Ctrl+Shift+X : Export all trees to a .conllu file</li>
       <li>? (shift /) : Toggle Help</li>
-	  <li>K (shift K) : Add a comment to the textbox, indicating this tree was skipped for language reasons (e.g. Malay/Chinese sentence)</li>
-	  <li>L (shift L) : Add a comment to the textbox, indicating this tree was skipped for lack of critical linguistic features (e.g. mojibake, list of phone numbers, ...)</li>
-	  
     </ul>
 	<ul>
 	<strong>Joining/splitting words (e.g. split <i>ill</i> to <i>i 'll"</i>)</strong>
@@ -475,56 +472,6 @@
   $('#posBtn').on('click', function(){
     openUPOSDialog();
   });
-
-
-  // Append a tag (e.g., "[skip_language]") to the second comment line ("#" line) of the current block
-	function addSkipTagToSecondComment(tag){
-	  const text = $('#treeText').val() || '';
-	  const lines = text.replace(/\r\n/g, '\n').split('\n');
-
-	  // Collect indices of comment lines (start with '#')
-	  const commentIdxs = [];
-	  for(let i=0; i<lines.length; i++){
-		const s = lines[i].trim();
-		if(s.startsWith('#')) commentIdxs.push(i);
-	  }
-
-	  // If we have a second comment line, append the tag there (if not already present)
-	  if(commentIdxs.length >= 2){
-		const i2 = commentIdxs[1];
-		const line = lines[i2];
-		if(!line.includes(tag)){
-		  // Append with a space separator
-		  lines[i2] = line + (/\s$/.test(line) ? '' : ' ') + tag;
-		  $('#treeText').val(lines.join('\n'));
-		  renderFromTextarea();
-		  setStatus(`Added ${tag} to second comment line.`);
-		} else {
-		  setStatus(`Tag ${tag} already present on second comment line.`);
-		}
-		return;
-	  }
-
-	  // If only one comment line exists, insert a new second comment line right after it
-	  if(commentIdxs.length === 1){
-		const i1 = commentIdxs[0];
-		const newLine = `# ${tag}`;
-		lines.splice(i1 + 1, 0, newLine);
-		$('#treeText').val(lines.join('\n'));
-		renderFromTextarea();
-		setStatus(`Inserted new second comment line with ${tag}.`);
-		return;
-	  }
-
-	  // If no comment lines, insert a new comment line at the top
-	  // (This becomes the first comment; there is no second line to append to.)
-	  const newLineTop = `# ${tag}`;
-	  lines.unshift(newLineTop);
-	  $('#treeText').val(lines.join('\n'));
-	  renderFromTextarea();
-	  setStatus(`No comment lines found. Inserted ${tag} at top.`);
-	}
-
 
   // Open/close modal helpers
   function openUPOSDialog(){
@@ -1235,27 +1182,6 @@
       if(cell) $(cell).addClass('token-selected');
     }
   }
-	// Shift+K => add [skip_language] ; Shift+L => add [skip_content]
-	$(document).on('keydown', function(e){
-	  // Avoid interfering with typing in inputs/textarea
-	  const tag = (e.target.tagName || '').toLowerCase();
-	  const dialogOpen = $('#uposDialog').is(':visible'); // ignore POS dialog if you have it
-	  if(tag === 'input' || tag === 'textarea' || dialogOpen) return;
-
-	  // Shift+K
-	  if(e.shiftKey && (e.key === 'K')){
-		e.preventDefault();
-		addSkipTagToSecondComment('[skip_language]');
-		return;
-	  }
-
-	  // Shift+L
-	  if(e.shiftKey && (e.key === 'L')){
-		e.preventDefault();
-		addSkipTagToSecondComment('[skip_content]');
-		return;
-	  }
-	});
 
   // Keyboard binding: r makes the selected token the root
   $(document).on('keydown', function(e){
