@@ -38,7 +38,7 @@ Some specific topics that I have worked on:
 + cross-linguistic differences in whether ungrammatical sentences sound bad or surprisingly OK (i.e. "grammaticality illusions").
 + Singapore English and how certain aspects of its grammar might be traced (or not!) to adstrate languages like English, Chinese, and Malay varieties.
 
-My CV can be found [here](https://z-n-huang.github.io/files/cv_Huang_Jan2025.pdf).
+My CV can be found [here](https://z-n-huang.github.io/files/cv_Huang_Dec2025.pdf).
 
 Collaboration and supervision
 ======
