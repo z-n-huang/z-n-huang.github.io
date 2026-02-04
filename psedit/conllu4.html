@@ -150,6 +150,8 @@
 <body>
   <header>
     <input id="fileInput" type="file" accept=".conllu,.txt" />
+	<!-- Export button -->
+<button id="exportAllBtn" title="Export all trees (Ctrl+Shift+X)">Export all trees</button>
     <div id="controls">
       <button id="prevBtn" disabled>Prev (<)</button>
       <button id="nextBtn" disabled>Next (>)</button>
@@ -279,7 +281,7 @@
 	
 	<div id="depControls" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
     <label style="display:inline-flex;align-items:center;gap:6px;">
-      <input id="toggleHighlights" type="checkbox" checked />
+      <input id="toggleHighlights" type="checkbox"  />
       Show only highlighted relations
     </label>
     <span id="depHint" style="color:#666;font-size:12px;">
@@ -360,7 +362,7 @@
   ]);
   const ADV_LEMMAS = new Set(['already', 'also']); // lemma-based highlight
 
-  let showOnlyHighlights = true; // toggled by checkbox
+  let showOnlyHighlights = false; // toggled by checkbox
 
   function deprelCategory(deprel, token) {
     const base = (deprel || '').split(':')[0];
@@ -1802,6 +1804,47 @@
   // Event bindings
   $('#prevBtn').on('click', prevTree);
   $('#nextBtn').on('click', nextTree);
+  
+  // Click: export all trees (same as Ctrl+Shift+X)
+	$('#exportAllBtn').on('click', function(){
+	  // Save current edits to the current tree before exporting
+	  if (typeof saveCurrentEdits === 'function') saveCurrentEdits();
+	  if (typeof exportConllu === 'function') {
+		exportConllu();
+		setStatus('Export started (via button).');
+	  } else {
+		console.error('exportConllu() not found.');
+		setStatus('Export function not found.');
+	  }
+	});
+
+	// Keyboard: Ctrl+Shift+X also triggers export
+	$(document).on('keydown', function(e){
+	  // Ignore when typing in inputs/textarea
+	  const tag = (e.target.tagName || '').toLowerCase();
+	  if (tag === 'input' || tag === 'textarea') return;
+
+	  if (e.ctrlKey && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
+		e.preventDefault();
+		if (typeof saveCurrentEdits === 'function') saveCurrentEdits();
+		if (typeof exportConllu === 'function') {
+		  exportConllu();
+		  setStatus('Export started (Ctrl+Shift+X).');
+		} else {
+		  console.error('exportConllu() not found.');
+		  setStatus('Export function not found.');
+		}
+	  }
+	});
+
+	// Optional: hide the button until a file is loaded
+	function updateJumpControls(){ /* keep your existing code here */ }
+	function updateUIState(){
+	  // Keep your existing UI state code, then toggle button based on data availability
+	  const hasData = trees && trees.length > 0 && currentIndex >= 0;
+	  $('#exportAllBtn').prop('disabled', !hasData);
+	  // If you already have updateUIState defined, just add the line above to it.
+	}
 
   $('#helpBtn').on('click', function(){
     $('#helpTab').toggle();
