@@ -7,12 +7,16 @@ author_profile: true
 
 Social science is social
 --------
++ Research Associate: Mohamed Hafiz
 + Current undergraduate student RAs:
-  + Firdaus Moner
-  + Joel Tan
+  + Hu Man Keat
+  + Rachelle Quek
+  + Cheryl Poh
 + Alumni:
-  + Postdoc: [Serene Siow](https://siowserene.carrd.co/) (postdoc)
+  + Postdoc: [Serene Siow](https://siowserene.carrd.co/)
   + RAs
+	+ Firdaus Moner
+	+ Joel Tan
     + Mannfred Tan
     + Spencer Lim
     + Wong Zi Shu

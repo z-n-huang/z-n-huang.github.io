@@ -150,8 +150,6 @@
 <body>
   <header>
     <input id="fileInput" type="file" accept=".conllu,.txt" />
-	<!-- Export button -->
-<button id="exportAllBtn" title="Export all trees (Ctrl+Shift+X)">Export all trees</button>
     <div id="controls">
       <button id="prevBtn" disabled>Prev (<)</button>
       <button id="nextBtn" disabled>Next (>)</button>
@@ -183,9 +181,6 @@
       <li>&gt; : Next sentence</li>
       <li>Ctrl+Shift+X : Export all trees to a .conllu file</li>
       <li>? (shift /) : Toggle Help</li>
-	  <li>K (shift K) : Add a comment to the textbox, indicating this tree was skipped for language reasons (e.g. Malay/Chinese sentence)</li>
-	  <li>L (shift L) : Add a comment to the textbox, indicating this tree was skipped for lack of critical linguistic features (e.g. mojibake, list of phone numbers, ...)</li>
-	  
     </ul>
 	<ul>
 	<strong>Joining/splitting words (e.g. split <i>ill</i> to <i>i 'll"</i>)</strong>
@@ -281,7 +276,7 @@
 	
 	<div id="depControls" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
     <label style="display:inline-flex;align-items:center;gap:6px;">
-      <input id="toggleHighlights" type="checkbox"  />
+      <input id="toggleHighlights" type="checkbox" checked />
       Show only highlighted relations
     </label>
     <span id="depHint" style="color:#666;font-size:12px;">
@@ -362,7 +357,7 @@
   ]);
   const ADV_LEMMAS = new Set(['already', 'also']); // lemma-based highlight
 
-  let showOnlyHighlights = false; // toggled by checkbox
+  let showOnlyHighlights = true; // toggled by checkbox
 
   function deprelCategory(deprel, token) {
     const base = (deprel || '').split(':')[0];
@@ -477,56 +472,6 @@
   $('#posBtn').on('click', function(){
     openUPOSDialog();
   });
-
-
-  // Append a tag (e.g., "[skip_language]") to the second comment line ("#" line) of the current block
-	function addSkipTagToSecondComment(tag){
-	  const text = $('#treeText').val() || '';
-	  const lines = text.replace(/\r\n/g, '\n').split('\n');
-
-	  // Collect indices of comment lines (start with '#')
-	  const commentIdxs = [];
-	  for(let i=0; i<lines.length; i++){
-		const s = lines[i].trim();
-		if(s.startsWith('#')) commentIdxs.push(i);
-	  }
-
-	  // If we have a second comment line, append the tag there (if not already present)
-	  if(commentIdxs.length >= 2){
-		const i2 = commentIdxs[1];
-		const line = lines[i2];
-		if(!line.includes(tag)){
-		  // Append with a space separator
-		  lines[i2] = line + (/\s$/.test(line) ? '' : ' ') + tag;
-		  $('#treeText').val(lines.join('\n'));
-		  renderFromTextarea();
-		  setStatus(`Added ${tag} to second comment line.`);
-		} else {
-		  setStatus(`Tag ${tag} already present on second comment line.`);
-		}
-		return;
-	  }
-
-	  // If only one comment line exists, insert a new second comment line right after it
-	  if(commentIdxs.length === 1){
-		const i1 = commentIdxs[0];
-		const newLine = `# ${tag}`;
-		lines.splice(i1 + 1, 0, newLine);
-		$('#treeText').val(lines.join('\n'));
-		renderFromTextarea();
-		setStatus(`Inserted new second comment line with ${tag}.`);
-		return;
-	  }
-
-	  // If no comment lines, insert a new comment line at the top
-	  // (This becomes the first comment; there is no second line to append to.)
-	  const newLineTop = `# ${tag}`;
-	  lines.unshift(newLineTop);
-	  $('#treeText').val(lines.join('\n'));
-	  renderFromTextarea();
-	  setStatus(`No comment lines found. Inserted ${tag} at top.`);
-	}
-
 
   // Open/close modal helpers
   function openUPOSDialog(){
@@ -1237,27 +1182,6 @@
       if(cell) $(cell).addClass('token-selected');
     }
   }
-	// Shift+K => add [skip_language] ; Shift+L => add [skip_content]
-	$(document).on('keydown', function(e){
-	  // Avoid interfering with typing in inputs/textarea
-	  const tag = (e.target.tagName || '').toLowerCase();
-	  const dialogOpen = $('#uposDialog').is(':visible'); // ignore POS dialog if you have it
-	  if(tag === 'input' || tag === 'textarea' || dialogOpen) return;
-
-	  // Shift+K
-	  if(e.shiftKey && (e.key === 'K')){
-		e.preventDefault();
-		addSkipTagToSecondComment('[skip_language]');
-		return;
-	  }
-
-	  // Shift+L
-	  if(e.shiftKey && (e.key === 'L')){
-		e.preventDefault();
-		addSkipTagToSecondComment('[skip_content]');
-		return;
-	  }
-	});
 
   // Keyboard binding: r makes the selected token the root
   $(document).on('keydown', function(e){
@@ -1804,47 +1728,6 @@
   // Event bindings
   $('#prevBtn').on('click', prevTree);
   $('#nextBtn').on('click', nextTree);
-  
-  // Click: export all trees (same as Ctrl+Shift+X)
-	$('#exportAllBtn').on('click', function(){
-	  // Save current edits to the current tree before exporting
-	  if (typeof saveCurrentEdits === 'function') saveCurrentEdits();
-	  if (typeof exportConllu === 'function') {
-		exportConllu();
-		setStatus('Export started (via button).');
-	  } else {
-		console.error('exportConllu() not found.');
-		setStatus('Export function not found.');
-	  }
-	});
-
-	// Keyboard: Ctrl+Shift+X also triggers export
-	$(document).on('keydown', function(e){
-	  // Ignore when typing in inputs/textarea
-	  const tag = (e.target.tagName || '').toLowerCase();
-	  if (tag === 'input' || tag === 'textarea') return;
-
-	  if (e.ctrlKey && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
-		e.preventDefault();
-		if (typeof saveCurrentEdits === 'function') saveCurrentEdits();
-		if (typeof exportConllu === 'function') {
-		  exportConllu();
-		  setStatus('Export started (Ctrl+Shift+X).');
-		} else {
-		  console.error('exportConllu() not found.');
-		  setStatus('Export function not found.');
-		}
-	  }
-	});
-
-	// Optional: hide the button until a file is loaded
-	function updateJumpControls(){ /* keep your existing code here */ }
-	function updateUIState(){
-	  // Keep your existing UI state code, then toggle button based on data availability
-	  const hasData = trees && trees.length > 0 && currentIndex >= 0;
-	  $('#exportAllBtn').prop('disabled', !hasData);
-	  // If you already have updateUIState defined, just add the line above to it.
-	}
 
   $('#helpBtn').on('click', function(){
     $('#helpTab').toggle();

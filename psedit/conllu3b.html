@@ -534,6 +534,64 @@ function setParsedCurrent(tokens, comments) {
   setStatus('Applied edits to current sentence.');
 }
 
+// Make newRootId the ROOT: HEAD=0, DEPREL=root.
+// The old root (if any) becomes DEPREL="sth" with HEAD=newRootId.
+function rerootTree(newRootId, formerRootDeprel = 'sth') {
+  if (currentIndex < 0 || !newRootId) return;
+  const lines = (trees[currentIndex] || '').split('\n');
+
+  let selIdx = -1, rootIdx = -1;
+  let selCols = null, rootCols = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    if (!raw || raw.startsWith('#')) continue;
+    const cols = raw.indexOf('\t') !== -1 ? raw.split('\t') : raw.trim().split(/ {2,}|\t/);
+    if (cols.length < 10) continue;
+    const id = cols[0];
+    if (id.includes('-') || id.includes('.')) continue;
+
+    const deprel = (cols[7] || '').toLowerCase();
+    if (id === String(newRootId)) { selIdx = i; selCols = cols; }
+    if (deprel === 'root') { rootIdx = i; rootCols = cols; }
+  }
+
+  if (selIdx === -1 || !selCols) return;
+
+  // If already root, nothing to do
+  if ((selCols[7] || '').toLowerCase() === 'root' && String(selCols[6]) === '0') {
+    $('#status').text(`Token ${newRootId} is already ROOT.`);
+    return;
+  }
+
+  // Demote old root under new root
+  if (rootIdx !== -1 && rootIdx !== selIdx && rootCols) {
+    rootCols[6] = String(newRootId);
+    rootCols[7] = formerRootDeprel;
+    lines[rootIdx] = rootCols.slice(0, 10).join('\t');
+  }
+
+  // Promote selected as new root
+  selCols[6] = '0';
+  selCols[7] = 'root';
+  lines[selIdx] = selCols.slice(0, 10).join('\t');
+
+  const newTree = lines.join('\n');
+  trees[currentIndex] = newTree;
+  $('#treeBox').val(newTree);
+  // Refresh UI
+  if (typeof renderPosGrid === 'function') renderPosGrid();
+  if (typeof renderDependencySummary === 'function') renderDependencySummary();
+  $('#status').text(`Rerooted on token ${newRootId}`);
+}
+// Select a token by clicking any token/POS cell
+$('#posGrid').on('click', 'td[data-token-id]', function(e) {
+  const id = $(this).attr('data-token-id');
+  if (!id) return;
+  selectedTokenId = id;          // remember the clicked word
+  $('#status').text(`Selected token ${id}. Press 'r' to make it ROOT.`);
+});
+
 function buildLevel1Heads(tokens) {
   const CLAUSAL_LEVEL1_BASES = new Set(['ccomp','xcomp','advcl','acl','parataxis']);
   const map = new Map();
@@ -743,6 +801,7 @@ function buildLevel1Heads(tokens) {
       return;
     }
   });
+
 
   // Initial UI state
   displayCurrentTree();
