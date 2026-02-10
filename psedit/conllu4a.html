@@ -152,14 +152,12 @@
     <input id="fileInput" type="file" accept=".conllu,.txt" />
 	<!-- Export button -->
 <button id="exportAllBtn" title="Export all trees (Ctrl+Shift+X)">Export all trees</button>
-<button id="saveAsBtn" title="Choose a file to save to">Specify file for autosave</button>
     <div id="controls">
       <button id="prevBtn" disabled>Prev (<)</button>
       <button id="nextBtn" disabled>Next (>)</button>
       <button id="helpBtn">Help (?)</button>
-      <!--span id="indexInfo">No file loaded</span-->
+      <span id="indexInfo">No file loaded</span>
     </div>
-	<!-- Autosave controls -->
 	<!-- Jump-to-tree roller -->
 <div id="jumpWrap" style="display:flex;align-items:center;gap:8px;">
   <label for="jumpInput">Go to:</label>
@@ -172,7 +170,7 @@
     <strong>Instructions</strong>
     <ul>
       <li>Use the file picker to load a CoNLL-U file (multiple sentences/trees are supported).</li>
-      <li>Use Prev/Next buttons or press &lt; and &gt; keys to navigate sentences. Pressing these keys will also save the current set of trees to an external file; if no such file is specified, the trees are dumped into the browser's local storage (use at your own risk!)</li>
+      <li>Use Prev/Next buttons or press &lt; and &gt; keys to navigate sentences.</li>
       <li>Edits in the textbox are automatically saved to the current tree when you navigate.</li>
       <li>Use the “Hide/Show Editor” toggle to show or hide the editable tree textbox.</li>
       <li>The table and analysis update automatically based on the current textbox content.</li>
@@ -316,108 +314,7 @@
   // Currently selected edge (null or {depId, headId, deprel})
   let selectedEdge = null;
 
-  // ---- Autosave globals ----
-	let autoSaveEnabled = true;
-	let fileHandle = null;                // persistent handle for writing back to disk (Chromium only)
-	let autoSaveTimer = null;             // debounce timer
-	const AUTO_SAVE_DEBOUNCE_MS = 400;    // wait briefly to batch keystrokes
-	const LS_KEY = 'conllu_autosave_snapshot_v1';  // localStorage fallback key
-
-	// Detect File System Access API support
-	const hasFSAccess = !!(window.showSaveFilePicker || (window.chooseFileSystemEntries)); // legacy flag for older Edge
-
-	// Serialize all trees (use your own if you already have one)
-	function serializeAllTrees(){
-	  if (!Array.isArray(trees)) return '';
-	  return trees.map(t => (t.raw || '').replace(/\s+$/,'') + '\n\n').join('').replace(/\n\n$/,'\n');
-	}
-
-	// Write to disk using the file handle
-	async function writeToHandle(content){
-	  if(!fileHandle) throw new Error('No file handle set.');
-	  // Chrome/Edge
-	  if (fileHandle.createWritable) {
-		const writable = await fileHandle.createWritable();
-		await writable.write(content);
-		await writable.close();
-	  } else if (window.FileSystemFileHandle && fileHandle.getFile) {
-		// very old implementations aren’t supported here; advise upgrading
-		throw new Error('Unsupported File System Access implementation.');
-	  }
-	}
-
-	// Ask user where to save (first time)
-	async function pickSaveLocation(){
-	  if(!hasFSAccess){
-		setStatus('File System Access API not supported in this browser. Falling back to localStorage autosave.');
-		return null;
-	  }
-	  try {
-		const opts = {
-		  suggestedName: 'edited.conllu',
-		  types: [{ description: 'CoNLL-U', accept: { 'text/plain': ['.conllu', '.txt'] } }]
-		};
-		// showSaveFilePicker is modern
-		if (window.showSaveFilePicker) {
-		  const handle = await window.showSaveFilePicker(opts);
-		  return handle;
-		}
-	  } catch (err){
-		setStatus('Save cancelled.');
-	  }
-	  return null;
-	}
-
-	// Debounced autosave entry point
-	function scheduleAutoSave(){
-	  if(autoSaveTimer) clearTimeout(autoSaveTimer);
-	  autoSaveTimer = setTimeout(doAutoSave, AUTO_SAVE_DEBOUNCE_MS);
-	}
-
-	async function doAutoSave(){
-	  const content = serializeAllTrees();
-	  // 1) Try writing to disk if we have a handle and autosave is enabled
-	  if(autoSaveEnabled && fileHandle && hasFSAccess){
-		try {
-		  await writeToHandle(content);
-		  setStatus('Autosaved to file.');
-		  return;
-		} catch(err){
-		  console.error(err);
-		  setStatus('Autosave to file failed; falling back to localStorage.');
-		}
-	  }
-	  // 2) Fallback: save snapshot to localStorage
-	  try {
-		localStorage.setItem(LS_KEY, content);
-		setStatus('Autosaved to browser (localStorage).');
-	  } catch(err){
-		console.error(err);
-		setStatus('Autosave failed (localStorage quota?).');
-	  }
-	}
-
-	// Optionally offer to restore last local snapshot on load
-	function maybeRestoreLocalSnapshot(){
-	  const snap = localStorage.getItem(LS_KEY);
-	  if(!snap) return;
-	  // Simple prompt to restore
-	  if(confirm('Restore last autosaved session from this browser?')){
-		// If you maintain trees[] structure, split back into trees
-		trees = splitConlluIntoTrees(snap);
-		if(trees.length > 0){
-		  currentIndex = 0;
-		  updateUIState();
-		  renderCurrentTree();
-		  setStatus('Restored last session from localStorage.');
-		} else {
-		  // Fallback: just drop content into textarea
-		  $('#treeText').val(snap);
-		  renderFromTextarea();
-		  setStatus('Restored last session into editor.');
-		}
-	  }
-	}
+  
 
   // Mark selection visually by adding a wrapping group with class, or toggling a class on label group + matching path
   function setSelectedEdge(depId, headId, deprel){
@@ -755,8 +652,6 @@
       setStatus(`Loaded ${trees.length} trees.`);
       updateUIState();
       renderCurrentTree();
-	  // After file load completes and UI is ready
-      initAutoSaveUI(); // <-- add this call
     };
     reader.readAsText(file, 'utf-8');
   });
@@ -920,7 +815,6 @@
     $('#treeText').val(text);
     renderFromTextarea(); // should call buildInfoTable + drawDependenciesBelow via your hook
     if(statusMsg) setStatus(statusMsg);
-	scheduleAutoSave();
   }
 
   // Clone a token object (shallow, columns only)
@@ -1928,52 +1822,12 @@
     $('#jumpInput').val(idx + 1);
   });
 
-  // Autosave whenever the editor textarea changes
-	$('#treeText').on('input', function(){
-	  scheduleAutoSave();
-	});
-
   // After file load (in reader.onload), after setting currentIndex and calling updateUIState/renderCurrentTree, also call:
   // updateJumpControls();
   // Event bindings
   $('#prevBtn').on('click', prevTree);
   $('#nextBtn').on('click', nextTree);
   
-  // "Save As…" picks a destination file and performs an immediate save
-	$('#saveAsBtn').on('click', async function(){
-	  if(!hasFSAccess){
-		setStatus('This browser does not support saving directly to disk. Autosave will use localStorage only.');
-		// Still do an immediate localStorage save
-		await doAutoSave();
-		return;
-	  }
-	  const handle = await pickSaveLocation();
-	  if(handle){
-		fileHandle = handle;
-		// Try to save immediately
-		await doAutoSave();
-		setStatus('Save location set. Autosave will write to this file.');
-	  }
-	});
-
-	// Toggle autosave
-	$('#autoSaveToggle').on('change', function(){
-	  autoSaveEnabled = $(this).is(':checked');
-	  setStatus(autoSaveEnabled ? 'Autosave enabled.' : 'Autosave disabled.');
-	  if(autoSaveEnabled){
-		// Save current state right away if we already have a file handle; otherwise it will use localStorage
-		scheduleAutoSave();
-	  }
-	});
-
-	// Call this once after the page initializes to show/hide controls appropriately
-	function initAutoSaveUI(){
-	  // If you want the toggle default ON, uncomment line below:
-	  // $('#autoSaveToggle').prop('checked', true).trigger('change');
-	  // Offer to restore previous session
-	  maybeRestoreLocalSnapshot();
-	}
-
   // Click: export all trees (same as Ctrl+Shift+X)
 	$('#exportAllBtn').on('click', function(){
 	  // Save current edits to the current tree before exporting
@@ -2050,13 +1904,11 @@
       // The '<' character typically requires Shift on comma, but we honor the literal
       e.preventDefault();
       prevTree();
-	  doAutoSave();
       return;
     }
     if(e.key === '>'){
       e.preventDefault();
       nextTree();
-	  doAutoSave();
       return;
     }
 
