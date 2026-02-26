@@ -200,7 +200,10 @@
 	<ul>
 	<strong>Changing part of speech</strong>
 		<li>Click on a word.</li>
-		<li>Press N (noun), V (verb), J (adjective), A (adverb), D (discourse particle), X (AUX), P (ADP, i.e. preposition), M (PROPN, i.e. name). (all are capitals, i.e. shift n, shift v, shift j, ...</li>
+		<li>Press N (noun, NOUN), V (verb, VERB), J (adjective, ADJ), A (adverb, ADV), D (discourse particle, INTJ), X (AUX), P (ADP, i.e. preposition), M (PROPN, i.e. name). (all are capitals, i.e. shift n, shift v, shift j, ...</li>
+		<ul>
+			<li>ADV, ADJ, and INTJ are closely associated with the deprels "advmod", "amod", "discourse". Therefore, pressing A, J, and D will actually not only change the POS, but also the deprel, EXCEPT when the existing deprel is "root" (in this case, the POS will change but the deprel will stay as "root").
+		</ul>
     </ul>
 	<ul>
 	<strong>Changing root of a sentence</strong>
