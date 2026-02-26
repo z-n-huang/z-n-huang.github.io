@@ -161,6 +161,7 @@
     </div>
 	<!-- Autosave controls -->
 	<!-- Jump-to-tree roller -->
+<span id="treeLabel" style="margin-left:8px; font-weight:600;">Tree —</span>
 <div id="jumpWrap" style="display:flex;align-items:center;gap:8px;">
   <label for="jumpInput">Go to:</label>
   <input id="jumpInput" type="number" min="1" value="1" style="width:80px;" />
@@ -755,6 +756,7 @@
       setStatus(`Loaded ${trees.length} trees.`);
       updateUIState();
       renderCurrentTree();
+	  updateTreeLabel(); 
 	  // After file load completes and UI is ready
       initAutoSaveUI(); // <-- add this call
     };
@@ -1386,6 +1388,121 @@
 		addSkipTagToSecondComment('[skip_content]');
 		return;
 	  }
+	  
+	  // Shift+D (particle)
+	  if (e.shiftKey && e.key === 'D') {
+		e.preventDefault();
+		if (!selectedTokenId) {
+		  setStatus('Select a word (FORM row) first, then press Shift+D.');
+		  return;
+		}
+
+		// Parse the current block to check the token’s existing DEPREL
+		const text = $('#treeText').val() || '';
+		const parsed = parseSingleConlluSentence(text);
+		const tok = parsed.tokens.find(t => t.id !== null && String(t.id) === String(selectedTokenId));
+		if(!tok){ setStatus('Selected token not found.'); return; }
+
+		// 1) Change POS to INTJ
+		const okPOS = (typeof setTokenUPOS === 'function')
+		  ? setTokenUPOS(selectedTokenId, 'INTJ')
+		  : false;
+
+		// 2) Change DEPREL to discourse unless current is root
+		let okRel = false;
+		const baseRel = (tok.deprel || '').split(':')[0];
+		if(baseRel !== 'root'){
+		  okRel = (typeof applyDependencyEdit === 'function')
+			? applyDependencyEdit(selectedTokenId, null, 'discourse')
+			: false;
+		} else {
+		  setStatus('DEPREL is root; leaving it unchanged.');
+		}
+
+		// Combined status
+		if (okPOS || okRel) {
+		  setStatus(`Token ${selectedTokenId}: POS=INTJ${baseRel !== 'root' ? '; DEPREL=discourse' : ''}`);
+		} else {
+		  setStatus('No change applied (already INTJ / discourse or edit blocked).');
+		}
+	  }
+	  
+	  // Shift+A (Adverb)
+	  if (e.shiftKey && e.key === 'A') {
+		e.preventDefault();
+		if (!selectedTokenId) {
+		  setStatus('Select a word (FORM row) first, then press Shift+A.');
+		  return;
+		}
+
+		// Parse the current block to check the token’s existing DEPREL
+		const text = $('#treeText').val() || '';
+		const parsed = parseSingleConlluSentence(text);
+		const tok = parsed.tokens.find(t => t.id !== null && String(t.id) === String(selectedTokenId));
+		if(!tok){ setStatus('Selected token not found.'); return; }
+
+		// 1) Change POS to ADV
+		const okPOS = (typeof setTokenUPOS === 'function')
+		  ? setTokenUPOS(selectedTokenId, 'ADV')
+		  : false;
+
+		// 2) Change DEPREL to discourse unless current is root
+		let okRel = false;
+		const baseRel = (tok.deprel || '').split(':')[0];
+		if(baseRel !== 'root'){
+		  okRel = (typeof applyDependencyEdit === 'function')
+			? applyDependencyEdit(selectedTokenId, null, 'advmod')
+			: false;
+		} else {
+		  setStatus('DEPREL is root; leaving it unchanged.');
+		}
+
+		// Combined status
+		if (okPOS || okRel) {
+		  setStatus(`Token ${selectedTokenId}: POS=INTJ${baseRel !== 'root' ? '; DEPREL=advmod' : ''}`);
+		} else {
+		  setStatus('No change applied (already ADV / advmod or edit blocked).');
+		}
+	  }
+	  
+	  // Shift+J (adjective)
+	  if (e.shiftKey && e.key === 'J') {
+		e.preventDefault();
+		if (!selectedTokenId) {
+		  setStatus('Select a word (FORM row) first, then press Shift+D.');
+		  return;
+		}
+
+		// Parse the current block to check the token’s existing DEPREL
+		const text = $('#treeText').val() || '';
+		const parsed = parseSingleConlluSentence(text);
+		const tok = parsed.tokens.find(t => t.id !== null && String(t.id) === String(selectedTokenId));
+		if(!tok){ setStatus('Selected token not found.'); return; }
+
+		// 1) Change POS to ADJ
+		const okPOS = (typeof setTokenUPOS === 'function')
+		  ? setTokenUPOS(selectedTokenId, 'ADJ')
+		  : false;
+
+		// 2) Change DEPREL to discourse unless current is root
+		let okRel = false;
+		const baseRel = (tok.deprel || '').split(':')[0];
+		if(baseRel !== 'root'){
+		  okRel = (typeof applyDependencyEdit === 'function')
+			? applyDependencyEdit(selectedTokenId, null, 'amod')
+			: false;
+		} else {
+		  setStatus('DEPREL is root; leaving it unchanged.');
+		}
+
+		// Combined status
+		if (okPOS || okRel) {
+		  setStatus(`Token ${selectedTokenId}: POS=INTJ${baseRel !== 'root' ? '; DEPREL=amod' : ''}`);
+		} else {
+		  setStatus('No change applied (already ADJ / amod or edit blocked).');
+		}
+	  }
+	  
 	});
 
   // Keyboard binding: r makes the selected token the root
@@ -1864,6 +1981,12 @@
     $('#statusBar').text(`Status: ${msg}`);
   }
 
+  // Helper: update the "Tree x" label
+	function updateTreeLabel(){
+	  const hasData = Array.isArray(trees) && trees.length > 0 && currentIndex >= 0;
+	  $('#treeLabel').text(hasData ? `Tree ${currentIndex + 1}` : 'Tree —');
+	}
+
   // Navigation helpers
   function navigateTo(index){
     if(index < 0 || index >= trees.length){
@@ -1873,9 +1996,10 @@
     currentIndex = index;
     renderCurrentTree();
     updateUIState();
+	updateTreeLabel();  
     setStatus(`Viewing tree ${currentIndex+1} of ${trees.length}.`);
   }
-
+	
   function prevTree(){
     if(currentIndex < 0) return;
     saveCurrentEdits();
@@ -1899,6 +2023,7 @@
     // Set slider max and input max
     $('#jumpInput').attr('max', trees.length).val(currentIndex + 1);
     $('#jumpSlider').attr('max', trees.length).val(currentIndex + 1);
+	updateTreeLabel();
   }
 
   // Call updateJumpControls whenever UI state changes and on file load
@@ -2013,6 +2138,7 @@
 	  const hasData = trees && trees.length > 0 && currentIndex >= 0;
 	  $('#exportAllBtn').prop('disabled', !hasData);
 	  // If you already have updateUIState defined, just add the line above to it.
+	  updateTreeLabel();
 	}
 
   $('#helpBtn').on('click', function(){

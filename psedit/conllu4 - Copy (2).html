@@ -86,8 +86,8 @@
 .edge-label-group { cursor: pointer; }
 .edge-label-bg-muted { fill: var(--label-bg-muted); stroke: var(--label-border); stroke-width: 1; rx: 8; ry: 8; }
 .edge-label-bg-strong { fill: var(--label-bg); stroke: var(--label-border); stroke-width: 1; rx: 8; ry: 8; filter: drop-shadow(0 1px 2px var(--label-shadow)); }
-.edge-label-text-muted { fill: var(--label-text-muted); font-size: 12px; font-weight: 600; }
-.edge-label-text-strong { fill: var(--label-text); font-size: 12px; font-weight: 600; }
+.edge-label-text-muted { fill: var(--label-text-muted); font-size: 11px; font-weight: 600; }
+.edge-label-text-strong { fill: var(--label-text); font-size: 11px; font-weight: 600; }
 
 /* Popover */
 .popover {
@@ -150,12 +150,16 @@
 <body>
   <header>
     <input id="fileInput" type="file" accept=".conllu,.txt" />
+	<!-- Export button -->
+<button id="exportAllBtn" title="Export all trees (Ctrl+Shift+X)">Export all trees</button>
+<button id="saveAsBtn" title="Choose a file to save to">Specify file for autosave</button>
     <div id="controls">
-      <button id="prevBtn" disabled>Prev (<)</button>
-      <button id="nextBtn" disabled>Next (>)</button>
+      <button id="prevBtn">Prev (<)</button>
+      <button id="nextBtn">Next (>)</button>
       <button id="helpBtn">Help (?)</button>
-      <span id="indexInfo">No file loaded</span>
+      <!--span id="indexInfo">No file loaded</span-->
     </div>
+	<!-- Autosave controls -->
 	<!-- Jump-to-tree roller -->
 <div id="jumpWrap" style="display:flex;align-items:center;gap:8px;">
   <label for="jumpInput">Go to:</label>
@@ -168,7 +172,7 @@
     <strong>Instructions</strong>
     <ul>
       <li>Use the file picker to load a CoNLL-U file (multiple sentences/trees are supported).</li>
-      <li>Use Prev/Next buttons or press &lt; and &gt; keys to navigate sentences.</li>
+      <li>Use Prev/Next buttons or press &lt; and &gt; keys to navigate sentences. Pressing these keys will also save the current set of trees to an external file; if no such file is specified, the trees are dumped into the browser's local storage (use at your own risk!)</li>
       <li>Edits in the textbox are automatically saved to the current tree when you navigate.</li>
       <li>Use the “Hide/Show Editor” toggle to show or hide the editable tree textbox.</li>
       <li>The table and analysis update automatically based on the current textbox content.</li>
@@ -181,6 +185,9 @@
       <li>&gt; : Next sentence</li>
       <li>Ctrl+Shift+X : Export all trees to a .conllu file</li>
       <li>? (shift /) : Toggle Help</li>
+	  <li>K (shift K) : Add a comment to the textbox, indicating this tree was skipped for language reasons (e.g. Malay/Chinese sentence)</li>
+	  <li>L (shift L) : Add a comment to the textbox, indicating this tree was skipped for lack of critical linguistic features (e.g. mojibake, list of phone numbers, ...)</li>
+	  
     </ul>
 	<ul>
 	<strong>Joining/splitting words (e.g. split <i>ill</i> to <i>i 'll"</i>)</strong>
@@ -237,14 +244,6 @@
     <div class="popover-header">Edit Dependency</div>
     <div class="popover-body">
       <div class="field">
-        <label>Dependent (ID):</label>
-        <input id="popDependent" type="number" min="1" />
-      </div>
-      <div class="field">
-        <label>Head (ID):</label>
-        <input id="popHead" type="number" min="0" />
-      </div>
-      <div class="field">
         <label>Relation:</label>
         <input id="popRel" list="udRelList" placeholder="e.g., nsubj, obj, ccomp, acl:relcl" />
         <datalist id="udRelList">
@@ -252,6 +251,7 @@
           <option value="nsubj"></option>
           <option value="nsubj:pass"></option>
           <option value="csubj"></option>
+		  <option value="vocative"></option>
           <option value="obj"></option>
           <option value="iobj"></option>
           <option value="ccomp"></option>
@@ -262,7 +262,17 @@
           <option value="advmod"></option>
           <option value="discourse"></option>
           <option value="dislocated"></option>
+		  <option value="aux"></option>
+		  <option value="cop"></option>
         </datalist>
+      </div>
+      <div class="field">
+        <label>Dependent (ID):</label>
+        <input id="popDependent" type="number" min="1" />
+      </div>
+      <div class="field">
+        <label>Head (ID):</label>
+        <input id="popHead" type="number" min="0" />
       </div>
       <div class="popover-actions">
         <button id="popApply">Apply</button>
@@ -276,7 +286,7 @@
 	
 	<div id="depControls" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
     <label style="display:inline-flex;align-items:center;gap:6px;">
-      <input id="toggleHighlights" type="checkbox" checked />
+      <input id="toggleHighlights" type="checkbox"  />
       Show only highlighted relations
     </label>
     <span id="depHint" style="color:#666;font-size:12px;">
@@ -306,7 +316,108 @@
   // Currently selected edge (null or {depId, headId, deprel})
   let selectedEdge = null;
 
-  
+  // ---- Autosave globals ----
+	let autoSaveEnabled = true;
+	let fileHandle = null;                // persistent handle for writing back to disk (Chromium only)
+	let autoSaveTimer = null;             // debounce timer
+	const AUTO_SAVE_DEBOUNCE_MS = 400;    // wait briefly to batch keystrokes
+	const LS_KEY = 'conllu_autosave_snapshot_v1';  // localStorage fallback key
+
+	// Detect File System Access API support
+	const hasFSAccess = !!(window.showSaveFilePicker || (window.chooseFileSystemEntries)); // legacy flag for older Edge
+
+	// Serialize all trees (use your own if you already have one)
+	function serializeAllTrees(){
+	  if (!Array.isArray(trees)) return '';
+	  return trees.map(t => (t.raw || '').replace(/\s+$/,'') + '\n\n').join('').replace(/\n\n$/,'\n');
+	}
+
+	// Write to disk using the file handle
+	async function writeToHandle(content){
+	  if(!fileHandle) throw new Error('No file handle set.');
+	  // Chrome/Edge
+	  if (fileHandle.createWritable) {
+		const writable = await fileHandle.createWritable();
+		await writable.write(content);
+		await writable.close();
+	  } else if (window.FileSystemFileHandle && fileHandle.getFile) {
+		// very old implementations aren’t supported here; advise upgrading
+		throw new Error('Unsupported File System Access implementation.');
+	  }
+	}
+
+	// Ask user where to save (first time)
+	async function pickSaveLocation(){
+	  if(!hasFSAccess){
+		setStatus('File System Access API not supported in this browser. Falling back to localStorage autosave.');
+		return null;
+	  }
+	  try {
+		const opts = {
+		  suggestedName: 'edited.conllu',
+		  types: [{ description: 'CoNLL-U', accept: { 'text/plain': ['.conllu', '.txt'] } }]
+		};
+		// showSaveFilePicker is modern
+		if (window.showSaveFilePicker) {
+		  const handle = await window.showSaveFilePicker(opts);
+		  return handle;
+		}
+	  } catch (err){
+		setStatus('Save cancelled.');
+	  }
+	  return null;
+	}
+
+	// Debounced autosave entry point
+	function scheduleAutoSave(){
+	  if(autoSaveTimer) clearTimeout(autoSaveTimer);
+	  autoSaveTimer = setTimeout(doAutoSave, AUTO_SAVE_DEBOUNCE_MS);
+	}
+
+	async function doAutoSave(){
+	  const content = serializeAllTrees();
+	  // 1) Try writing to disk if we have a handle and autosave is enabled
+	  if(autoSaveEnabled && fileHandle && hasFSAccess){
+		try {
+		  await writeToHandle(content);
+		  setStatus('Autosaved to file.');
+		  return;
+		} catch(err){
+		  console.error(err);
+		  setStatus('Autosave to file failed; falling back to localStorage.');
+		}
+	  }
+	  // 2) Fallback: save snapshot to localStorage
+	  try {
+		localStorage.setItem(LS_KEY, content);
+		setStatus('Autosaved to browser (localStorage).');
+	  } catch(err){
+		console.error(err);
+		setStatus('Autosave failed (localStorage quota?).');
+	  }
+	}
+
+	// Optionally offer to restore last local snapshot on load
+	function maybeRestoreLocalSnapshot(){
+	  const snap = localStorage.getItem(LS_KEY);
+	  if(!snap) return;
+	  // Simple prompt to restore
+	  if(confirm('Restore last autosaved session from this browser?')){
+		// If you maintain trees[] structure, split back into trees
+		trees = splitConlluIntoTrees(snap);
+		if(trees.length > 0){
+		  currentIndex = 0;
+		  updateUIState();
+		  renderCurrentTree();
+		  setStatus('Restored last session from localStorage.');
+		} else {
+		  // Fallback: just drop content into textarea
+		  $('#treeText').val(snap);
+		  renderFromTextarea();
+		  setStatus('Restored last session into editor.');
+		}
+	  }
+	}
 
   // Mark selection visually by adding a wrapping group with class, or toggling a class on label group + matching path
   function setSelectedEdge(depId, headId, deprel){
@@ -357,7 +468,7 @@
   ]);
   const ADV_LEMMAS = new Set(['already', 'also']); // lemma-based highlight
 
-  let showOnlyHighlights = true; // toggled by checkbox
+  let showOnlyHighlights = false; // toggled by checkbox
 
   function deprelCategory(deprel, token) {
     const base = (deprel || '').split(':')[0];
@@ -473,6 +584,56 @@
     openUPOSDialog();
   });
 
+
+  // Append a tag (e.g., "[skip_language]") to the second comment line ("#" line) of the current block
+	function addSkipTagToSecondComment(tag){
+	  const text = $('#treeText').val() || '';
+	  const lines = text.replace(/\r\n/g, '\n').split('\n');
+
+	  // Collect indices of comment lines (start with '#')
+	  const commentIdxs = [];
+	  for(let i=0; i<lines.length; i++){
+		const s = lines[i].trim();
+		if(s.startsWith('#')) commentIdxs.push(i);
+	  }
+
+	  // If we have a second comment line, append the tag there (if not already present)
+	  if(commentIdxs.length >= 2){
+		const i2 = commentIdxs[1];
+		const line = lines[i2];
+		if(!line.includes(tag)){
+		  // Append with a space separator
+		  lines[i2] = line + (/\s$/.test(line) ? '' : ' ') + tag;
+		  $('#treeText').val(lines.join('\n'));
+		  renderFromTextarea();
+		  setStatus(`Added ${tag} to second comment line.`);
+		} else {
+		  setStatus(`Tag ${tag} already present on second comment line.`);
+		}
+		return;
+	  }
+
+	  // If only one comment line exists, insert a new second comment line right after it
+	  if(commentIdxs.length === 1){
+		const i1 = commentIdxs[0];
+		const newLine = `# ${tag}`;
+		lines.splice(i1 + 1, 0, newLine);
+		$('#treeText').val(lines.join('\n'));
+		renderFromTextarea();
+		setStatus(`Inserted new second comment line with ${tag}.`);
+		return;
+	  }
+
+	  // If no comment lines, insert a new comment line at the top
+	  // (This becomes the first comment; there is no second line to append to.)
+	  const newLineTop = `# ${tag}`;
+	  lines.unshift(newLineTop);
+	  $('#treeText').val(lines.join('\n'));
+	  renderFromTextarea();
+	  setStatus(`No comment lines found. Inserted ${tag} at top.`);
+	}
+
+
   // Open/close modal helpers
   function openUPOSDialog(){
     if(!selectedTokenId){ setStatus('Select a token (click a word in the FORM row) before opening POS.'); return; }
@@ -513,7 +674,27 @@
     setStatus(`Set token ${selectedTokenId} UPOS=${value}`);
     closeUPOSDialog();
   }
+  // Robust click bindings for POS dialog buttons.
+	// Delegated binding ensures it works even if the dialog HTML is injected after scripts run.
+	$(document).on('click', '#uposApply', function(e){
+	  e.preventDefault();
+	  if (typeof applyUPOSFromDialog === 'function') {
+		applyUPOSFromDialog();
+	  } else {
+		console.error('applyUPOSFromDialog() not found.');
+	  }
+	});
 
+	$(document).on('click', '#uposCancel', function(e){
+	  e.preventDefault();
+	  if (typeof closeUPOSDialog === 'function') {
+		closeUPOSDialog();
+	  } else {
+		// Fallback: hide the dialog directly if you don’t have a helper
+		$('#uposDialog').hide();
+	  }
+	});
+ 
   // Bind modal buttons
   $('#uposApply').on('click', applyUPOSFromDialog);
   $('#uposCancel').on('click', closeUPOSDialog);
@@ -574,6 +755,8 @@
       setStatus(`Loaded ${trees.length} trees.`);
       updateUIState();
       renderCurrentTree();
+	  // After file load completes and UI is ready
+      initAutoSaveUI(); // <-- add this call
     };
     reader.readAsText(file, 'utf-8');
   });
@@ -737,6 +920,7 @@
     $('#treeText').val(text);
     renderFromTextarea(); // should call buildInfoTable + drawDependenciesBelow via your hook
     if(statusMsg) setStatus(statusMsg);
+	scheduleAutoSave();
   }
 
   // Clone a token object (shallow, columns only)
@@ -1182,6 +1366,27 @@
       if(cell) $(cell).addClass('token-selected');
     }
   }
+	// Shift+K => add [skip_language] ; Shift+L => add [skip_content]
+	$(document).on('keydown', function(e){
+	  // Avoid interfering with typing in inputs/textarea
+	  const tag = (e.target.tagName || '').toLowerCase();
+	  const dialogOpen = $('#uposDialog').is(':visible'); // ignore POS dialog if you have it
+	  if(tag === 'input' || tag === 'textarea' || dialogOpen) return;
+
+	  // Shift+K
+	  if(e.shiftKey && (e.key === 'K')){
+		e.preventDefault();
+		addSkipTagToSecondComment('[skip_language]');
+		return;
+	  }
+
+	  // Shift+L
+	  if(e.shiftKey && (e.key === 'L')){
+		e.preventDefault();
+		addSkipTagToSecondComment('[skip_content]');
+		return;
+	  }
+	});
 
   // Keyboard binding: r makes the selected token the root
   $(document).on('keydown', function(e){
@@ -1723,11 +1928,92 @@
     $('#jumpInput').val(idx + 1);
   });
 
+  // Autosave whenever the editor textarea changes
+	$('#treeText').on('input', function(){
+	  scheduleAutoSave();
+	});
+
   // After file load (in reader.onload), after setting currentIndex and calling updateUIState/renderCurrentTree, also call:
   // updateJumpControls();
   // Event bindings
   $('#prevBtn').on('click', prevTree);
   $('#nextBtn').on('click', nextTree);
+  
+  // "Save As…" picks a destination file and performs an immediate save
+	$('#saveAsBtn').on('click', async function(){
+	  if(!hasFSAccess){
+		setStatus('This browser does not support saving directly to disk. Autosave will use localStorage only.');
+		// Still do an immediate localStorage save
+		await doAutoSave();
+		return;
+	  }
+	  const handle = await pickSaveLocation();
+	  if(handle){
+		fileHandle = handle;
+		// Try to save immediately
+		await doAutoSave();
+		setStatus('Save location set. Autosave will write to this file.');
+	  }
+	});
+
+	// Toggle autosave
+	$('#autoSaveToggle').on('change', function(){
+	  autoSaveEnabled = $(this).is(':checked');
+	  setStatus(autoSaveEnabled ? 'Autosave enabled.' : 'Autosave disabled.');
+	  if(autoSaveEnabled){
+		// Save current state right away if we already have a file handle; otherwise it will use localStorage
+		scheduleAutoSave();
+	  }
+	});
+
+	// Call this once after the page initializes to show/hide controls appropriately
+	function initAutoSaveUI(){
+	  // If you want the toggle default ON, uncomment line below:
+	  // $('#autoSaveToggle').prop('checked', true).trigger('change');
+	  // Offer to restore previous session
+	  maybeRestoreLocalSnapshot();
+	}
+
+  // Click: export all trees (same as Ctrl+Shift+X)
+	$('#exportAllBtn').on('click', function(){
+	  // Save current edits to the current tree before exporting
+	  if (typeof saveCurrentEdits === 'function') saveCurrentEdits();
+	  if (typeof exportConllu === 'function') {
+		exportConllu();
+		setStatus('Export started (via button).');
+	  } else {
+		console.error('exportConllu() not found.');
+		setStatus('Export function not found.');
+	  }
+	});
+
+	// Keyboard: Ctrl+Shift+X also triggers export
+	$(document).on('keydown', function(e){
+	  // Ignore when typing in inputs/textarea
+	  const tag = (e.target.tagName || '').toLowerCase();
+	  if (tag === 'input' || tag === 'textarea') return;
+
+	  if (e.ctrlKey && e.shiftKey && (e.key === 'X' || e.key === 'x')) {
+		e.preventDefault();
+		if (typeof saveCurrentEdits === 'function') saveCurrentEdits();
+		if (typeof exportConllu === 'function') {
+		  exportConllu();
+		  setStatus('Export started (Ctrl+Shift+X).');
+		} else {
+		  console.error('exportConllu() not found.');
+		  setStatus('Export function not found.');
+		}
+	  }
+	});
+
+	// Optional: hide the button until a file is loaded
+	function updateJumpControls(){ /* keep your existing code here */ }
+	function updateUIState(){
+	  // Keep your existing UI state code, then toggle button based on data availability
+	  const hasData = trees && trees.length > 0 && currentIndex >= 0;
+	  $('#exportAllBtn').prop('disabled', !hasData);
+	  // If you already have updateUIState defined, just add the line above to it.
+	}
 
   $('#helpBtn').on('click', function(){
     $('#helpTab').toggle();
@@ -1764,11 +2050,13 @@
       // The '<' character typically requires Shift on comma, but we honor the literal
       e.preventDefault();
       prevTree();
+	  doAutoSave();
       return;
     }
     if(e.key === '>'){
       e.preventDefault();
       nextTree();
+	  doAutoSave();
       return;
     }
 
@@ -1832,8 +2120,8 @@
       </select>
     </div>
     <div id="uposActions">
-      <button id="uposApply">Apply</button>
-      <button id="uposCancel">Cancel</button>
+      <button id="uposApply" type="button">Apply</button>
+      <button id="uposCancel" type="button">Cancel</button>
     </div>
   </div>
 </div>
