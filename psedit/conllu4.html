@@ -170,7 +170,7 @@
   </header>
 
   <div id="helpTab">
-    <strong>Instructions</strong>
+    <strong>Readme</strong>
     <ul>
       <li>Use the file picker to load a CoNLL-U file (multiple sentences/trees are supported).</li>
       <li>Use Prev/Next buttons or press &lt; and &gt; keys to navigate sentences. Pressing these keys will also save the current set of trees to an external file; if no such file is specified, the trees are dumped into the browser's local storage (use at your own risk!)</li>
@@ -221,6 +221,8 @@
 	<li>Toggle "Show only highlighted relation" to show all relations.</li>
 	<li>Change head/deprel.</li>
 	</ul>
+	
+	
   </div>
 
   <div id="editorWrap">
@@ -249,26 +251,49 @@
     <div class="popover-body">
       <div class="field">
         <label>Relation:</label>
-        <input id="popRel" list="udRelList" placeholder="e.g., nsubj, obj, ccomp, acl:relcl" />
-        <datalist id="udRelList">
-          <option value="root"></option>
-          <option value="nsubj"></option>
-          <option value="nsubj:pass"></option>
-          <option value="csubj"></option>
-		  <option value="vocative"></option>
-          <option value="obj"></option>
-          <option value="iobj"></option>
-          <option value="ccomp"></option>
-          <option value="xcomp"></option>
-          <option value="parataxis"></option>
-          <option value="acl"></option>
-          <option value="acl:relcl"></option>
-          <option value="advmod"></option>
-          <option value="discourse"></option>
-          <option value="dislocated"></option>
-		  <option value="aux"></option>
-		  <option value="cop"></option>
-        </datalist>
+        <select id="popRel">
+        <!-- datalist id="udRelList"-->
+<option value="acl">acl</option>
+<option value="advcl">advcl</option>
+<option value="advmod">advmod</option>
+<option value="amod">amod</option>
+<option value="appos">appos</option>
+<option value="aux">aux</option>
+<option value="case">case</option>
+<option value="cc">cc</option>
+<option value="ccomp">ccomp</option>
+<option value="clf">clf</option>
+<option value="compound">compound</option>
+<option value="conj">conj</option>
+<option value="cop">cop</option>
+<option value="csubj">csubj</option>
+<option value="dep">dep</option>
+<option value="det">det</option>
+<option value="discourse">discourse</option>
+<option value="dislocated">dislocated</option>
+<option value="expl">expl</option>
+<option value="fixed">fixed</option>
+<option value="flat">flat</option>
+<option value="goeswith">goeswith</option>
+<option value="iobj">iobj</option>
+<option value="list">list</option>
+<option value="mark">mark</option>
+<option value="nmod">nmod</option>
+<option value="nsubj">nsubj</option>
+<option value="nsubj:pass">nsubj:pass</option>
+<option value="nummod">nummod</option>
+<option value="obj">obj</option>
+<option value="obl">obl</option>
+<option value="orphan">orphan</option>
+<option value="parataxis">parataxis</option>
+<option value="punct">punct</option>
+<option value="reparandum">reparandum</option>
+<option value="root">root</option>
+<option value="vocative">vocative</option>
+<option value="xcomp">xcomp</option>
+
+        <!--/datalist-->
+		</select>
       </div>
       <div class="field">
         <label>Dependent (ID):</label>
@@ -297,6 +322,11 @@
       Shortcuts: Various keys set deprel • Shift+←/→ change head • Enter confirm what is in popup • Esc cancel
     </span>
     </div>
+	<div>
+	<span id="depHint" style="color:#666;font-size:10px;">
+      Code largely generated using GPT-4.1 (AI-Know); assembled/tested/tweaks by NH.
+    </span>
+	</div>
 
 
   <!--div id="analysis">
@@ -460,7 +490,13 @@
     if(!rel) return false;
     return CLAUSAL_PREFIXES.some(prefix => rel === prefix || rel.startsWith(prefix + ':'));
   }
-
+  
+  function updateDeprelInDialog(newRel) {
+	  // Only update if dialog is open
+	  if ($('#edgePopover').is(':visible')) {
+		$('#popRel').val(newRel);
+	  }
+  }
   // Highlight configuration
   const HIGHLIGHT_DEPRELS = new Set([
     'nsubj', 'csubj', 'nsubj:pass',
@@ -1736,6 +1772,7 @@
       applyDependencyEdit(selectedEdge.depId, null, newRel);
       // Update selectedEdge state with new deprel
       selectedEdge.deprel = newRel;
+	  updateDeprelInDialog(newRel);
       return;
     }
 
