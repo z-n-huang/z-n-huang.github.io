@@ -264,13 +264,13 @@
 <option value="ccomp">ccomp</option>
 <option value="clf">clf</option>
 <option value="compound">compound</option>
-<option value="compound">compound:prt</option>
+<option value="compound:prt">compound:prt</option>
 <option value="conj">conj</option>
 <option value="cop">cop</option>
 <option value="csubj">csubj</option>
 <option value="dep">dep</option>
 <option value="det">det</option>
-<option value="det">det:predet</option>
+<option value="det:predet">det:predet</option>
 <option value="discourse">discourse</option>
 <option value="dislocated">dislocated</option>
 <option value="expl">expl</option>
@@ -281,13 +281,13 @@
 <option value="list">list</option>
 <option value="mark">mark</option>
 <option value="nmod">nmod</option>
-<option value="nmod">nmod:poss</option>
+<option value="nmod:poss">nmod:poss</option>
 <option value="nsubj">nsubj</option>
 <option value="nsubj:pass">nsubj:pass</option>
 <option value="nummod">nummod</option>
 <option value="obj">obj</option>
 <option value="obl">obl</option>
-<option value="obl">obl:tmod</option>
+<option value="obl:tmod">obl:tmod</option>
 <option value="orphan">orphan</option>
 <option value="parataxis">parataxis</option>
 <option value="punct">punct</option>
@@ -1598,35 +1598,145 @@
       return;
     }
 
-    // Build new tokens to replace baseTok
-    const newTokens = parts.map((w, j) => {
-      const nt = cloneToken(baseTok);
-      nt.form = w;
-      nt.lemma = nt.lemma && nt.lemma !== '_' ? nt.lemma : w.toLowerCase();
-      // First keeps original head/deprel; others attach as compound to the first
-      if(j === 0){
-        // unchanged
-      } else {
-        nt.head = String(baseTok.id); // will be remapped after renumber
-        nt.deprel = 'compound';
-      }
-      return nt;
-    });
+	  // Call your existing function to perform the split
+	  splitTokenWithMultiwordAndSpaceAfterNo(selectedTokenId, parts);
+  }
+  
+  function splitTokenWithMultiwordAndSpaceAfterNo(tokenId, newWords) {
+	  const parsed = parseSingleConlluSentence($('#treeText').val() || '');
 
-    // Replace in the full parsed.tokens array (need the true index in parsed.tokens)
-    const allInts = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
-    const globalIdx = parsed.tokens.findIndex(t => t.id !== null && !t.isRange && !t.isEmpty && String(t.id) === String(selectedTokenId));
-    if(globalIdx === -1){ setStatus('Internal error: index.'); return; }
+	  // Find the token to split
+	  const tokIndex = parsed.tokens.findIndex(t => String(t.id) === String(tokenId));
+	  if (tokIndex === -1) {
+		setStatus('Token to split not found');
+		return;
+	  }
 
-    // Update dependents of baseTok: they stay pointing to the first new token (same old ID for now)
-    // We will renumber after insertion and then remap heads accordingly.
-    parsed.tokens.splice(globalIdx, 1, ...newTokens);
+	  const originalTok = parsed.tokens[tokIndex];
+	  const IdSpan = `${tokenId}-${tokenId + newWords.length - 1}`;
 
-    // Renumber all integer tokens and fix heads
-    const updated = renumberIntegerTokens(parsed);
-    commitParsed(updated, `Split token ${selectedTokenId} into ${parts.length} tokens.`);
+	  // Create new multiword token line with range, e.g., "2-3"
+	  const multiwordToken = {
+		...originalTok,
+		idStr: IdSpan,
+		isRange: true,
+		isEmpty: false,
+		form: originalTok.form,
+		lemma: '_',
+		upos: '_',
+		xpos: '_',
+		feats: '_',
+		head: '_',
+		deprel: '_',
+		deps: '_',
+		misc: '_',
+	  };
+
+	  // Create split tokens, set MISC for SpaceAfter=No for all but last
+	  const splitTokens = newWords.map((w, idx) => {
+		const newId = tokenId + idx;
+		let miscField = originalTok.misc || '_';
+
+		// Append or set SpaceAfter=No except for the last token
+		if (idx < newWords.length - 1) {
+		  if(miscField === '_' || miscField === '') {
+			miscField = 'SpaceAfter=No';
+		  } else {
+			// Add SpaceAfter=No if not present, separated by pipe
+			if (!miscField.includes('SpaceAfter=No')) {
+			  miscField += '|SpaceAfter=No';
+			}
+		  }
+		}
+
+		return {
+		  ...originalTok,
+		  idStr: String(newId),
+		  id: newId,
+		  form: w,
+		  misc: miscField,
+		  head: idx === 0 ? originalTok.head : String(tokenId), // first token keeps head; others attach as compound
+		  deprel: idx === 0 ? originalTok.deprel : 'compound',
+		  isRange: false,
+		  isEmpty: false,
+		};
+	  });
+
+	  // Remove original token line
+	  parsed.tokens.splice(tokIndex, 1);
+	  // Insert multiword token line
+	  parsed.tokens.splice(tokIndex, 0, multiwordToken);
+	  // Insert split tokens after multiword token
+	  parsed.tokens.splice(tokIndex + 1, 0, ...splitTokens);
+
+	  // Optional: renumber tokens if you have such a function
+	  renumberTokensIncludingMultiword(parsed);
+
+	  // Serialize back to textarea and redraw
+	  const newText = serializeParsedSentence(parsed);
+	  $('#treeText').val(newText);
+	  renderFromTextarea();
+
+	  setStatus(`Split token ${tokenId} into multiword token ${multiwordToken.idStr} with SpaceAfter=No on all but last.`);
+	}
+  
+  
+// Renumber all tokens, including multiword ranges, using old→new ID mapping.
+// - Integer tokens get new sequential IDs (1..n)
+// - Heads that are integers are remapped
+// - Multiword tokens "a-b" become "map(a)-map(b)" (no overrun)
+function renumberTokensIncludingMultiword(parsed){
+  // 1) Build list of integer tokens (exclude ranges and empty nodes)
+  const intTokens = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
+
+  // 2) Create map oldIntIdStr -> newIntIdStr
+  const idMap = new Map();
+  let nextId = 1;
+  for(const t of intTokens){
+    const old = String(t.id);     // old integer id as string
+    const mapped = String(nextId);
+    idMap.set(old, mapped);
+    t.id = nextId;
+    t.idStr = mapped;
+    nextId++;
   }
 
+  // 3) Remap integer HEADs
+  for(const t of parsed.tokens){
+    if(t.head != null && /^\d+$/.test(String(t.head))){
+      const mapped = idMap.get(String(t.head));
+      if(mapped) t.head = mapped;
+    }
+  }
+
+  // 4) Rewrite each multiword token's range using mapped endpoints
+  for(const t of parsed.tokens){
+    if(!t.isRange) continue;
+    const m = /^(\d+)-(\d+)$/.exec(t.idStr);
+    if(!m) continue;
+
+    const oldStart = m[1];
+    const oldEnd   = m[2];
+
+    const newStart = idMap.get(oldStart);
+    const newEnd   = idMap.get(oldEnd);
+	
+
+    // Only rewrite if both ends can be mapped (they should when split created int tokens)
+    if(newStart && newEnd){
+      t.idStr = `${newStart}-${newEnd}`;
+    } else {
+      // Fallback (rare): if only start maps, keep width (oldEnd-oldStart+1)
+      if(newStart){
+        const width = (parseInt(oldEnd,10) - parseInt(oldStart,10) + 1);
+        t.idStr = `${newStart}-${parseInt(newStart,10) + width - 1}`;
+      }
+      // else leave as-is
+    }
+  }
+
+  return parsed;
+}
   // Keyboard binding for '/'
   $(document).on('keydown', function(e){
     const tag = (e.target.tagName || '').toLowerCase();
