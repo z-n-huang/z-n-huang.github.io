@@ -1613,8 +1613,9 @@
 	  }
 
 	  const originalTok = parsed.tokens[tokIndex];
-	  const IdSpan = `${tokenId}-${tokenId + newWords.length - 1}`;
-
+	  const spanEnd = tokenId + newWords.length-1
+	  const IdSpan = `${tokenId}-` + String(spanEnd);
+	  console.log(IdSpan)
 	  // Create new multiword token line with range, e.g., "2-3"
 	  const multiwordToken = {
 		...originalTok,
@@ -1665,13 +1666,14 @@
 	  // Remove original token line
 	  parsed.tokens.splice(tokIndex, 1);
 	  // Insert multiword token line
+	  console.log(multiwordToken);
 	  parsed.tokens.splice(tokIndex, 0, multiwordToken);
 	  // Insert split tokens after multiword token
 	  parsed.tokens.splice(tokIndex + 1, 0, ...splitTokens);
 
 	  // Optional: renumber tokens if you have such a function
 	  renumberTokensIncludingMultiword(parsed);
-
+	  console.log(parsed)
 	  // Serialize back to textarea and redraw
 	  const newText = serializeParsedSentence(parsed);
 	  $('#treeText').val(newText);
@@ -1688,7 +1690,8 @@
 function renumberTokensIncludingMultiword(parsed){
   // 1) Build list of integer tokens (exclude ranges and empty nodes)
   const intTokens = parsed.tokens.filter(t => t.id !== null && !t.isRange && !t.isEmpty);
-
+  let multiwordSeen = 0;
+  
   // 2) Create map oldIntIdStr -> newIntIdStr
   const idMap = new Map();
   let nextId = 1;
@@ -1714,13 +1717,17 @@ function renumberTokensIncludingMultiword(parsed){
     if(!t.isRange) continue;
     const m = /^(\d+)-(\d+)$/.exec(t.idStr);
     if(!m) continue;
+	
+	multiwordSeen++;
+	if(multiwordSeen == 1) continue;
 
     const oldStart = m[1];
     const oldEnd   = m[2];
+	const nWords   = parseInt(oldEnd,10) - parseInt(oldStart,10)
 
     const newStart = idMap.get(oldStart);
-    const newEnd   = idMap.get(oldEnd);
-	
+    const newEnd   = parseInt(newStart,10) + nWords;
+	//console.log(newEnd, shifted_by, oldEnd);
 
     // Only rewrite if both ends can be mapped (they should when split created int tokens)
     if(newStart && newEnd){
