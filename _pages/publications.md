@@ -10,6 +10,8 @@ Please email me if the manuscript is not available for download.
 
 Refereed journal publications
 ======
++ 2026\. The role of phases and specificity in definite islands. (With Zheng Shen.) *Natural Language and Linguistic Theory*. DOI: <https://doi.org/10.1007/s11049-026-09707-6> {[manuscript](https://lingbuzz.net/lingbuzz/007746)}.
++ 2026\. Overt pronouns in null subject languages: an experimental investigation of Kashubian, Polish, and Silesian. (With Marta Ruda.) *Linguistics* 64(1):31-65. DOI: <https://doi.org/10.1515/ling-2024-0109> {PDF: see journal link (open-access).
 + 2025\. Treebanks and World Englishes: a Singapore English perspective. (With Li Lin, Kunmei Han, Jiawen Hing, Luwen Cao, Vincent Ooi, and Zhiming Bao.) *English World-Wide* 46(1):93-121. DOI: <https://doi.org/10.1075/eww.23069.hua> {[manuscript](https://z-n-huang.github.io/files/Huangetal_EWW_Treebanks_Singapore_English_202410_preprint.pdf)}.
 + 2025\. A nearly exhaustive experimental investigation of bridge effects in English. (With Diogo Almeida and Jon Sprouse.) *Language* 101(1): 72-108. DOI: <https://dx.doi.org/10.1353/lan.2025.a954229> {PDF: see journal link (open-access), [manuscript + supplementary material](https://z-n-huang.github.io/files/HuangAlmeidaSprouse_Bridge_effects_202410.pdf), [data](https://osf.io/fg6ts/)}
 + 2024\. Finiteness in a language without finite morphology: an experimental study of Mandarin Chinese. *Natural Language and Linguistic Theory* 42(2): 533-556. DOI: <https://doi.org/10.1007/s11049-023-09591-4> {[PDF](https://z-n-huang.github.io/files/Huang2024_NLLT_finiteness.pdf), [Lingbuzz](https://ling.auf.net/lingbuzz/007149), [materials](https://z-n-huang.github.io/files/materials/Huang_NLLT_materials.pdf)}
