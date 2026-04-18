@@ -13,13 +13,10 @@ Email me at either:
 + znhuang at nus dot edu dot sg, or
 + znhuang at terpmail dot umd dot edu
 
-Recent updates (August 2025)
+Recent updates (April 2026)
 ======
-+ Mohamed Hafiz (representing a team of researchers including myself) giving a talk on Singapore English passive constructions at [NWAV-Asia Pacific 8](https://www.ntu.edu.sg/nie/new-ways-of-analysing-variation-asia-pacific-8-singapore/programme) at Nanyang Technological University.
-+ Gave an online talk on recent work on Chaozhou (Teochew; joint work with Jiajia Cai) at the [Yushan Linguistics Salon](https://www.eng.ntnu.edu.tw/index.php/en/yushan-salon/) hosted at the National Taiwan Normal University in July 2025.
-+ Co-taught with [Sandra Villata](https://sandravillata.com/) a course on [experimental syntax](https://nyispb.org/v-nyi-10-program/ling/theoretical-linguistics-cognitive-science_652.html) at the [Virtual NYI program](https://nyispb.org/general-information/). If you have missed the official registration deadline, feel free to contact me or the organisers if you would like to register!
-+ Now out in *English World-Wide*: ["Treebanks and World Englishes: a Singapore English perspective"](https://doi.org/10.1075/eww.23069.hua). This paper, coauthored with several NUS colleagues, considers how effectively we can leverage off-the-shelf American English statistical parsers for parsing Singapore English, despite the grammatical and lexical divergences between the two varieties.
-+ Now out in *Language*: ["A nearly exhaustive experimental investigation of bridge effects in English"](https://dx.doi.org/10.1353/lan.2025.a954229). This paper, coauthored with Diogo Almeida and Jon Sprouse, evaluates existing theories of bridge verbs / bridge effects with experiments covering 640 English verbs, and presents a new multivariate account involving a morphosyntactic licensing component.
++ Now available online in *Natural Language and Linguistic Theory*: ["The role of phases and specificity in definite islands"](https://doi.org/10.1007/s11049-026-09707-6), co-authored with [Zheng Shen](https://zheng-shen.github.io/). This paper presents experiments on definite NP islands. We show that the acceptability profiles of these islands differ between a wh-movement language (English) and a wh-in situ language (Mandarin Chinese), and show how two competing accounts of these islands can be combined to provide a more complete picture.
++ And also published, in *Linguistics*: ["Overt pronouns in null subject languages: an experimental investigation of Kashubian, Polish, and Silesian"](https://doi.org/10.1515/ling-2024-0109), co-authored with Marta Ruda. This paper, also experimental in nature, demonstrates microvariation in the interpretational (binding) possibilities of null subject pronouns in three Slavic varieties, which challenge existing proposals on how to classify null subject languages.
 
 What I do
 ======
