@@ -7,7 +7,7 @@ redirect_from:
   - /about.html
 ---
 
-I am an assistant professor at the [Department of English, Linguistics and Theatre Studies](https://fass.nus.edu.sg/elts/) at the [National University of Singapore](https://www.nus.edu.sg/). I currently serve on the editorial board of the [Journal of East Asian Linguistics](https://link.springer.com/journal/10831).
+I am an assistant professor at the [Department of English, Linguistics and Theatre Studies](https://fass.nus.edu.sg/elts/) at the [National University of Singapore](https://www.nus.edu.sg/). I currently serve on the editorial board of the [Journal of East Asian Linguistics](https://link.springer.com/journal/10831) and [First Language](https://journals.sagepub.com/home/fla).
 
 Email me at either:
 + znhuang at nus dot edu dot sg, or
@@ -15,6 +15,7 @@ Email me at either:
 
 Recent updates (April 2026)
 ======
++ Excited to join the editorial board of [First Language](https://journals.sagepub.com/home/fla)!
 + Now available online in *Natural Language and Linguistic Theory*: ["The role of phases and specificity in definite islands"](https://doi.org/10.1007/s11049-026-09707-6), co-authored with [Zheng Shen](https://zheng-shen.github.io/). This paper presents experiments on definite NP islands. We show that the acceptability profiles of these islands differ between a wh-movement language (English) and a wh-in situ language (Mandarin Chinese), and show how two competing accounts of these islands can be combined to provide a more complete picture.
 + And also published, in *Linguistics*: ["Overt pronouns in null subject languages: an experimental investigation of Kashubian, Polish, and Silesian"](https://doi.org/10.1515/ling-2024-0109), co-authored with Marta Ruda. This paper, also experimental in nature, demonstrates microvariation in the interpretational (binding) possibilities of null subject pronouns in three Slavic varieties, which challenge existing proposals on how to classify null subject languages.
 
@@ -42,6 +43,3 @@ Collaboration and supervision
 NUS is an exciting place for doing linguistics (especially languages of East and Southeast Asia), with [lab facilities, corpora](https://z-n-huang.github.io/nus-resources/), and a community of [like-minded faculty and students](https://fass.nus.edu.sg/elts/). 
 Please get in touch if you are interested.
 
-Interested in participating in language research at NUS?
-======
-For information about upcoming studies, click [here](https://blog.nus.edu.sg/langsci/)!
