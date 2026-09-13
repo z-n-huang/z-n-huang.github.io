@@ -13,11 +13,12 @@ Email me at either:
 + znhuang at nus dot edu dot sg, or
 + znhuang at terpmail dot umd dot edu
 
-Recent updates (April 2026)
+Recent updates (September 2026)
 ======
++ Looking forward to attending and presenting on Colloquial Singapore English at [FOSS-16](https://sites.google.com/view/2026-foss-16-16/?pli=1&authuser=0)!
++ Now available: [*Young Singaporean English: Current Developments in CSE Morphosyntax in a Digital World*](https://www.cambridge.org/core/elements/young-singaporean-english/A58D60FF88E0572470CE114C04E0D9E6) (Cambridge University Press, open access). This co-authored "Elements" (short book) discusses a number recent developments in the lexicon and grammar in Colloquial Singapore English, documenting continued influence from adstrate languages such as Chinese "dialects" and Malay.
 + Excited to join the editorial board of [First Language](https://journals.sagepub.com/home/fla)!
 + Now available online in *Natural Language and Linguistic Theory*: ["The role of phases and specificity in definite islands"](https://doi.org/10.1007/s11049-026-09707-6), co-authored with [Zheng Shen](https://zheng-shen.github.io/). This paper presents experiments on definite NP islands. We show that the acceptability profiles of these islands differ between a wh-movement language (English) and a wh-in situ language (Mandarin Chinese), and show how two competing accounts of these islands can be combined to provide a more complete picture.
-+ And also published, in *Linguistics*: ["Overt pronouns in null subject languages: an experimental investigation of Kashubian, Polish, and Silesian"](https://doi.org/10.1515/ling-2024-0109), co-authored with Marta Ruda. This paper, also experimental in nature, demonstrates microvariation in the interpretational (binding) possibilities of null subject pronouns in three Slavic varieties, which challenge existing proposals on how to classify null subject languages.
 
 What I do
 ======
